@@ -8,7 +8,7 @@ A mod for Factorio that adds a special combinator for use with the [Project Cybe
 
 ## License
 
-Copyright ©️ 2023 by [Adam Hellberg][sharparam].
+Copyright © 2023 by [Adam Hellberg][sharparam].
 
 This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
