@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+fmtk() {
+  exec npx factoriomod-debug@latest "$@"
+}
+
+if [[ -d src ]]; then
+  (pushd src > /dev/null && fmtk "$@")
+else
+  fmtk
+fi

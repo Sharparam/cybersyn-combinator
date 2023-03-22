@@ -1,0 +1,17 @@
+{
+  "name": "cybersyn-combinator",
+  "version": "0.0.0",
+  "title": "Cybersyn Combinator",
+  "author": "Sharparam",
+  "contact": "sharparam@sharparam.com",
+  "homepage": "https://github.com/Sharparm/cybersyn-combinator",
+  "description": "A specialized combinator for the Project Cybersyn mod",
+  "factorio_version": "1.1",
+  "dependencies": [
+    "cybersyn"
+  ],
+  "package": {
+    "readme": "information.md",
+    "faq": "faq.md"
+  }
+}

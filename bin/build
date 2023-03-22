@@ -1,0 +1,156 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+VERBOSE=false
+
+println() {
+  cat <<< "$@"
+}
+
+eprintln() {
+  cat <<< "$@" 1>&2
+}
+
+vprintln() {
+  if [[ "$VERBOSE" == true ]]; then
+    eprintln "$@"
+  fi
+}
+
+usage() {
+  cat <<EOF
+Usage: $0 [-hvc] [-s SRCDIR] [-o OUTDIR]
+
+  -h
+    Displays this help message.
+
+  -v
+    Enables verbose mode.
+
+  -c
+    Cleans intermediate build files after building.
+
+  -s SRCDIR
+    Specify source directory for mod files (default is 'src').
+
+  -o OUTDIR
+    Specify output directory for release files (default is 'build').
+EOF
+}
+
+CLEAN=false
+SRCDIR="src"
+OUTDIR="build"
+
+OPTIND=1
+
+while getopts "hvcs:o:" opt; do
+  case "$opt" in
+    h)
+      usage
+      exit 0
+      ;;
+    v)
+      VERBOSE=true
+      ;;
+    c)
+      CLEAN=true
+      ;;
+    s)
+      SRCDIR=${OPTARG}
+      ;;
+    o)
+      OUTDIR=${OPTARG}
+      ;;
+    :)
+      eprintln "Option -$OPTARG requires an argument"
+      exit 1
+      ;;
+    \?)
+      usage 1>&2
+      exit 1
+      ;;
+    *)
+      usage 1>&2
+      exit 1
+      ;;
+  esac
+done
+
+VERSION="unknown"
+VERSION_FULL="unknown"
+
+version() {
+  local -r fallback='0.1.0'
+  local gitver
+  gitver=$(git describe --always)
+  local -r withcommit='^v([0-9]+\.[0-9]+\.[0-9]+)(-[0-9]+-[[:alnum:]]+)?$'
+  local -r commit='^[[:alnum:]]+$'
+  if [[ "$gitver" =~ $withcommit ]]; then
+    # We have an exact version
+    VERSION=${BASH_REMATCH[1]}
+    VERSION_FULL="${BASH_REMATCH[1]}${BASH_REMATCH[2]}"
+  elif [[ "$gitver" =~ $commit ]]; then
+    VERSION="$fallback"
+    VERSION_FULL="$fallback-${BASH_REMATCH[0]}"
+  fi
+}
+
+version
+
+if [[ "$VERSION" == "unknown" ]]; then
+  eprintln "Failed to resolve valid version"
+  exit 1
+fi
+
+if [[ ! -d "$SRCDIR" ]]; then
+  eprintln "Specified src dir $SRCDIR does not exist"
+  exit 1
+fi
+
+SRCINFO="$SRCDIR/info.json"
+
+if [[ ! -f "$SRCINFO" ]]; then
+  eprintln "Could not locate info.json in src dir $SRCDIR"
+  exit 1
+fi
+
+MODNAME=$(jq -r .name "$SRCINFO")
+
+vprintln "Detected mod name $MODNAME"
+vprintln "Detected version: $VERSION ($VERSION_FULL)"
+
+vprintln "Current working dir: $PWD"
+
+vprintln "Cleaning and creating build dir"
+RELNAME="${MODNAME}_${VERSION}"
+RELDIR="$OUTDIR/${MODNAME}_$VERSION"
+ZIPNAME="${RELNAME}.zip"
+rm -rf "$OUTDIR"
+mkdir -p "$RELDIR"
+
+vprintln "Copying mod files to $RELDIR"
+cp -a "$SRCDIR/." "$RELDIR"
+[[ -f README.md ]] && cp -a README.md "$RELDIR"
+[[ -f LICENSE ]] && cp -a LICENSE "$RELDIR"
+
+RELINFO="$RELDIR/info.json"
+tmpinfo=$(mktemp)
+jq --arg version "$VERSION" '.version = $version' "$RELINFO" > "$tmpinfo" && mv "$tmpinfo" "$RELINFO"
+
+vprintln "Zip name: $ZIPNAME"
+(
+  pushd "$OUTDIR" > /dev/null \
+  && zip \
+    -r \
+    "$ZIPNAME" \
+    "$RELNAME" \
+    --exclude \
+      '*~'
+)
+
+if [[ "$CLEAN" == true ]]; then
+  vprintln "Cleaning $RELDIR"
+  rm -rf "$RELDIR"
+fi
