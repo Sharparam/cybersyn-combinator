@@ -8,7 +8,8 @@
   "description": "A specialized combinator for the Project Cybersyn mod",
   "factorio_version": "1.1",
   "dependencies": [
-    "cybersyn"
+    "base >= 1.1.76",
+    "cybersyn >= 1.2.13"
   ],
   "package": {
     "readme": "information.md",
