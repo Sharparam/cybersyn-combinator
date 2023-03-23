@@ -7,7 +7,18 @@
         {
             "type": "factoriomod",
             "request": "launch",
-            "name": "Factorio Mod Debug"
+            "name": "Factorio Mod Debug",
+            "adjustMods": {
+              "cybersyn": true,
+              "cybersyn-combinator": true,
+              "EditorExtensions": true,
+              "flib": true
+            },
+            "checkGlobals": [
+              "cybersyn-combinator"
+            ],
+            "disableExtraMods": true,
+            "hookLog": true
         },
         {
             "type": "factoriomod",
