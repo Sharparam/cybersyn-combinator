@@ -1,0 +1,41 @@
+{
+    "Lua.workspace.library": [
+      "~/factorio/data",
+      "~/.config/Code/User/workspaceStorage/19194ab926a005c1b8add80c8d001947/justarandomgeek.factoriomod-debug/sumneko-3rd/factorio/library",
+      "/home/sharparam/factorio/mods/flib"
+    ],
+    "Lua.workspace.userThirdParty": [
+      "~/.config/Code/User/workspaceStorage/19194ab926a005c1b8add80c8d001947/justarandomgeek.factoriomod-debug/sumneko-3rd"
+    ],
+    "Lua.diagnostics.globals": [
+      "__DebugAdapter",
+      "__Profiler"
+    ],
+    "Lua.runtime.builtin": {
+      "io": "disable",
+      "os": "disable",
+      "math": "disable",
+      "debug": "disable",
+      "coroutine": "disable",
+      "package": "disable"
+    },
+    "Lua.runtime.version": "Lua 5.2",
+    "Lua.runtime.special": {
+      "__object_name": "type"
+    },
+    "Lua.runtime.plugin": "~/.config/Code/User/workspaceStorage/19194ab926a005c1b8add80c8d001947/justarandomgeek.factoriomod-debug/sumneko-3rd/factorio/plugin.lua",
+    "factorio.package.tagName": "v$VERSION",
+    "factorio.package.movedToCommitMessage": "Update version to $VERSION",
+    "factorio.package.preparingCommitMessage": "Prepare release of version $VERSION",
+    "factorio.package.zipLocation": "outside",
+    "factorio.versions": [
+      {
+        "name": "Stable",
+        "factorioPath": "/home/sharparam/factorio/bin/x64/factorio",
+        "active": true
+      }
+    ],
+    "[lua]": {
+      "editor.codeLens": false
+    }
+}
