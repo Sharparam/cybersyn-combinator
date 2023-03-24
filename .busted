@@ -1,0 +1,9 @@
+return {
+  _all = {
+    pattern = "_tests"
+  },
+  default = {
+    ROOT = { "tests" },
+    verbose = true
+  }
+}
