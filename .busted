@@ -1,6 +1,7 @@
 return {
   _all = {
-    pattern = "_tests"
+    pattern = "_tests",
+    lpath = "./src/?.lua;./src/?/?.lua;./src/?/init.lua;./src/scripts/?.lua"
   },
   default = {
     ROOT = { "tests" },
