@@ -7,7 +7,7 @@ else
   table.insert(data.raw.technology["circuit-network"].effects, { type = "unlock-recipe", recipe = constants.ENTITY_NAME })
 end
 
-if settings.startup["cybersyn-combinator-upgradeable"].value == true then
+if settings.startup[constants.SETTINGS.UPGRADEABLE].value == true then
   data.raw["constant-combinator"]["constant-combinator"].next_upgrade = constants.ENTITY_NAME
 end
 

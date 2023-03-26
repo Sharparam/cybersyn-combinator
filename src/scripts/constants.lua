@@ -9,6 +9,7 @@ local constants = {
     SLOT_COUNT = "cybersyn-combinator-slotcount",
     SLOT_ROWS = "cybersyn-combinator-slotrows",
     SLOT_COUNT_WAGON = "cybersyn-combinator-slotcount-wagon",
+    UPGRADEABLE = "cybersyn-combinator-upgradeable",
     EMIT_DEFAULT_REQUEST_THRESHOLD = "cybersyn-combinator-emit-default-request-threshold",
     EMIT_DEFAULT_PRIORITY = "cybersyn-combinator-emit-default-priority",
     EMIT_DEFAULT_LOCKED_SLOTS = "cybersyn-combinator-emit-default-locked-slots",
