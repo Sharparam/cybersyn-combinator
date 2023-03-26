@@ -669,6 +669,22 @@ function cc_gui:on_gui_elem_changed(event)
   log:debug("on_gui_elem_changed: ", serpent.block(event))
 end
 
+function cc_gui:on_entity_destroyed(unit_number)
+  for _, player in pairs(game.players) do
+    if not player then goto continue end
+    local screen = player.gui.screen
+    local window = screen[WINDOW_ID]
+    if not window then goto continue end
+    log:debug("current window unit number: ", window.tags.unit_number)
+    if window.tags.unit_number == unit_number then
+      log:debug("closing window")
+      self:close(player.index)
+    end
+
+    ::continue::
+  end
+end
+
 function cc_gui:register()
   flib_gui.add_handlers {
     [WINDOW_ID .. "_close"] = handle_close,

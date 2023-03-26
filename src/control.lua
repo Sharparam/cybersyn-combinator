@@ -37,6 +37,18 @@ script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
   log:debug("default value for ", name, " changed to ", num)
 end)
 
+script.on_event(defines.events.on_player_mined_entity, function(event)
+  local player = game.get_player(event.player_index)
+  local entity = event.entity
+  if not player or not entity then return end
+  local pname = player.name
+  log:debug(entity.name, "[", entity.unit_number, "] destroyed by ", pname)
+  cc_gui:on_entity_destroyed(entity.unit_number)
+end, {
+  { filter = "type", type = "constant-combinator" },
+  { filter = "name", name = constants.ENTITY_NAME, mode = "and" }
+})
+
 util.on_multi_event(
   {
     defines.events.on_built_entity,
