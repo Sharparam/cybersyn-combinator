@@ -18,6 +18,15 @@ init_cs_default(constants.SETTINGS.CS_REQUEST_THRESHOLD)
 init_cs_default(constants.SETTINGS.CS_PRIORITY)
 init_cs_default(constants.SETTINGS.CS_LOCKED_SLOTS)
 
+script.on_load(function()
+  if not global.player_data then return end
+  for _, player_data in pairs(global.player_data) do
+    if player_data and player_data.state and player_data.state.combinator then
+      setmetatable(player_data.state.combinator, { __index = CybersynCombinator })
+    end
+  end
+end)
+
 script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
   local name = event.setting
   local tbl = config.cs_signals[name]
