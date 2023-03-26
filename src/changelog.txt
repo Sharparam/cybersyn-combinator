@@ -1,4 +1,16 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.2.0
+Date: ????
+  Changes:
+    - Combinator will no longer automatically sort signals.
+  Bugfixes:
+    - Fix GUI window not having a connection to its entity in some cases.
+    - Fix combinator window not closing when its associated entity was mined/destroyed.
+    - Fix handling of construction/destruction events causing crashes in some circumstances.
+    - Fix an issue with game crash when signal slot was right clicked before editing finished of another slot.
+  Info:
+    - Improve some setting descriptions.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.0
 Date: 2023-03-26
   Major Features:
