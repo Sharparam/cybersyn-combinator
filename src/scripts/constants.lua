@@ -2,6 +2,7 @@ local constants = {
   INT32_MAX = 2147483647,
   INT32_MIN = -2147483648,
   MOD_NAME = "cybersyn-combinator",
+  MOD_TITLE = "Cybersyn Combinator",
   ENTITY_NAME = "cybersyn-constant-combinator"
 }
 
