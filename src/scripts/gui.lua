@@ -661,14 +661,6 @@ function cc_gui:on_gui_closed(event)
   self:close(player_index)
 end
 
-function cc_gui:on_gui_click(event)
-  log:debug("on_gui_click: ", serpent.block(event))
-end
-
-function cc_gui:on_gui_elem_changed(event)
-  log:debug("on_gui_elem_changed: ", serpent.block(event))
-end
-
 function cc_gui:on_entity_destroyed(unit_number)
   for _, player in pairs(game.players) do
     if not player then goto continue end
