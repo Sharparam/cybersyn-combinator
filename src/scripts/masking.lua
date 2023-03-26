@@ -1,4 +1,4 @@
-local constants = require "constants"
+local constants = require "scripts.constants"
 
 local supper = string.upper
 local sformat = string.format

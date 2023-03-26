@@ -1,7 +1,7 @@
-local constants = require "constants"
-local config = require "config"
-local log = require("logger").gui
-local cc_util = require "util"
+local constants = require "scripts.constants"
+local config = require "scripts.config"
+local log = require("scripts.logger").gui
+local cc_util = require "scripts.cc_util"
 local CybersynCombinator = require "combinator"
 local util = require "__core__.lualib.util"
 local flib_gui = require "__flib__.gui-lite"

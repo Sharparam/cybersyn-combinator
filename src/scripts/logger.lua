@@ -2,7 +2,7 @@ local log = log or print
 local sformat = string.format
 local tconcat = table.concat
 
-local constants = require "constants"
+local constants = require "scripts.constants"
 local MOD_TITLE = constants.MOD_TITLE
 
 local NOOP = function() end

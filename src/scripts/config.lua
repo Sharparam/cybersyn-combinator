@@ -1,4 +1,4 @@
-local constants = require "constants"
+local constants = require "scripts.constants"
 local startup = settings.startup
 
 local slot_rows = tonumber(startup[constants.SETTINGS.SLOT_ROWS].value)

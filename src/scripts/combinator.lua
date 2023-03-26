@@ -1,6 +1,6 @@
-local constants = require "constants"
-local config = require "config"
-local log = require("logger").combinator.class
+local constants = require "scripts.constants"
+local config = require "scripts.config"
+local log = require("scripts.logger").combinator.class
 
 --- @type Signal
 --- @diagnostic disable-next-line assign-type-mismatch

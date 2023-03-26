@@ -1,6 +1,6 @@
-local constants = require "constants"
-local log = require("logger").remote
-local cc_gui = require "gui"
+local constants = require "scripts.constants"
+local log = require("scripts.logger").remote
+local cc_gui = require "scripts.gui"
 
 local cc_remote = {}
 
