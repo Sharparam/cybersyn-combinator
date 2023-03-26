@@ -3,6 +3,7 @@ local config = require "scripts.config"
 local log = require("scripts.logger").control
 local util = require "scripts.util"
 local cc_gui = require "scripts.gui"
+local cc_remote = require "scripts.remote"
 local CybersynCombinator = require "scripts.combinator"
 
 local function init_cs_default(name)
@@ -54,3 +55,4 @@ util.on_multi_event(
 )
 
 cc_gui:register()
+cc_remote:register()
