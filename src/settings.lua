@@ -1,7 +1,10 @@
+local constants = require "scripts.constants"
+local NAMES = constants.SETTINGS
+
 data:extend {
   {
     type = "string-setting",
-    name = "cybersyn-combinator-loglevel",
+    name = NAMES.LOG_LEVEL,
     setting_type = "startup",
     default_value = "WARN",
     allowed_values = {
@@ -15,7 +18,7 @@ data:extend {
   },
   {
     type = "string-setting",
-    name = "cybersyn-combinator-loglevel-chat",
+    name = NAMES.CHAT_LOG_LEVEL,
     setting_type = "startup",
     default_value = "ERROR",
     allowed_values = {
@@ -29,7 +32,7 @@ data:extend {
   },
   {
     type = "int-setting",
-    name = "cybersyn-combinator-slotrows",
+    name = NAMES.SLOT_ROWS,
     setting_type = "startup",
     default_value = 4,
     minimum_value = 1,
@@ -38,7 +41,7 @@ data:extend {
   },
   {
     type = "int-setting",
-    name = "cybersyn-combinator-slotcount-wagon",
+    name = NAMES.SLOT_COUNT_WAGON,
     setting_type = "startup",
     default_value = 1000,
     minimum_value = 1,
@@ -46,42 +49,42 @@ data:extend {
   },
   {
     type = "bool-setting",
-    name = "cybersyn-combinator-upgradeable",
+    name = NAMES.UPGRADEABLE,
     setting_type = "startup",
     default_value = false,
     order = "c[cybersyn]-c[combinator]-u[upgradeable]"
   },
   {
     type = "bool-setting",
-    name = "cybersyn-combinator-emit-default-request-threshold",
+    name = NAMES.EMIT_DEFAULT_REQUEST_THRESHOLD,
     setting_type = "runtime-global",
     default_value = false,
     order = "c[cybersyn]-c[combinator]-e[emit]-d[default]-r[request]-t[threshold]"
   },
   {
     type = "bool-setting",
-    name = "cybersyn-combinator-emit-default-priority",
+    name = NAMES.EMIT_DEFAULT_PRIORITY,
     setting_type = "runtime-global",
     default_value = false,
     order = "c[cybersyn]-c[combinator]-e[emit]-d[default]-p[priority]"
   },
   {
     type = "bool-setting",
-    name = "cybersyn-combinator-emit-default-locked-slots",
+    name = NAMES.EMIT_DEFAULT_LOCKED_SLOTS,
     setting_type = "runtime-global",
     default_value = false,
     order = "c[cybersyn]-c[combinator]-e[emit]-d[default]-l[locked]-s[slots]"
   },
   {
     type = "bool-setting",
-    name = "cybersyn-combinator-use-stacks",
+    name = NAMES.USE_STACKS,
     setting_type = "runtime-per-user",
     default_value = false,
     order = "c[cybersyn]-c[combinator]-u[use]-s[stacks]"
   },
   {
     type = "bool-setting",
-    name = "cybersyn-combinator-disable-built",
+    name = NAMES.DISABLE_BUILT,
     setting_type = "runtime-per-user",
     default_value = false,
     order = "c[cybersyn]-c[combinator]-d[disable]-b[built]"
