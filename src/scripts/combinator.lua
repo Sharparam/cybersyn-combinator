@@ -28,10 +28,10 @@ end
 function CC:validate()
   if not self:is_valid_entity() then return end
 
-  local need_sort = self:needs_sorting()
-  if need_sort then
-    self:sort_signals()
-  end
+  -- local need_sort = self:needs_sorting()
+  -- if need_sort then
+  --   self:sort_signals()
+  -- end
 end
 
 --- @return boolean
@@ -186,6 +186,7 @@ function CC:parse_slot(slot)
 end
 
 --- @private
+--- @deprecated Not using sorting for now
 function CC:sort_signals()
   if not self:is_valid_entity() then return end
   local control = self:get_control_behavior()
@@ -236,6 +237,7 @@ function CC:sort_signals()
 end
 
 --- @private
+--- @deprecated Not using sorting for now
 --- @return boolean
 function CC:needs_sorting()
   if not self:is_valid_entity() then return false end
