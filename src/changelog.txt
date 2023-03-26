@@ -1,8 +1,9 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.0
-Date: ????
+Date: 2023-03-27
   Changes:
     - Combinator will no longer automatically sort signals.
+    - The confirm button for editing signal values will now enable immediately upon starting editing.
   Bugfixes:
     - Fix GUI window not having a connection to its entity in some cases.
     - Fix combinator window not closing when its associated entity was mined/destroyed.
