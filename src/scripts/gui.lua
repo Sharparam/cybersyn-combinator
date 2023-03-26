@@ -680,8 +680,6 @@ function cc_gui:register()
   flib_gui.handle_events()
   script.on_event(defines.events.on_gui_opened, function(event) self:on_gui_opened(event) end)
   script.on_event(defines.events.on_gui_closed, function(event) self:on_gui_closed(event) end)
-  -- script.on_event(defines.events.on_gui_elem_changed, function(event) self:on_gui_elem_changed(event) end)
-  -- script.on_event(defines.events.on_gui_click, function(event) self:on_gui_click(event) end)
 end
 
 return cc_gui
