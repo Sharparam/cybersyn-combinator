@@ -84,7 +84,7 @@ VERSION_FULL="unknown"
 version() {
   local -r fallback='0.1.0'
   local gitver
-  gitver=$(git describe --always --all)
+  gitver=$(git describe --always --tags)
   local -r withcommit='^v([0-9]+\.[0-9]+\.[0-9]+)(-[0-9]+-[[:alnum:]]+)?$'
   local -r commit='^[[:alnum:]]+$'
   if [[ "$gitver" =~ $withcommit ]]; then
