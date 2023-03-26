@@ -176,8 +176,8 @@ end
 --- @return uint?
 function CC:parse_slot(slot)
   if not slot then return nil end
-  slot = slot + config.cs_slot_count
-  if slot <= config.cs_slot_count or slot > config.total_slot_count then
+  slot = config.slot_start + slot - 1
+  if slot < config.slot_start or slot > config.slot_end then
     log:warn("Invalid slot number #", slot)
     return nil
   end
@@ -220,7 +220,7 @@ function CC:sort_signals()
     control.set_signal(slot --[[@as uint]], nil)
   end
 
-  local misc_slot = config.cs_slot_count + 1
+  local misc_slot = config.network_slot_start
   for _, signal in pairs(previous) do
     local type = signal.signal.type
     local name = signal.signal.name

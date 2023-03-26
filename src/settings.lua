@@ -41,6 +41,15 @@ data:extend {
   },
   {
     type = "int-setting",
+    name = NAMES.NETWORK_SLOT_COUNT,
+    setting_type = "startup",
+    default_value = 50,
+    minimum_value = 1,
+    maximum_value = 100,
+    order = "c[cybersyn]-c[combinator]-s[slotcount]-n[network]"
+  },
+  {
+    type = "int-setting",
     name = NAMES.SLOT_COUNT_WAGON,
     setting_type = "startup",
     default_value = 1000,

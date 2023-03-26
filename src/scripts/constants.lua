@@ -6,6 +6,7 @@ local constants = {
   SETTINGS = {
     LOG_LEVEL = "cybersyn-combinator-loglevel",
     CHAT_LOG_LEVEL = "cybersyn-combinator-loglevel-chat",
+    NETWORK_SLOT_COUNT = "cybersyn-combinator-slotcount-network",
     SLOT_COUNT = "cybersyn-combinator-slotcount",
     SLOT_ROWS = "cybersyn-combinator-slotrows",
     SLOT_COUNT_WAGON = "cybersyn-combinator-slotcount-wagon",
