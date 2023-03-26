@@ -59,6 +59,8 @@ combi_recipe.ingredients = {
   { "constant-combinator", 1 },
   { "electronic-circuit", 1 }
 }
+combi_recipe.enabled = false
+combi_recipe.subgroup = data.raw.recipe["train-stop"].subgroup
 
 data:extend {
   combi,
