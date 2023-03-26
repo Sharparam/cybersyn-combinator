@@ -685,6 +685,26 @@ function cc_gui:on_gui_closed(event)
   self:close(player_index)
 end
 
+--- @param event EventData.CustomInputEvent
+function cc_gui:on_input_close(event)
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  local screen = player.gui.screen
+  local window = screen[WINDOW_ID]
+  if not window then return end
+  log:debug("input_close from ", event.player_index)
+end
+
+--- @param event EventData.CustomInputEvent
+function cc_gui:on_input_confirm(event)
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  local screen = player.gui.screen
+  local window = screen[WINDOW_ID]
+  if not window then return end
+  log:debug("input_confirm from ", event.player_index)
+end
+
 --- @param unit_number uint?
 function cc_gui:on_entity_destroyed(unit_number)
   if not unit_number then return end
@@ -717,6 +737,8 @@ function cc_gui:register()
   flib_gui.handle_events()
   script.on_event(defines.events.on_gui_opened, function(event) self:on_gui_opened(event) end)
   script.on_event(defines.events.on_gui_closed, function(event) self:on_gui_closed(event) end)
+  script.on_event(constants.MOD_NAME .. "-toggle-menu", function(event) self:on_input_close(event --[[@as EventData.CustomInputEvent]]) end)
+  script.on_event(constants.MOD_NAME .. "-confirm-gui", function(event) self:on_input_confirm(event --[[@as EventData.CustomInputEvent]]) end)
 end
 
 return cc_gui
