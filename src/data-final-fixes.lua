@@ -12,3 +12,5 @@ if settings.startup["cybersyn-combinator-upgradeable"].value == true then
 end
 
 data.raw["constant-combinator"]["constant-combinator"].fast_replaceable_group = "constant-combinator"
+
+data.raw.item[constants.ENTITY_NAME].order = data.raw.item["cybersyn-combinator"].order .. "-b"
