@@ -78,5 +78,12 @@ data:extend {
     setting_type = "runtime-per-user",
     default_value = false,
     order = "c[cybersyn]-c[combinator]-u[use]-s[stacks]"
+  },
+  {
+    type = "bool-setting",
+    name = "cybersyn-combinator-disable-built",
+    setting_type = "runtime-per-user",
+    default_value = false,
+    order = "c[cybersyn]-c[combinator]-d[disable]-b[built]"
   }
 }

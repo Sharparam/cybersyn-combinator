@@ -13,6 +13,7 @@ local constants = {
     EMIT_DEFAULT_PRIORITY = "cybersyn-combinator-emit-default-priority",
     EMIT_DEFAULT_LOCKED_SLOTS = "cybersyn-combinator-emit-default-locked-slots",
     USE_STACKS = "cybersyn-combinator-use-stacks",
+    DISABLE_BUILT = "cybersyn-combinator-disable-built",
     CS_REQUEST_THRESHOLD = "cybersyn-request-threshold",
     CS_PRIORITY = "cybersyn-priority",
     CS_LOCKED_SLOTS = "cybersyn-locked-slots"
