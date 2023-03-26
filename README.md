@@ -6,6 +6,10 @@ A mod for Factorio that adds a special combinator for use with the [Project Cybe
 
 *TODO*
 
+## Acknowledgements
+
+A lot was gained from looking at how the [LTN Combinator Modernized][ltnc] mod does things, so big thanks are due to that mod for getting up and running with the Cybersyn version.
+
 ## License
 
 Copyright © 2023 by [Adam Hellberg][sharparam].
@@ -16,3 +20,4 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 [sharparam]: https://sharparam.com
 [cybersyn]: https://mods.factorio.com/mod/cybersyn
+[ltnc]: https://mods.factorio.com/mod/LTN_Combinator_Modernized
