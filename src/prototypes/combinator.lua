@@ -51,6 +51,8 @@ local combi_item = flib_data_util.copy_prototype(data.raw.item["constant-combina
 combi_item.icon = "__cybersyn-combinator__/graphics/icons/cybersyn-combinator.png"
 combi_item.icon_size = 64
 combi_item.icon_mipmaps = 4
+combi_item.subgroup = data.raw.item["train-stop"].subgroup
+combi_item.place_result = name
 
 local combi_recipe = flib_data_util.copy_prototype(data.raw.recipe["constant-combinator"], name)
 combi_recipe.ingredients = {
