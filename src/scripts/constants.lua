@@ -1,6 +1,6 @@
 local constants = {
   MOD_NAME = "cybersyn-combinator",
-  ENTITY_NAME = "cybersyn-combinator-special"
+  ENTITY_NAME = "cybersyn-constant-combinator"
 }
 
 return constants
