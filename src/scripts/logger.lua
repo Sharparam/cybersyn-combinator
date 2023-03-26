@@ -1,4 +1,4 @@
-local log = log
+local log = log or print
 local sformat = string.format
 local tconcat = table.concat
 
