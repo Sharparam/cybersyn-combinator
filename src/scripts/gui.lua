@@ -261,6 +261,9 @@ local function create_window(player, entity)
       type = "frame",
       direction = "vertical",
       name = WINDOW_ID,
+      tags = {
+        unit_number = entity.unit_number
+      },
       children = {
         { -- Titlebar
           type = "flow",
