@@ -5,6 +5,8 @@ local tconcat = table.concat
 local constants = require "constants"
 local MOD_TITLE = constants.MOD_TITLE
 
+local NOOP = function() end
+
 --- @class Logger
 --- @field context string
 --- @field [string] Logger
@@ -118,64 +120,46 @@ end
 if THRESHOLD < LogLevel.DISABLED then
   --- @param level LogLevel
   --- @param ... LocalisedString
-  --- @return Logger
   function Logger:log(level, ...)
     if level < THRESHOLD then return self end
     local prefix = build_prefix(level, self.context)
     local msg = { "", prefix, ... }
     log(msg)
-    if level < CHAT_THRESHOLD or not game then return self end
+    if level < CHAT_THRESHOLD or not game then return end
     local rich_prefix = build_rich_prefix(level, self.context)
     local gmsg = { "", rich_prefix, ... }
     game.print(gmsg)
-    return self
   end
 else
-  --- @param level LogLevel
-  --- @param ... LocalisedString
-  --- @return Logger
-  --- @diagnostic disable-next-line unused-local
-  function Logger:log(level, ...) return self end
+  Logger.log = NOOP
 end
 
 if THRESHOLD <= LogLevel.DEBUG then
   --- @param ... LocalisedString
-  --- @return Logger
-  function Logger:debug(...) return self:log(LogLevel.DEBUG, ...) end
+  function Logger:debug(...) self:log(LogLevel.DEBUG, ...) end
 else
-  --- @param ... LocalisedString
-  --- @return Logger
-  function Logger:debug(...) return self end
+  Logger.debug = NOOP
 end
 
 if THRESHOLD <= LogLevel.INFO then
   --- @param ... LocalisedString
-  --- @return Logger
-  function Logger:info(...) return self:log(LogLevel.INFO, ...) end
+  function Logger:info(...) self:log(LogLevel.INFO, ...) end
 else
-  --- @param ... LocalisedString
-  --- @return Logger
-  function Logger:info(...) return self end
+  Logger.info = NOOP
 end
 
 if THRESHOLD <= LogLevel.WARN then
   --- @param ... LocalisedString
-  --- @return Logger
-  function Logger:warn(...) return self:log(LogLevel.WARN, ...) end
+  function Logger:warn(...) self:log(LogLevel.WARN, ...) end
 else
-  --- @param ... LocalisedString
-  --- @return Logger
-  function Logger:warn(...) return self end
+  Logger.warn = NOOP
 end
 
 if THRESHOLD <= LogLevel.ERROR then
   --- @param ... LocalisedString
-  --- @return Logger
-  function Logger:error(...) return self:log(LogLevel.ERROR, ...) end
+  function Logger:error(...) self:log(LogLevel.ERROR, ...) end
 else
-  --- @param ... LocalisedString
-  --- @return Logger
-  function Logger:error(...) return self end
+  Logger.error = NOOP
 end
 
 return Logger
