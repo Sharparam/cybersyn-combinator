@@ -39,6 +39,8 @@ local cc_gui = {}
 
 --- @class CombinatorState
 --- @field main_window LuaGuiElement
+--- @field status_sprite LuaGuiElement
+--- @field status_label LuaGuiElement
 --- @field entity_preview LuaGuiElement
 --- @field on_off LuaGuiElement
 --- @field signal_value_stacks LuaGuiElement
@@ -150,8 +152,11 @@ local function handle_on_off(event)
   if not element then return end
   local enabled = element.switch_state == "right"
   log:debug("combinator switch changed to ", enabled)
-  local state = cc_util.get_player_data(event.player_index).state
+  local state = cc_util.get_player_data(event.player_index).state --[[@as CombinatorState]]
   state.combinator:set_enabled(enabled)
+  local status = state.entity.status
+  state.status_sprite.sprite = STATUS_SPRITES[status] or DEFAULT_STATUS_SPRITE
+  state.status_label.caption = STATUS_NAMES[status] or DEFAULT_STATUS_NAME
 end
 
 --- @param event EventData.on_gui_elem_changed
@@ -312,12 +317,14 @@ local function create_window(player, entity)
                           children = {
                             {
                               type = "sprite",
+                              name = "status_sprite",
                               sprite = STATUS_SPRITES[entity.status] or DEFAULT_STATUS_SPRITE,
                               style = "status_image",
                               style_mods = { stretch_image_to_widget_size = true }
                             },
                             {
                               type = "label",
+                              name = "status_label",
                               caption = STATUS_NAMES[entity.status] or DEFAULT_STATUS_NAME
                             }
                           },
@@ -550,12 +557,15 @@ local function create_window(player, entity)
   main_window.force_auto_center()
 
   state.main_window = main_window
+  state.status_sprite = named.status_sprite
+  state.status_label = named.status_label
   state.entity_preview = preview
   state.on_off = named.on_off
   state.signal_value_stacks = named.signal_value_stacks
   state.signal_value_items = named.signal_value_items
   state.signal_value_confirm = named.signal_value_confirm
   state.signals = signals
+  state.entity = entity
 
   return state
 end
