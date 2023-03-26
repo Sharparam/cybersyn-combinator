@@ -324,8 +324,80 @@ local function create_window(player, entity)
           style_mods = { padding = 8 },
           children = {
             {
+              type = "frame",
+              style = "deep_frame_in_shallow_frame",
+              style_mods = { width = 280, vertically_stretchable = true },
+              direction = "vertical",
+              children = {
+                {
+                  type = "frame",
+                  style = "subheader_frame",
+                  direction = "horizontal",
+                  style_mods = { horizontally_stretchable = true, left_padding = 8 },
+                  children = {
+                    {
+                      type = "label",
+                      style = "caption_label",
+                      caption = { "cybersyn-combinator-window.network-list-title" }
+                    },
+                    {
+                      type = "empty-widget",
+                      style = "flib_horizontal_pusher"
+                    },
+                    {
+                      type = "sprite-button",
+                      sprite = "utility/add",
+                      style = "flib_tool_button_light_green",
+                      mouse_button_filter = { "left" },
+                      tooltip = "my test tooltip"
+                    },
+                    {
+                      type = "sprite-button",
+                      sprite = "utility/rename_icon_normal",
+                      style = "tool_button",
+                      mouse_button_filter = { "left" }
+                    },
+                    {
+                      type = "sprite-button",
+                      sprite = "utility/trash",
+                      style = "tool_button_red",
+                      mouse_button_filter = { "left" }
+                    }
+                  }
+                },
+                {
+                  type = "scroll-pane",
+                  name = "network_list",
+                  style = "cybersyn-combinator_network-list_scroll-pane",
+                  vertical_scroll_policy = "auto",
+                  -- Manually added children for testing layout/design
+                  children = {
+                    {
+                      type = "button",
+                      style = "cybersyn-combinator_network-list_item",
+                      caption = "Regular button",
+                      tooltip = "I am a tooltip",
+                      tags = {
+                        slot = 1 -- network slot
+                      }
+                    },
+                    {
+                      type = "button",
+                      style = "cybersyn-combinator_network-list_item-active",
+                      caption = "Active button",
+                      tooltip = "I am another tooltip",
+                      tags = {
+                        slot = 2
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
               type = "flow",
               direction = "vertical",
+              style_mods = { left_margin = 8 },
               children = {
                 { -- status, preview, CS signals
                   type = "flow",
@@ -367,7 +439,7 @@ local function create_window(player, entity)
                               name = "preview",
                               style = "wide_entity_button",
                               style_mods = {
-                                width = 280,
+                                width = 128,
                                 height = 128,
                                 horizontally_stretchable = true
                               }
