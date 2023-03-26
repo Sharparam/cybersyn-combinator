@@ -97,5 +97,36 @@ data:extend {
     setting_type = "runtime-per-user",
     default_value = false,
     order = "c[cybersyn]-c[combinator]-d[disable]-b[built]"
+  },
+  {
+    type = "string-setting",
+    name = NAMES.NETWORK_MASK_PARSE_MODE,
+    setting_type = "runtime-per-user",
+    default_value = "DECIMAL",
+    allowed_values = {
+      "DECIMAL",
+      "HEX"
+    },
+    order = "c[cybersyn]-c[combinator]-m[masks]-p[parse]-m[mode]"
+  },
+  {
+    type = "string-setting",
+    name = NAMES.NETWORK_MASK_DISPLAY_MODE,
+    setting_type = "runtime-per-user",
+    default_value = "DECIMAL",
+    allowed_values = {
+      "DECIMAL",
+      "HEX",
+      "BINARY",
+      "OCTAL"
+    },
+    order = "c[cybersyn]-c[combinator]-m[masks]-d[display]"
+  },
+  {
+    type = "bool-setting",
+    name = NAMES.NETWORK_MASK_DISPLAY_PREFIX,
+    setting_type = "runtime-per-user",
+    default_value = false,
+    order = "c[cybersyn]-c[combinator]-m[masks]-d[display]-p[prefix]"
   }
 }
