@@ -14,7 +14,9 @@
               "EditorExtensions": true,
               "flib": true,
               "LogisticTrainNetwork": true,
-              "LTN_Combinator_Modernized": true
+              "LTN_Combinator_Modernized": true,
+              "factoryplanner": true,
+              "RecipeBook": true
             },
             "checkGlobals": [
               "cybersyn-combinator"
