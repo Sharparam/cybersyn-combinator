@@ -1,5 +1,8 @@
 # Cybersyn Combinator
 
+[![Build status][build-badge]][build]
+[![Latest release][release-badge]][release]
+
 A mod for Factorio that adds a special combinator for use with the [Project Cybersyn][cybersyn] mod.
 
 ## Usage
@@ -68,6 +71,11 @@ Copyright © 2023 by [Adam Hellberg][sharparam].
 This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+[build-badge]: https://github.com/Sharparam/cybersyn-combinator/actions/workflows/build.yml/badge.svg
+[build]: https://github.com/Sharparam/cybersyn-combinator/actions/workflows/build.yml
+[release-badge]: https://img.shields.io/github/v/release/Sharparam/cybersyn-combinator
+[release]: https://github.com/Sharparam/cybersyn-combinator/releases/latest
 
 [sharparam]: https://sharparam.com
 [cybersyn]: https://mods.factorio.com/mod/cybersyn
