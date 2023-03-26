@@ -3,6 +3,7 @@ local constants = {
   INT32_MIN = -2147483648,
   MOD_NAME = "cybersyn-combinator",
   MOD_TITLE = "Cybersyn Combinator",
+  --- @type { [string]: string }
   SETTINGS = {
     LOG_LEVEL = "cybersyn-combinator-loglevel",
     CHAT_LOG_LEVEL = "cybersyn-combinator-loglevel-chat",

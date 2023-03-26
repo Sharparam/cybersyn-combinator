@@ -12,11 +12,22 @@ if not network_slot_count then
   error("network slot count setting is not a valid number")
 end
 
+--- @class CybersynSignal
+--- @field slot uint
+--- @field default integer
+--- @field min integer
+--- @field max integer
+
 local config = {
+  --- @type uint
   cs_slot_count = 3,
-  network_slot_count = network_slot_count,
-  slot_rows = slot_rows,
-  slot_cols = 14,
+  --- @type uint
+  network_slot_count = network_slot_count --[[@as uint]],
+  --- @type uint
+  slot_rows = slot_rows --[[@as uint]],
+  --- @type uint
+  slot_cols = 10,
+  --- @type table<string, CybersynSignal>
   cs_signals = {
     ["cybersyn-request-threshold"] = {
       slot = 1,
@@ -42,6 +53,7 @@ local config = {
 config.slot_count = config.slot_rows * config.slot_cols
 config.total_slot_count = config.slot_count + config.cs_slot_count + config.network_slot_count
 
+--- @type uint
 config.cs_slot_start = 1
 config.cs_slot_end = config.cs_slot_start + config.cs_slot_count - 1
 config.network_slot_start = config.cs_slot_count + 1
