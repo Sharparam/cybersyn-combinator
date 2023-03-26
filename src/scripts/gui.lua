@@ -121,7 +121,7 @@ local function change_signal_count(state, event)
   state.signal_value_items.text = tostring(value)
   state.signal_value_items.focus()
   state.signal_value_items.select_all()
-  state.signal_value_confirm.enabled = false
+  state.signal_value_confirm.enabled = true
 
   if signal_type == "item" or signal_type == "fluid" then
     --- @type integer
