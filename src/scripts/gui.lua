@@ -689,6 +689,8 @@ end
 function cc_gui:on_input_close(event)
   local state = get_player_state(event.player_index)
   if not state then return end
+  local player = game.get_player(event.player_index)
+  if not player then return end
   local screen = player.gui.screen
   local window = screen[WINDOW_ID]
   if not window then return end
@@ -699,6 +701,8 @@ end
 function cc_gui:on_input_confirm(event)
   local state = get_player_state(event.player_index)
   if not state then return end
+  local player = game.get_player(event.player_index)
+  if not player then return end
   local screen = player.gui.screen
   local window = screen[WINDOW_ID]
   if not window then return end
