@@ -661,7 +661,9 @@ function cc_gui:on_gui_closed(event)
   self:close(player_index)
 end
 
+--- @param unit_number uint?
 function cc_gui:on_entity_destroyed(unit_number)
+  if not unit_number then return end
   for _, player in pairs(game.players) do
     if not player then goto continue end
     local screen = player.gui.screen

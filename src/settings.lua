@@ -65,6 +65,13 @@ data:extend {
   },
   {
     type = "bool-setting",
+    name = NAMES.DISABLE_NONPLAYER_BUILT,
+    setting_type = "runtime-global",
+    default_value = false,
+    order = "c[cybersyn]-c[combinator]-d[disable]-b[built]-n[nonplayer]"
+  },
+  {
+    type = "bool-setting",
     name = NAMES.EMIT_DEFAULT_REQUEST_THRESHOLD,
     setting_type = "runtime-global",
     default_value = false,

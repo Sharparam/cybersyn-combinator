@@ -1,7 +1,6 @@
 local constants = require "scripts.constants"
 local config = require "scripts.config"
 local log = require("scripts.logger").control
-local util = require "scripts.util"
 local cc_gui = require "scripts.gui"
 local cc_remote = require "scripts.remote"
 local CybersynCombinator = require "scripts.combinator"
@@ -37,6 +36,11 @@ script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
   log:debug("default value for ", name, " changed to ", num)
 end)
 
+local entity_event_filters = {
+  { filter = "type", type = "constant-combinator" },
+  { filter = "name", name = constants.ENTITY_NAME, mode = "and" }
+}
+
 script.on_event(defines.events.on_player_mined_entity, function(event)
   local player = game.get_player(event.player_index)
   local entity = event.entity
@@ -44,36 +48,73 @@ script.on_event(defines.events.on_player_mined_entity, function(event)
   local pname = player.name
   log:debug(entity.name, "[", entity.unit_number, "] destroyed by ", pname)
   cc_gui:on_entity_destroyed(entity.unit_number)
-end, {
-  { filter = "type", type = "constant-combinator" },
-  { filter = "name", name = constants.ENTITY_NAME, mode = "and" }
-})
+end, entity_event_filters)
 
-util.on_multi_event(
-  {
-    defines.events.on_built_entity,
-    defines.events.on_robot_built_entity,
-    defines.events.script_raised_built,
-    defines.events.script_raised_revive
-  },
-  --- @param event EventData.on_built_entity|EventData.on_robot_built_entity|EventData.script_raised_built|EventData.script_raised_revive
-  function(event)
-    local player = game.get_player(event.player_index)
-    local entity = event.created_entity or event.entity
-    if not player or not entity then return end
-    local pname = player.name
-    log:debug(entity.name, "[", entity.unit_number, "] built by ", pname)
-    local disable = settings.get_player_settings(player)[constants.SETTINGS.DISABLE_BUILT].value
-    if not disable then return end
-    local combinator = CybersynCombinator:new(entity)
-    combinator:disable()
-    log:debug(entity.name, "[", entity.unit_number, "] disabled due to per-player setting")
-  end,
-  {
-    { filter = "type", type = "constant-combinator" },
-    { filter = "name", name = constants.ENTITY_NAME, mode = "and" }
-  }
-)
+script.on_event(defines.events.on_robot_mined_entity, function(event)
+  local entity = event.entity
+  if not entity then return end
+  log:debug(entity.name, "[", entity.unit_number, "] destroyed by bot")
+  cc_gui:on_entity_destroyed(entity.unit_number)
+end, entity_event_filters)
+
+script.on_event(defines.events.script_raised_destroy, function(event)
+  local entity = event.entity
+  if not entity then return end
+  log:debug(entity.name, "[", entity.unit_number, "] destroyed by script")
+  cc_gui:on_entity_destroyed(entity.unit_number)
+end, entity_event_filters)
+
+script.on_event(defines.events.on_built_entity, function(event)
+  local player = game.get_player(event.player_index)
+  local entity = event.created_entity
+  if not player or not entity then return end
+  local pname = player.name
+  log:debug(entity.name, "[", entity.unit_number, "] built by ", pname)
+  local disable = settings.get_player_settings(player)[constants.SETTINGS.DISABLE_BUILT].value
+  if not disable then return end
+  local combinator = CybersynCombinator:new(entity)
+  combinator:disable()
+  log:debug(entity.name, "[", entity.unit_number, "] disabled due to per-player setting")
+end, entity_event_filters)
+
+--- @param event EventData.script_raised_built|EventData.script_raised_revive
+local function on_script_raised_built_or_revive(event)
+  local entity = event.entity
+  if not entity then return end
+  local player = entity.last_user
+  local disable = false
+  if player then
+    log:debug("found relevant player in script_raised_built_or_revive")
+    disable = settings.get_player_settings(player)[constants.SETTINGS.DISABLE_BUILT].value == true
+  else
+    disable = settings.global[constants.SETTINGS.DISABLE_NONPLAYER_BUILT].value == true
+  end
+  if not disable then return end
+  local combinator = CybersynCombinator:new(entity)
+  combinator:disable()
+  log:debug(entity.name, "[", entity.unit_number, "] disabled due to per-player or global setting")
+end
+
+script.on_event(defines.events.script_raised_built, on_script_raised_built_or_revive, entity_event_filters)
+script.on_event(defines.events.script_raised_revive, on_script_raised_built_or_revive, entity_event_filters)
+
+script.on_event(defines.events.on_robot_built_entity, function(event)
+  local entity = event.created_entity
+  if not entity then return end
+  local robot = event.robot
+  local player = entity.last_user or robot.last_user
+  local disable = false
+  if player then
+    log:debug("found relevant player in robot_built_entity")
+    disable = settings.get_player_settings(player)[constants.SETTINGS.DISABLE_BUILT].value == true
+  else
+    disable = settings.global[constants.SETTINGS.DISABLE_NONPLAYER_BUILT].value == true
+  end
+  if not disable then return end
+  local combinator = CybersynCombinator:new(entity)
+  combinator:disable()
+  log:debug(entity.name, "[", entity.unit_number, "] disabled due to per-player or global setting")
+end, entity_event_filters)
 
 cc_gui:register()
 cc_remote:register()

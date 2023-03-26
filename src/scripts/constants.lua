@@ -16,6 +16,7 @@ local constants = {
     EMIT_DEFAULT_LOCKED_SLOTS = "cybersyn-combinator-emit-default-locked-slots",
     USE_STACKS = "cybersyn-combinator-use-stacks",
     DISABLE_BUILT = "cybersyn-combinator-disable-built",
+    DISABLE_NONPLAYER_BUILT = "cybersyn-combinator-disable-built-nonplayer",
     NETWORK_MASK_PARSE_MODE = "cybersyn-combinator-network-mask-parse-mode",
     NETWORK_MASK_DISPLAY_MODE = "cybersyn-combinator-network-mask-display-mode",
     NETWORK_MASK_DISPLAY_PREFIX = "cybersyn-combinator-network-mask-display-prefix",
