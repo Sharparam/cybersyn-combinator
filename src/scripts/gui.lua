@@ -52,7 +52,26 @@ local cc_gui = {}
 --- @field selected_slot uint?
 --- @field stack_size integer?
 
+--- @param player_index uint?
+--- @return CombinatorState?
+local function get_player_state(player_index)
+  if not player_index then return nil end
+  local data = cc_util.get_player_data(player_index)
+  if not data then return nil end
+  return data.state --[[@as CombinatorState?]]
+end
+
+--- @param player_index uint
 --- @param state CombinatorState
+local function set_player_state(player_index, state)
+  local data = cc_util.get_player_data(player_index)
+  if not data then
+    log:error("failed to get player data table for player ", player_index, " for writing state")
+    return -- TODO: Throw error?
+  end
+  data.state = state
+end
+
 --- @param slot uint?
 --- @param signal Signal?
 local function update_signal_table(state, slot, signal)
@@ -151,8 +170,9 @@ local function handle_on_off(event)
   local element = event.element
   if not element then return end
   local enabled = element.switch_state == "right"
+  local state = get_player_state(event.player_index)
+  if not state then return end
   log:debug("combinator switch changed to ", enabled)
-  local state = cc_util.get_player_data(event.player_index).state --[[@as CombinatorState]]
   state.combinator:set_enabled(enabled)
   local status = state.entity.status
   state.status_sprite.sprite = STATUS_SPRITES[status] or DEFAULT_STATUS_SPRITE
@@ -162,11 +182,13 @@ end
 --- @param event EventData.on_gui_elem_changed
 local function handle_signal_changed(event)
   local element = event.element
-  local state = cc_util.get_player_data(event.player_index).state
-  local slot = element.tags.slot --[[@as integer]]
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  local slot = element.tags.slot --[[@as uint]]
+  local signal = { signal = element.elem_value, count = 0 }
+  if not signal.signal then return end
   log:debug("elem changed, slot ", slot, ": ", element.elem_value)
   state.selected_slot = slot
-  local signal = { signal = element.elem_value, count = 0 }
   state.combinator:set_slot(slot, signal)
   element.locked = true
   change_signal_count(state, {
@@ -179,8 +201,9 @@ end
 --- @param event EventData.on_gui_click
 local function handle_signal_click(event)
   local element = event.element
-  local state = cc_util.get_player_data(event.player_index).state
-  local slot = element.tags.slot --[[@as integer]]
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  local slot = element.tags.slot --[[@as uint]]
   log:debug("signal click on slot ", slot, ": ", element.elem_value)
 
   if event.button == defines.mouse_button_type.right then
@@ -205,7 +228,8 @@ local function handle_signal_value_changed(event)
   local value = tonumber(element.text)
   if not value then return end
   log:debug("value of ", element.name, " changed to : ", value)
-  local state = cc_util.get_player_data(event.player_index).state --[[@as CombinatorState]]
+  local state = get_player_state(event.player_index)
+  if not state then return end
   state.signal_value_confirm.enabled = true
   if element.name == "signal_value_items" then
     local stack = value / state.stack_size
@@ -217,8 +241,8 @@ end
 
 --- @param event EventData.on_gui_confirmed
 local function handle_signal_value_confirmed(event)
-  local state = cc_util.get_player_data(event.player_index).state --[[@as CombinatorState]]
-  if not state.selected_slot then return end
+  local state = get_player_state(event.player_index)
+  if not state or not state.selected_slot then return end
   local value = tonumber(state.signal_value_items.text)
   if not value then return end
   set_new_signal_value(state, value)
@@ -226,8 +250,8 @@ end
 
 --- @param event EventData.on_gui_click
 local function handle_signal_value_confirm(event)
-  local state = cc_util.get_player_data(event.player_index).state --[[@as CombinatorState]]
-  if not state.selected_slot then return end
+  local state = get_player_state(event.player_index)
+  if not state or not state.selected_slot then return end
   local value = tonumber(state.signal_value_items.text)
   if not value then return end
   set_new_signal_value(state, value)
@@ -238,7 +262,8 @@ local function handle_cs_signal_value_changed(event)
   local element = event.element
   local value = tonumber(element.text)
   if not value then return end
-  local state = cc_util.get_player_data(event.player_index).state --[[@as CombinatorState]]
+  local state = get_player_state(event.player_index)
+  if not state then return end
   local signal_name = element.tags.signal_name --[[@as string]]
   log:debug("cs_signal_value_changed: ", signal_name, " changed to ", value)
   local min = constants.INT32_MIN
@@ -604,8 +629,7 @@ function cc_gui:open(player_index, entity)
   update_cs_signals(state)
   update_signal_table(state)
 
-  local player_data = cc_util.get_player_data(player_index)
-  player_data.state = state
+  set_player_state(player_index, state)
 
   player.opened = state.main_window
   return true
