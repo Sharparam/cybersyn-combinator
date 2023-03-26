@@ -12,7 +12,9 @@
               "cybersyn": true,
               "cybersyn-combinator": true,
               "EditorExtensions": true,
-              "flib": true
+              "flib": true,
+              "LogisticTrainNetwork": true,
+              "LTN_Combinator_Modernized": true
             },
             "checkGlobals": [
               "cybersyn-combinator"
