@@ -5,11 +5,11 @@ set -euo pipefail
 VERBOSE=false
 
 println() {
-  cat <<< "$@"
+  printf "%s\n" "$*"
 }
 
 eprintln() {
-  cat <<< "$@" 1>&2
+  printf "%s\n" "$*" 1>&2
 }
 
 vprintln() {
