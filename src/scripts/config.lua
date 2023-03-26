@@ -3,13 +3,26 @@ local startup = settings.startup
 
 local slot_rows = tonumber(startup[constants.SETTINGS.SLOT_ROWS].value)
 local network_slot_count = tonumber(startup[constants.SETTINGS.NETWORK_SLOT_COUNT].value)
+local slot_count_wagon = tonumber(startup[constants.SETTINGS.SLOT_COUNT_WAGON].value)
 
 if not slot_rows then
   error("slot rows setting is not a valid number")
 end
 
+if slot_rows < 0 then
+  error("slot rows is negative")
+end
+
 if not network_slot_count then
   error("network slot count setting is not a valid number")
+end
+
+if network_slot_count < 0 then
+  error("network slot count is negative")
+end
+
+if not slot_count_wagon then
+  error("wagon slot count is not a valid number")
 end
 
 --- @class CybersynSignal
@@ -39,7 +52,7 @@ local config = {
       slot = 2,
       default = 0,
       min = 0,
-      max = startup[constants.SETTINGS.SLOT_COUNT_WAGON].value
+      max = slot_count_wagon
     },
     ["cybersyn-priority"] = {
       slot = 3,
