@@ -43,9 +43,9 @@ data:extend {
     type = "int-setting",
     name = NAMES.NETWORK_SLOT_COUNT,
     setting_type = "startup",
-    default_value = 50,
+    default_value = 100,
     minimum_value = 1,
-    maximum_value = 100,
+    maximum_value = 500,
     order = "c[cybersyn]-c[combinator]-s[slotcount]-n[network]"
   },
   {
