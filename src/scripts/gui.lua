@@ -187,6 +187,13 @@ local function handle_signal_changed(event)
   local slot = element.tags.slot --[[@as uint]]
   local signal = { signal = element.elem_value, count = 0 }
   if not signal.signal then return end
+  if not cc_util.is_valid_output_signal(signal) then
+    element.elem_value = nil
+    local player = game.get_player(event.player_index)
+    if not player then return end
+    player.print({ "cybersyn-combinator-window.invalid-signal" })
+    return
+  end
   log:debug("elem changed, slot ", slot, ": ", element.elem_value)
   state.selected_slot = slot
   state.combinator:set_item_slot(slot, signal)
