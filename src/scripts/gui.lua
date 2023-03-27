@@ -2,6 +2,7 @@ local constants = require "scripts.constants"
 local config = require "scripts.config"
 local log = require("scripts.logger").gui
 local cc_util = require "scripts.cc_util"
+local masking = require "scripts.masking"
 local CybersynCombinator = require "combinator"
 local util = require "__core__.lualib.util"
 local flib_gui = require "__flib__.gui-lite"
@@ -37,7 +38,15 @@ local cc_gui = {}
 --- @class SignalEntry
 --- @field button LuaGuiElement
 
---- @class CombinatorState
+--- @class NetworkMaskState
+--- @field list LuaGuiElement
+--- @field signal_button LuaGuiElement
+--- @field textfield LuaGuiElement
+--- @field add_button LuaGuiElement
+--- @field signal Signal?
+--- @field mask integer?
+
+--- @class UiState
 --- @field main_window LuaGuiElement
 --- @field status_sprite LuaGuiElement
 --- @field status_label LuaGuiElement
@@ -51,18 +60,19 @@ local cc_gui = {}
 --- @field combinator CybersynCombinator
 --- @field selected_slot uint?
 --- @field stack_size integer?
+--- @field network_mask NetworkMaskState
 
 --- @param player_index uint?
---- @return CombinatorState?
+--- @return UiState?
 local function get_player_state(player_index)
   if not player_index then return nil end
   local data = cc_util.get_player_data(player_index)
   if not data then return nil end
-  return data.state --[[@as CombinatorState?]]
+  return data.state --[[@as UiState?]]
 end
 
 --- @param player_index uint
---- @param state CombinatorState
+--- @param state UiState
 local function set_player_state(player_index, state)
   local data = cc_util.get_player_data(player_index)
   if not data then
@@ -90,7 +100,7 @@ local function update_signal_table(state, slot, signal)
   button.locked = true
 end
 
---- @param state CombinatorState
+--- @param state UiState
 local function update_cs_signals(state)
   for name, data in pairs(config.cs_signals) do
     local value = state.combinator:get_cs_value(name)
@@ -101,7 +111,7 @@ local function update_cs_signals(state)
   end
 end
 
---- @param state CombinatorState
+--- @param state UiState
 --- @param event EventData.on_gui_click|EventData.on_gui_elem_changed
 local function change_signal_count(state, event)
   local slot = state.selected_slot
@@ -146,7 +156,7 @@ local function change_signal_count(state, event)
   end
 end
 
---- @param state CombinatorState
+--- @param state UiState
 --- @param value integer
 local function set_new_signal_value(state, value)
   local new_value = util.clamp(value, constants.INT32_MIN, constants.INT32_MAX)
@@ -157,6 +167,80 @@ local function set_new_signal_value(state, value)
   state.signals[state.selected_slot].button.label.caption = util.format_number(new_value, true)
   state.selected_slot = nil
   state.stack_size = nil
+end
+
+local handle_network_list_item_click
+
+--- @param player PlayerIdentification?
+--- @param state UiState?
+local function refresh_network_list(player, state)
+  if not state then return end
+  local list = state.network_mask.list
+  list.clear()
+  local signals = state.combinator:get_network_signals()
+  for slot, signal in ipairs(signals) do
+    local mask = signal.count
+    local formatted_mask = masking.format(mask, player, true)
+    local rich_type = signal.signal.type == "virtual" and "virtual-signal" or signal.signal.type
+    local rich = "[" .. rich_type .. "=" .. signal.signal.name .. "] " .. formatted_mask
+    local dec = masking.format_explicit(mask, masking.Mode.DECIMAL, false, true)
+    local hex = masking.format_explicit(mask, masking.Mode.HEX, false, true)
+    local bin = masking.format_explicit(mask, masking.Mode.BINARY, false, true)
+    local oct = masking.format_explicit(mask, masking.Mode.OCTAL, false, true)
+    flib_gui.add(list, {
+      type = "button",
+      style = "cybersyn-combinator_network-list_item",
+      caption = rich,
+      tooltip = { "cybersyn-combinator-window.network-list-item-tooltip", dec, hex, bin, oct },
+      handler = {
+        [defines.events.on_gui_click] = handle_network_list_item_click
+      },
+      tags = {
+        slot = slot,
+        mask = mask,
+        signal_type = signal.signal.type,
+        signal_name = signal.signal.name
+      }
+    })
+  end
+end
+
+--- @param state UiState?
+local function focus_network_mask_input(state)
+  if not state then return end
+  state.network_mask.textfield.focus()
+  state.network_mask.textfield.select_all()
+end
+
+--- @param player PlayerIdentification?
+--- @param state UiState?
+local function add_network_mask(player, state)
+  if not state then return end
+  local signal = state.network_mask.signal
+  if not signal or signal.count == 0 then return end
+  local rich_type = signal.signal.type == "virtual" and "virtual-signal" or signal.signal.type
+  local mask = signal.count
+  local formatted_mask = masking.format(mask, player)
+  local rich = "[" .. rich_type .. "=" .. signal.signal.name .. "] " .. formatted_mask
+  log:debug("result rich text: ", rich)
+
+  local result = state.combinator:add_or_update_network_signal(signal)
+  refresh_network_list(player, state)
+
+  if not result then
+    log:info("Reached maximum number of network signals on combinator")
+    local actual_player = player
+    if type(player) == "number" or type(player) == "string" then
+      actual_player = game.get_player(player)
+    end
+    if actual_player then
+      actual_player.print { "cybersyn-combinator-window.max-network-signals", config.network_slot_count }
+    end
+  end
+
+  state.network_mask.signal_button.elem_value = nil
+  state.network_mask.signal = nil
+  state.network_mask.add_button.enabled = false
 end
 
 --- @param event EventData.on_gui_click
@@ -282,11 +366,125 @@ local function handle_cs_signal_value_changed(event)
   state.combinator:set_cs_value(signal_name, util.clamp(value, min, max))
 end
 
+--- @param event EventData.on_gui_elem_changed
+local function handle_network_mask_signal_changed(event)
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  local element = event.element
+  if not element then return end
+  --- @type Signal
+  local signal = { signal = element.elem_value --[[@as SignalID]], count = 0 }
+  if not signal.signal then
+    state.network_mask.signal = nil
+    state.network_mask.add_button.enabled = false
+    return
+  end
+  if not cc_util.is_valid_output_signal(signal) then
+    event.element.elem_value = nil
+    state.network_mask.signal = nil
+    state.network_mask.add_button.enabled = false
+    local player = game.get_player(event.player_index)
+    if not player then return end
+    player.print({ "cybersyn-combinator-window.invalid-signal" })
+    return
+  end
+  if signal.signal.type ~= "virtual" then
+    event.element.elem_value = nil
+    state.network_mask.signal = nil
+    state.network_mask.add_button.enabled = false
+    log:info("attempt to use non-virtual signal as network mask")
+    local player = game.get_player(event.player_index)
+    if not player then return end
+    player.print { "cybersyn-combinator-window.non-virtual-network-mask", signal.signal.type, signal.signal.name }
+    return
+  end
+  state.network_mask.signal = signal
+  log:debug("network signal changed to ", serpent.block(signal))
+  if state.network_mask.mask ~= nil then
+    signal.count = state.network_mask.mask
+    state.network_mask.add_button.enabled = true
+  else
+    state.network_mask.add_button.enabled = false
+  end
+
+  focus_network_mask_input(state)
+end
+
+--- @param event EventData.on_gui_click
+local function handle_network_mask_signal_click(event)
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  if event.button == defines.mouse_button_type.right then
+    state.network_mask.signal = nil
+    state.network_mask.add_button.enabled = false
+  end
+end
+
+--- @param event EventData.on_gui_text_changed
+local function handle_network_mask_changed(event)
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  local text = event.element.text
+  local mask = masking.parse(text, event.player_index)
+  if state.network_mask.signal then state.network_mask.signal.count = mask end
+  if mask == 0 then
+    state.network_mask.mask = nil
+    state.network_mask.add_button.enabled = false
+    return
+  end
+  state.network_mask.mask = mask
+  state.network_mask.add_button.enabled = true
+end
+
+--- @param event EventData.on_gui_confirmed
+local function handle_network_mask_confirmed(event)
+  local state = get_player_state(event.player_index)
+  add_network_mask(event.player_index, state)
+end
+
+--- @param event EventData.on_gui_click
+local function handle_network_mask_add_click(event)
+  local state = get_player_state(event.player_index)
+  add_network_mask(event.player_index, state)
+end
+
+--- @param event EventData.on_gui_click
+handle_network_list_item_click = function(event)
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  local element = event.element
+  if not element then return end
+  local slot = element.tags.slot --[[@as uint?]]
+  if not slot then return end
+  log:debug("clicked on network list button for slot ", slot, " with button ", event.button)
+  if event.button == defines.mouse_button_type.right then
+    state.combinator:remove_network_slot(slot)
+    refresh_network_list(event.player_index, state)
+    log:debug("removed network signal at slot ", slot)
+    return
+  end
+  if event.button ~= defines.mouse_button_type.left then return end
+  local signal = state.combinator:get_network_slot(slot)
+  if not signal then return end
+  state.network_mask.signal = signal
+  state.network_mask.mask = signal.count
+  state.network_mask.signal_button.elem_value = signal.signal
+  state.network_mask.textfield.text = masking.format_for_input(signal.count, event.player_index)
+  state.network_mask.add_button.enabled = true
+  focus_network_mask_input(state)
+end
+
 --- @param player LuaPlayer
 --- @param entity LuaEntity
---- @return CombinatorState
+--- @return UiState
 local function create_window(player, entity)
   local screen = player.gui.screen
+
+  local network_list_width = 200
+
+  if settings.get_player_settings(player)[constants.SETTINGS.NETWORK_MASK_DISPLAY_MODE].value == "BINARY" then
+    network_list_width = 340
+  end
 
   local named, main_window = flib_gui.add(screen, {
     {
@@ -333,42 +531,79 @@ local function create_window(player, entity)
             {
               type = "frame",
               style = "deep_frame_in_shallow_frame",
-              style_mods = { width = 280, vertically_stretchable = true },
+              style_mods = { width = network_list_width, vertically_stretchable = true },
               direction = "vertical",
               children = {
                 {
                   type = "frame",
                   style = "subheader_frame",
-                  direction = "horizontal",
-                  style_mods = { horizontally_stretchable = true, left_padding = 8 },
+                  direction = "vertical",
+                  style_mods = { horizontally_stretchable = true, maximal_height = 90 },
                   children = {
                     {
-                      type = "label",
-                      style = "caption_label",
-                      caption = { "cybersyn-combinator-window.network-list-title" }
+                      type = "flow",
+                      direction = "horizontal",
+                      style_mods = { left_padding = 8 },
+                      children = {
+                        {
+                          type = "label",
+                          style = "caption_label",
+                          caption = { "", { "cybersyn-combinator-window.network-list-title" }, " [font=default-tiny-bold][virtual-signal=signal-info][/font]" },
+                          tooltip = { "cybersyn-combinator-window.network-list-tooltip" }
+                        },
+                        -- {
+                        --   type = "sprite",
+                        --   style = "cybersyn-combinator_network-list_info-sprite",
+                        --   sprite = "virtual-signal/signal-info",
+                        --   tooltip = { "cybersyn-combinator-window.network-list-tooltip" }
+                        -- },
+                        {
+                          type = "empty-widget",
+                          style = "flib_horizontal_pusher"
+                        }
+                      }
                     },
                     {
-                      type = "empty-widget",
-                      style = "flib_horizontal_pusher"
-                    },
-                    {
-                      type = "sprite-button",
-                      sprite = "utility/add",
-                      style = "flib_tool_button_light_green",
-                      mouse_button_filter = { "left" },
-                      tooltip = "my test tooltip"
-                    },
-                    {
-                      type = "sprite-button",
-                      sprite = "utility/rename_icon_normal",
-                      style = "tool_button",
-                      mouse_button_filter = { "left" }
-                    },
-                    {
-                      type = "sprite-button",
-                      sprite = "utility/trash",
-                      style = "tool_button_red",
-                      mouse_button_filter = { "left" }
+                      type = "flow",
+                      direction = "horizontal",
+                      style_mods = { left_padding = 3, right_padding = 3 },
+                      children = {
+                        {
+                          type = "choose-elem-button",
+                          name = "network_mask_signal_button",
+                          elem_type = "signal",
+                          style_mods = { width = 32, height = 32 },
+                          handler = {
+                            [defines.events.on_gui_elem_changed] = handle_network_mask_signal_changed,
+                            [defines.events.on_gui_click] = handle_network_mask_signal_click
+                          }
+                        },
+                        {
+                          type = "textfield",
+                          name = "network_mask_textfield",
+                          style = "cybersyn-combinator_network-mask-text-input",
+                          style_mods = { horizontally_stretchable = true, minimal_width = 50, maximal_width = 300 },
+                          text = "",
+                          numeric = false,
+                          clear_and_focus_on_right_click = true,
+                          lose_focus_on_confirm = true,
+                          handler = {
+                            [defines.events.on_gui_text_changed] = handle_network_mask_changed,
+                            [defines.events.on_gui_confirmed] = handle_network_mask_confirmed
+                          }
+                        },
+                        {
+                          type = "sprite-button",
+                          name = "network_mask_add_button",
+                          sprite = "utility/check_mark",
+                          style = "flib_tool_button_light_green",
+                          enabled = false,
+                          mouse_button_filter = { "left" },
+                          handler = {
+                            [defines.events.on_gui_click] = handle_network_mask_add_click
+                          }
+                        }
+                      }
                     }
                   }
                 },
@@ -376,28 +611,7 @@ local function create_window(player, entity)
                   type = "scroll-pane",
                   name = "network_list",
                   style = "cybersyn-combinator_network-list_scroll-pane",
-                  vertical_scroll_policy = "auto",
-                  -- Manually added children for testing layout/design
-                  children = {
-                    {
-                      type = "button",
-                      style = "cybersyn-combinator_network-list_item",
-                      caption = "Regular button",
-                      tooltip = "I am a tooltip",
-                      tags = {
-                        slot = 1 -- network slot
-                      }
-                    },
-                    {
-                      type = "button",
-                      style = "cybersyn-combinator_network-list_item-active",
-                      caption = "Active button",
-                      tooltip = "I am another tooltip",
-                      tags = {
-                        slot = 2
-                      }
-                    }
-                  }
+                  vertical_scroll_policy = "auto"
                 }
               }
             },
@@ -570,7 +784,6 @@ local function create_window(player, entity)
                           type = "sprite-button",
                           name = "signal_value_confirm",
                           style = "item_and_count_select_confirm",
-                          style_mods = { left_padding = 5 },
                           sprite = "utility/check_mark",
                           enabled = false,
                           mouse_button_filter = { "left" },
@@ -673,6 +886,12 @@ local function create_window(player, entity)
   state.signal_value_confirm = named.signal_value_confirm
   state.signals = signals
   state.entity = entity
+  state.network_mask = {
+    list = named.network_list,
+    signal_button = named.network_mask_signal_button,
+    textfield = named.network_mask_textfield,
+    add_button = named.network_mask_add_button
+  }
 
   return state
 end
@@ -707,6 +926,7 @@ function cc_gui:open(player_index, entity)
 
   update_cs_signals(state)
   update_signal_table(state)
+  refresh_network_list(player_index, state)
 
   set_player_state(player_index, state)
 
@@ -815,7 +1035,13 @@ function cc_gui:register()
     [WINDOW_ID .. "_signal_value_changed"] = handle_signal_value_changed,
     [WINDOW_ID .. "_signal_value_confirmed"] = handle_signal_value_confirmed,
     [WINDOW_ID .. "_signal_value_confirm"] = handle_signal_value_confirm,
-    [WINDOW_ID .. "_cs_signal_value_changed"] = handle_cs_signal_value_changed
+    [WINDOW_ID .. "_cs_signal_value_changed"] = handle_cs_signal_value_changed,
+    [WINDOW_ID .. "_network_mask_signal_click"] = handle_network_mask_signal_click,
+    [WINDOW_ID .. "_network_mask_signal_changed"] = handle_network_mask_signal_changed,
+    [WINDOW_ID .. "_network_mask_changed"] = handle_network_mask_changed,
+    [WINDOW_ID .. "_network_mask_confirmed"] = handle_network_mask_confirmed,
+    [WINDOW_ID .. "_network_mask_add_click"] = handle_network_mask_add_click,
+    [WINDOW_ID .. "_network_list_item_click"] = handle_network_list_item_click
   }
   flib_gui.handle_events()
   script.on_event(defines.events.on_gui_opened, function(event) self:on_gui_opened(event) end)

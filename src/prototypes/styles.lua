@@ -21,6 +21,19 @@ styles["cybersyn-combinator_cs-signal-text"] = {
   horizontally_stretchable = "off"
 }
 
+styles["cybersyn-combinator_network-list_info-sprite"] = {
+  type = "image_style",
+  parent = "image",
+  size = 10,
+  stretch_image_to_widget_size = true,
+  vertical_align = "center"
+}
+
+styles["cybersyn-combinator_network-mask-text-input"] = {
+  type = "textbox_style",
+  horizontal_align = "right"
+}
+
 -- Credit to FactoryPlanner for list-box/scroll-pane styles
 styles["cybersyn-combinator_network-list_scroll-pane"] = {
   type = "scroll_pane_style",

@@ -1,4 +1,5 @@
 local constants = require "scripts.constants"
+local util = require "__core__.lualib.util"
 
 local supper = string.upper
 local sformat = string.format
@@ -125,7 +126,7 @@ local function parse_base(input, base)
   return uint_to_int(num)
 end
 
-local FORMAT_DECIMAL = "%11d"
+local FORMAT_DECIMAL = "%d"
 
 --- @type { [Mode]: fun(mask: integer): string }
 local FORMATTERS = {
@@ -168,21 +169,48 @@ local masking = {
   Mode = Mode
 }
 
+local PRETTIFIERS = {
+  [Mode.DECIMAL] = function(s) return util.format_number(tonumber(s), false) end,
+  [Mode.BINARY] = function(s) return gsub(s, "....", "%0 ") end
+}
+
+--- @param mask integer
+--- @param mode Mode
+--- @param use_prefix boolean
+--- @param pretty boolean?
+--- @return string
+function masking.format_explicit(mask, mode, use_prefix, pretty)
+  local formatter = FORMATTERS[mode]
+  local formatted = formatter(mask)
+  if pretty and PRETTIFIERS[mode] then formatted = PRETTIFIERS[mode](formatted) end
+  if use_prefix then
+    return PREFIXES[mode] .. formatted
+  else
+    return formatted
+  end
+end
+
 --- Formats a network mask for display.
 --- If `player` is given, it will format with respect to the "use hex masks" and
 --- "display prefix" setting, otherwise it will assume decimal format and no prefix.
 --- @param mask integer
 --- @param player LuaPlayer|uint|string?
+--- @param pretty boolean?
 --- @return string
-function masking.format(mask, player)
+function masking.format(mask, player, pretty)
   local mode, should_prefix = get_format_settings(player)
-  local formatter = FORMATTERS[mode]
-  local formatted = formatter(mask)
-  if should_prefix then
-    return PREFIXES[mode] .. formatted
-  else
-    return formatted
+  return masking.format_explicit(mask, mode, should_prefix, pretty)
+end
+
+--- @param mask integer
+--- @param player PlayerIdentification?
+function masking.format_for_input(mask, player)
+  if get_is_hex_mode(player) then
+    return masking.format_explicit(mask, Mode.HEX, false, false)
   end
+
+  local mode, _ = get_format_settings(player)
+  return masking.format_explicit(mask, mode, mode ~= Mode.DECIMAL, false)
 end
 
 --- Parses the input string to a network mask.
