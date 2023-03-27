@@ -729,7 +729,7 @@ function cc_gui:close(player_index)
   log:debug("GUI close, player index ", player_index)
   local destroyed = destroy(player, WINDOW_ID)
   local player_data = cc_util.get_player_data(player_index)
-  if player_data.state and player_data.state.combinator then
+  if player_data and player_data.state and player_data.state.combinator then
     player_data.state.combinator:validate()
     player_data.state = nil
   end
