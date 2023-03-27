@@ -1,4 +1,14 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.3.0
+Date: ????
+  Major Features:
+    - Added an interface on the combinator for managing (sub-)network masks.
+  Changes:
+    - Increased default network mask slot setting to 100.
+    - Increased max network mask slotting to 500.
+  Bugfixes:
+    - Combinator will no longer allow the input of invalid signals, some of which crashed the game.
+---------------------------------------------------------------------------------------------------
 Version: 0.2.0
 Date: 2023-03-27
   Changes:
