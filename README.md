@@ -60,6 +60,13 @@ The `bin/build` script can be used to package a zip of the mod. Run `./bin/build
 
 For the common operation of packaging to a zip and removing any intermediate build files, run `./bin/build -vc` (`-v` enables verbose, and `-c` enables cleaning up intermediate files).
 
+### Migrations
+
+Use the `bin/migrate` helper script to create a new Lua or JSON migration, any arguments passed to the script will be interpreted as the migration name.
+Pass `-j` as the first argument to generate a JSON migration.
+
+The new migration file will have the current date and time (in UTC) as a prefix, followed by the current version number as determined by `git describe`.
+
 ## Acknowledgements
 
 A lot was gained from looking at how the [LTN Combinator Modernized][ltnc] mod does things, so big thanks are due to that mod for getting up and running with the Cybersyn version.
