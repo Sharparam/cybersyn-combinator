@@ -12,13 +12,20 @@ if [[ "$ver" =~ $ver_re ]]; then
 fi
 
 arg='untitled'
+ext='lua'
+
+if [[ "$1" == "-j" ]]; then
+  ext='json'
+  shift
+fi
 
 if [[ -n "$*" ]]; then
   arg="$*"
 fi
 
-name="${name}_${arg//[[:space:]]/_}.lua"
+name="${name}_${arg//[[:space:]]/_}.${ext}"
 
 path="src/migrations/$name"
 
 touch "$path"
+echo "Created new migration: $path"
