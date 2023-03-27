@@ -78,7 +78,7 @@ local function update_signal_table(state, slot, signal)
   if not state then return end
   if state and not slot and not signal then
     for s = 1, config.slot_count do
-      local sig = state.combinator:get_slot(s --[[@as uint]])
+      local sig = state.combinator:get_item_slot(s --[[@as uint]])
       update_signal_table(state, s --[[@as uint]], sig)
     end
     return
@@ -105,7 +105,7 @@ end
 --- @param event EventData.on_gui_click|EventData.on_gui_elem_changed
 local function change_signal_count(state, event)
   local slot = state.selected_slot
-  local signal = state.combinator:get_slot(slot)
+  local signal = state.combinator:get_item_slot(slot)
   if not signal or not signal.signal then
     cc_gui:close(event.player_index)
     return
@@ -150,7 +150,7 @@ end
 --- @param value integer
 local function set_new_signal_value(state, value)
   local new_value = util.clamp(value, constants.INT32_MIN, constants.INT32_MAX)
-  state.combinator:set_slot_value(state.selected_slot, new_value)
+  state.combinator:set_item_slot_value(state.selected_slot, new_value)
   state.signal_value_items.enabled = false
   state.signal_value_stacks.enabled = false
   state.signal_value_confirm.enabled = false
@@ -189,7 +189,7 @@ local function handle_signal_changed(event)
   if not signal.signal then return end
   log:debug("elem changed, slot ", slot, ": ", element.elem_value)
   state.selected_slot = slot
-  state.combinator:set_slot(slot, signal)
+  state.combinator:set_item_slot(slot, signal)
   element.locked = true
   change_signal_count(state, {
     button = defines.mouse_button_type.left,
@@ -207,7 +207,7 @@ local function handle_signal_click(event)
   log:debug("signal click on slot ", slot, ": ", element.elem_value)
 
   if event.button == defines.mouse_button_type.right then
-    state.combinator:remove_slot(slot)
+    state.combinator:remove_item_slot(slot)
     element.locked = false
     element.elem_value = nil
     element.label.caption = ""

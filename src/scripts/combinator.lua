@@ -93,16 +93,58 @@ end
 
 --- @param slot uint?
 --- @return Signal
-function CC:get_slot(slot)
-  if not self:is_valid_entity() then
-    return EMPTY_SIGNAL
-  end
+function CC:get_item_slot(slot)
+  return self:get_slot(self:parse_item_slot(slot))
+end
 
-  slot = self:parse_slot(slot)
+--- @param slot uint?
+--- @return Signal
+function CC:get_network_slot(slot)
+  return self:get_slot(self:parse_network_slot(slot))
+end
+
+--- @param slot uint?
+--- @param signal Signal
+function CC:set_item_slot(slot, signal)
+  self:set_slot(self:parse_item_slot(slot), signal)
+end
+
+--- @param slot uint?
+--- @param signal Signal
+function CC:set_network_slot(slot, signal)
+  self:set_slot(self:parse_network_slot(slot), signal)
+end
+
+--- @param slot uint?
+--- @param value integer
+function CC:set_item_slot_value(slot, value)
+  self:set_slot_value(self:parse_item_slot(slot), value)
+end
+
+--- @param slot uint?
+--- @param value integer
+function CC:set_network_slot_value(slot, value)
+  self:set_slot_value(self:parse_network_slot(slot), value)
+end
+
+--- @param slot uint?
+function CC:remove_item_slot(slot)
+  self:remove_slot(self:parse_item_slot(slot))
+end
+
+--- @param slot uint?
+function CC:remove_network_slot(slot)
+  self:remove_slot(self:parse_network_slot(slot))
+end
+
+--- @private
+--- @param slot uint?
+--- @return Signal
+function CC:get_slot(slot)
+  if not self:is_valid_entity() then return EMPTY_SIGNAL end
   if not slot then return EMPTY_SIGNAL end
   local control = self:get_control_behavior()
   if not control then return EMPTY_SIGNAL end
-
   return control.get_signal(slot)
 end
 
@@ -110,7 +152,6 @@ end
 --- @param signal Signal
 function CC:set_slot(slot, signal)
   if not self:is_valid_entity() then return end
-  slot = self:parse_slot(slot)
   if not slot then return end
   local control = self:get_control_behavior()
   if not control then return end
@@ -121,7 +162,6 @@ end
 --- @param value integer
 function CC:set_slot_value(slot, value)
   if not self:is_valid_entity() then return end
-  slot = self:parse_slot(slot)
   if not slot then return end
   local control = self:get_control_behavior()
   if not control then return end
@@ -133,7 +173,6 @@ end
 --- @param slot uint?
 function CC:remove_slot(slot)
   if not self:is_valid_entity() then return end
-  slot = self:parse_slot(slot)
   if not slot then return end
 
   local control = self:get_control_behavior()
@@ -174,11 +213,25 @@ end
 --- @private
 --- @param slot integer?
 --- @return uint?
-function CC:parse_slot(slot)
+function CC:parse_item_slot(slot)
   if not slot then return nil end
   slot = config.slot_start + slot - 1
   if slot < config.slot_start or slot > config.slot_end then
     log:warn("Invalid slot number #", slot)
+    return nil
+  end
+
+  return slot
+end
+
+--- @private
+--- @param slot integer?
+--- @return uint?
+function CC:parse_network_slot(slot)
+  if not slot then return nil end
+  slot = config.network_slot_start + slot - 1
+  if slot < config.network_slot_start or slot > config.network_slot_end then
+    log:warn("Invalid network slot number #", slot)
     return nil
   end
 
