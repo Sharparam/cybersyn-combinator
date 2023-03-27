@@ -8,6 +8,7 @@ Date: ????
     - Increased max network mask slotting to 500.
   Bugfixes:
     - Combinator will no longer allow the input of invalid signals, some of which crashed the game.
+    - Fix combinator recipe not unlocking when mod added to save where Cybersyn tech was already researched.
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.0
 Date: 2023-03-27

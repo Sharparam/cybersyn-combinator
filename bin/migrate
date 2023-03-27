@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+mkdir -p src/migrations
+
+name=$(date -u +'%Y-%m-%d_%H%M%S')
+
+ver=$(git describe --always --tags)
+ver_re='^v[0-9]+\.[0-9]+\.[0-9]+'
+
+if [[ "$ver" =~ $ver_re ]]; then
+  name="${name}_${BASH_REMATCH[0]}"
+fi
+
+arg='untitled'
+
+if [[ -n "$*" ]]; then
+  arg="$*"
+fi
+
+name="${name}_${arg//[[:space:]]/_}.lua"
+
+path="src/migrations/$name"
+
+touch "$path"
