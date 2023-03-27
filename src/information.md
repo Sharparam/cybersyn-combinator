@@ -12,11 +12,8 @@ It functions like a regular constant combinator, but has built-in support for se
    - Priority
    - Locked slots
  - Ability to input signals using stack counts
+ - Panel to input network masks with options to display them in various formats.
  - You could use it instead of a constant combinator for purposes other than Cybersyn, if you want to (perhaps for the higher slot count)
-
-## Roadmap
-
- - Add a built-in way to configure sub-network masks.
 
 ## Bugs/support/feature requests/questions
 
