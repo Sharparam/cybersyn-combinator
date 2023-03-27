@@ -1,8 +1,14 @@
-local util = {}
+local cc_util = {}
+
+local INVALID_VIRTUAL_SIGNALS = {
+  ["signal-everything"] = true,
+  ["signal-anything"] = true,
+  ["signal-each"] = true
+}
 
 --- @param player_index uint
 --- @return table?
-function util.get_player_data(player_index)
+function cc_util.get_player_data(player_index)
   if not global.player_data then global.player_data = {} end
   local player = game.get_player(player_index)
   if not player or not player.valid then
@@ -14,4 +20,13 @@ function util.get_player_data(player_index)
   return global.player_data[player_index]
 end
 
-return util
+--- @param signal Signal|SignalID?
+--- @return boolean
+function cc_util.is_valid_output_signal(signal)
+  if not signal or type(signal) ~= "table" then return false end
+  if signal.signal then signal = signal.signal end
+  if signal.type ~= "virtual" then return true end
+  return not INVALID_VIRTUAL_SIGNALS[signal.name]
+end
+
+return cc_util

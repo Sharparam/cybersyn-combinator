@@ -32,6 +32,8 @@ function CC:validate()
   -- if need_sort then
   --   self:sort_signals()
   -- end
+
+  self:sort_network_signals()
 end
 
 --- @return boolean
@@ -93,16 +95,88 @@ end
 
 --- @param slot uint?
 --- @return Signal
-function CC:get_slot(slot)
-  if not self:is_valid_entity() then
-    return EMPTY_SIGNAL
-  end
+function CC:get_item_slot(slot)
+  return self:get_slot(self:parse_item_slot(slot))
+end
 
-  slot = self:parse_slot(slot)
+--- @param slot uint?
+--- @param signal Signal
+function CC:set_item_slot(slot, signal)
+  self:set_slot(self:parse_item_slot(slot), signal)
+end
+
+--- @param slot uint?
+--- @param value integer
+function CC:set_item_slot_value(slot, value)
+  self:set_slot_value(self:parse_item_slot(slot), value)
+end
+
+--- @param slot uint?
+function CC:remove_item_slot(slot)
+  self:remove_slot(self:parse_item_slot(slot))
+end
+
+--- @param slot uint?
+--- @return Signal
+function CC:get_network_slot(slot)
+  return self:get_slot(self:parse_network_slot(slot))
+end
+
+--- @param slot uint?
+--- @param signal Signal
+function CC:set_network_slot(slot, signal)
+  self:set_slot(self:parse_network_slot(slot), signal)
+  self:sort_network_signals()
+end
+
+--- @param slot uint?
+--- @param value integer
+function CC:set_network_slot_value(slot, value)
+  self:set_slot_value(self:parse_network_slot(slot), value)
+end
+
+--- @param slot uint?
+function CC:remove_network_slot(slot)
+  self:remove_slot(self:parse_network_slot(slot))
+  self:sort_network_signals()
+end
+
+--- @return table<uint, Signal>
+function CC:get_network_signals()
+  local signals = {}
+  for slot = 1, config.network_slot_count do
+    local signal = self:get_network_slot(slot --[[@as uint]])
+    if not signal or not signal.signal then break end
+    signals[#signals + 1] = signal
+  end
+  return signals
+end
+
+--- @param signal Signal
+--- @return boolean
+function CC:add_or_update_network_signal(signal)
+  self:sort_network_signals()
+  local signals = self:get_network_signals()
+  for slot, existing in ipairs(signals) do
+    if existing.signal.type == signal.signal.type and existing.signal.name == signal.signal.name then
+      self:set_network_slot_value(slot --[[@as uint]], signal.count)
+      return true
+    end
+  end
+  local slot = #signals --[[@as uint]] + 1
+  if slot > config.network_slot_count then return false end
+  self:set_network_slot(slot, signal)
+  return true
+end
+
+--- @private
+--- @param slot uint?
+--- @return Signal
+function CC:get_slot(slot)
+  if not self:is_valid_entity() then return EMPTY_SIGNAL end
   if not slot then return EMPTY_SIGNAL end
   local control = self:get_control_behavior()
   if not control then return EMPTY_SIGNAL end
-
   return control.get_signal(slot)
 end
 
@@ -110,7 +184,6 @@ end
 --- @param signal Signal
 function CC:set_slot(slot, signal)
   if not self:is_valid_entity() then return end
-  slot = self:parse_slot(slot)
   if not slot then return end
   local control = self:get_control_behavior()
   if not control then return end
@@ -121,7 +194,6 @@ end
 --- @param value integer
 function CC:set_slot_value(slot, value)
   if not self:is_valid_entity() then return end
-  slot = self:parse_slot(slot)
   if not slot then return end
   local control = self:get_control_behavior()
   if not control then return end
@@ -133,7 +205,6 @@ end
 --- @param slot uint?
 function CC:remove_slot(slot)
   if not self:is_valid_entity() then return end
-  slot = self:parse_slot(slot)
   if not slot then return end
 
   local control = self:get_control_behavior()
@@ -174,7 +245,7 @@ end
 --- @private
 --- @param slot integer?
 --- @return uint?
-function CC:parse_slot(slot)
+function CC:parse_item_slot(slot)
   if not slot then return nil end
   slot = config.slot_start + slot - 1
   if slot < config.slot_start or slot > config.slot_end then
@@ -183,6 +254,42 @@ function CC:parse_slot(slot)
   end
 
   return slot
+end
+
+--- @private
+--- @param slot integer?
+--- @return uint?
+function CC:parse_network_slot(slot)
+  if not slot then return nil end
+  slot = config.network_slot_start + slot - 1
+  if slot < config.network_slot_start or slot > config.network_slot_end then
+    log:warn("Invalid network slot number #", slot)
+    return nil
+  end
+
+  return slot
+end
+
+--- @private
+function CC:sort_network_signals()
+  if not self:is_valid_entity() then return end
+  local control = self:get_control_behavior()
+  if not control then return end
+  local previous = {}
+  for slot = config.network_slot_start, config.network_slot_end do
+    local signal = control.get_signal(slot --[[@as uint]])
+    if signal and signal.signal then
+      previous[#previous + 1] = signal
+    end
+    --- @diagnostic disable-next-line param-type-mismatch
+    control.set_signal(slot --[[@as uint]], nil)
+  end
+
+  for i, signal in ipairs(previous) do
+    local slot = config.network_slot_start + i - 1
+    if slot > config.network_slot_end then break end
+    control.set_signal(slot, signal)
+  end
 end
 
 --- @private
