@@ -2,6 +2,8 @@
 
 [![Build status][build-badge]][build]
 [![Latest release][release-badge]][release]
+[![Version on mod portal][mod-portal-ver-badge]][mod]
+[![Factorio version][factorio-ver-badge]][mod]
 
 A mod for Factorio that adds a special combinator for use with the [Project Cybersyn][cybersyn] mod.
 
@@ -79,6 +81,9 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+[mod]: https://mods.factorio.com/mod/cybersyn-combinator
+[mod-portal-ver-badge]: https://img.shields.io/badge/dynamic/json.svg?label=mod%20portal&url=https%3A%2F%2Fmods.factorio.com%2Fapi%2Fmods%2Fcybersyn-combinator&query=%24.releases%5B-1%3A%5D.version&colorB=%23a87723
+[factorio-ver-badge]: https://img.shields.io/badge/dynamic/json.svg?label=factorio%20version&url=https%3A%2F%2Fmods.factorio.com%2Fapi%2Fmods%2Fcybersyn-combinator&query=%24.releases%5B-1%3A%5D.info_json.factorio_version&colorB=%23a87723
 [build-badge]: https://github.com/Sharparam/cybersyn-combinator/actions/workflows/build.yml/badge.svg
 [build]: https://github.com/Sharparam/cybersyn-combinator/actions/workflows/build.yml
 [release-badge]: https://img.shields.io/github/v/release/Sharparam/cybersyn-combinator
