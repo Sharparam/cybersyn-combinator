@@ -68,10 +68,10 @@ local LEVEL_PREFIXES = {
 }
 
 local LEVEL_PREFIX_COLORS = {
-  [LogLevel.DEBUG] = "green", -- { r = 0, g = 1, b = 0 },
-  [LogLevel.INFO] = "white", -- { r = 1, g = 1, b = 1 },
-  [LogLevel.WARN] = "yellow", -- { r = 1, g = 1, b = 0},
-  [LogLevel.ERROR] = "red" -- { r = 1, g = 0, b = 0 }
+  [LogLevel.DEBUG] = "green",
+  [LogLevel.INFO] = "blue",
+  [LogLevel.WARN] = "yellow",
+  [LogLevel.ERROR] = "red"
 }
 
 local PREFIX_FORMAT = "%s - %5s: "
