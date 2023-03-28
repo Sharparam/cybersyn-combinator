@@ -3,6 +3,8 @@ Version: 0.3.0
 Date: ????
   Major Features:
     - Added an interface on the combinator for managing (sub-)network masks.
+  Features:
+    - Buttons added to reset Cybersyn signals to default values on combinator.
   Changes:
     - Increased default network mask slot setting to 100.
     - Increased max network mask slotting to 500.
