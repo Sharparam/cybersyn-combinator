@@ -171,6 +171,7 @@ local masking = {
 
 local PRETTIFIERS = {
   [Mode.DECIMAL] = function(s) return util.format_number(tonumber(s), false) end,
+  [Mode.HEX] = function(s) return gsub(s, "..", "%0 ") end,
   [Mode.BINARY] = function(s) return gsub(s, "....", "%0 ") end
 }
 
