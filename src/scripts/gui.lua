@@ -548,15 +548,13 @@ local function create_window(player, entity)
                         {
                           type = "label",
                           style = "caption_label",
-                          caption = { "", { "cybersyn-combinator-window.network-list-title" }, " [font=default-tiny-bold][virtual-signal=signal-info][/font]" },
+                          caption = {
+                            "",
+                            { "cybersyn-combinator-window.network-list-title" },
+                            " [font=default-tiny-bold][virtual-signal=signal-info][/font]"
+                          },
                           tooltip = { "cybersyn-combinator-window.network-list-tooltip" }
                         },
-                        -- {
-                        --   type = "sprite",
-                        --   style = "cybersyn-combinator_network-list_info-sprite",
-                        --   sprite = "virtual-signal/signal-info",
-                        --   tooltip = { "cybersyn-combinator-window.network-list-tooltip" }
-                        -- },
                         {
                           type = "empty-widget",
                           style = "flib_horizontal_pusher"
