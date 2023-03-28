@@ -850,7 +850,7 @@ local function create_window(player, entity)
         {
           type = "label",
           name = "label",
-          style = "signal_count",
+          style = "cybersyn-combinator_signal-count",
           ignored_by_interaction = true,
           caption = ""
         }
