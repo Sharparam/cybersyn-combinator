@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.3.1
+Date: 2023-03-28
+  Bugfixes:
+    - Fix signals being placed in wrong slots when pasted from regular constant combinator.
+---------------------------------------------------------------------------------------------------
 Version: 0.3.0
 Date: 2023-03-28
   Major Features:

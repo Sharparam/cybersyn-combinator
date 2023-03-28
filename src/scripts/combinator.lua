@@ -24,9 +24,9 @@ local function should_emit_default(name)
 end
 
 --- @param entity LuaEntity
---- @param built boolean? `true` if constructed from a built entity, otherwise `false` or `nil`.
+--- @param sort_all boolean? `true` if all signals should be sorted, otherwise `false` or `nil`.
 --- @return CybersynCombinator
-function CC:new(entity, built)
+function CC:new(entity, sort_all)
   if not entity or not entity.valid or entity.name ~= constants.ENTITY_NAME then
     log:error("new: entity must be valid instance of ", constants.ENTITY_NAME, ", but ", entity.name, " was passed")
     error("CybersynCombinator:new: entity has to be a valid instance of " .. constants.ENTITY_NAME)
@@ -34,16 +34,16 @@ function CC:new(entity, built)
 
   local instance = setmetatable({ entity = entity }, { __index = self })
 
-  instance:validate(built)
+  instance:validate(sort_all)
 
   return instance
 end
 
---- @param built boolean?
-function CC:validate(built)
+--- @param sort_all boolean?
+function CC:validate(sort_all)
   if not self:is_valid_entity() then return end
 
-  if built and self:needs_sorting() then
+  if sort_all and self:needs_sorting() then
     self:sort_signals()
   end
 

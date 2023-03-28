@@ -116,5 +116,12 @@ script.on_event(defines.events.on_robot_built_entity, function(event)
   log:debug(entity.name, "[", entity.unit_number, "] disabled due to per-player or global setting")
 end, entity_event_filters)
 
+script.on_event(defines.events.on_entity_settings_pasted, function(event)
+  local dest = event.destination
+  if not dest or not dest.valid or dest.type ~= "constant-combinator" then return end
+  if dest.name ~= constants.ENTITY_NAME then return end
+  CybersynCombinator:new(dest, true)
+end)
+
 cc_gui:register()
 cc_remote:register()
