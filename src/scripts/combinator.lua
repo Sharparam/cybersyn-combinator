@@ -10,9 +10,23 @@ local EMPTY_SIGNAL = { signal = nil, count = 0 }
 --- @field entity LuaEntity
 local CC = {}
 
+--- @param name string?
+--- @return boolean
+local function should_emit_default(name)
+  local is_r = name == constants.SETTINGS.CS_REQUEST_THRESHOLD
+  local is_p = name == constants.SETTINGS.CS_PRIORITY
+  local is_l = name == constants.SETTINGS.CS_LOCKED_SLOTS
+  local e_r = settings.global[constants.SETTINGS.EMIT_DEFAULT_REQUEST_THRESHOLD].value
+  local e_p = settings.global[constants.SETTINGS.EMIT_DEFAULT_PRIORITY].value
+  local e_l = settings.global[constants.SETTINGS.EMIT_DEFAULT_LOCKED_SLOTS].value
+
+  return (is_r and e_r == true) or (is_p and e_p == true) or (is_l and e_l == true)
+end
+
 --- @param entity LuaEntity
+--- @param built boolean? `true` if constructed from a built entity, otherwise `false` or `nil`.
 --- @return CybersynCombinator
-function CC:new(entity)
+function CC:new(entity, built)
   if not entity or not entity.valid or entity.name ~= constants.ENTITY_NAME then
     log:error("new: entity must be valid instance of ", constants.ENTITY_NAME, ", but ", entity.name, " was passed")
     error("CybersynCombinator:new: entity has to be a valid instance of " .. constants.ENTITY_NAME)
@@ -20,20 +34,21 @@ function CC:new(entity)
 
   local instance = setmetatable({ entity = entity }, { __index = self })
 
-  instance:validate()
+  instance:validate(built)
 
   return instance
 end
 
-function CC:validate()
+--- @param built boolean?
+function CC:validate(built)
   if not self:is_valid_entity() then return end
 
-  -- local need_sort = self:needs_sorting()
-  -- if need_sort then
-  --   self:sort_signals()
-  -- end
+  if built and self:needs_sorting() then
+    self:sort_signals()
+  end
 
   self:sort_network_signals()
+  self:validate_cs_signals()
 end
 
 --- @return boolean
@@ -270,6 +285,30 @@ function CC:parse_network_slot(slot)
   return slot
 end
 
+function CC:validate_cs_signals()
+  if not self:is_valid_entity() then return end
+  local control = self:get_control_behavior()
+  if not control then return end
+  for slot = config.cs_slot_start, config.cs_slot_end do
+    local signal = control.get_signal(slot --[[@as uint]])
+    if not signal or not signal.signal then goto continue end
+    local type = signal.signal.type
+    local name = signal.signal.name
+    local cs_signal = config.cs_signals[name]
+
+    if type ~= "virtual" or not cs_signal then goto continue end
+
+    local emit_default = should_emit_default(name)
+
+    if signal.count == 0 or (signal.count == cs_signal.default and not emit_default) then
+      --- @diagnostic disable-next-line param-type-mismatch
+      control.set_signal(slot --[[@as uint]], nil)
+    end
+
+    ::continue::
+  end
+end
+
 --- @private
 function CC:sort_network_signals()
   if not self:is_valid_entity() then return end
@@ -293,7 +332,6 @@ function CC:sort_network_signals()
 end
 
 --- @private
---- @deprecated Not using sorting for now
 function CC:sort_signals()
   if not self:is_valid_entity() then return end
   local control = self:get_control_behavior()
@@ -303,24 +341,6 @@ function CC:sort_signals()
   for slot = 1, config.total_slot_count do
     local signal = control.get_signal(slot --[[@as uint]])
     if signal and signal.signal then
-      -- local type = signal.signal.type
-      -- local name = signal.signal.name
-      -- local cs_signal = config.cs_signals[name]
-
-      -- if type == "virtual" and cs_signal and signal.count == cs_signal.default then
-      --   local is_r = name == constants.SETTINGS.CS_REQUEST_THRESHOLD
-      --   local is_p = name == constants.SETTINGS.CS_PRIORITY
-      --   local is_l = name == constants.SETTINGS.CS_LOCKED_SLOTS
-      --   local e_r = settings.global[constants.SETTINGS.EMIT_DEFAULT_REQUEST_THRESHOLD].value
-      --   local e_p = settings.global[constants.SETTINGS.EMIT_DEFAULT_PRIORITY].value
-      --   local e_l = settings.global[constants.SETTINGS.EMIT_DEFAULT_LOCKED_SLOTS].value
-      --   if (is_r and e_r) or (is_p and e_p) or (is_l and e_l) then
-      --     previous[#previous + 1] = signal
-      --   end
-      -- else
-      --   previous[#previous + 1] = signal
-      -- end
-
       previous[#previous + 1] = signal
     end
 
@@ -328,23 +348,25 @@ function CC:sort_signals()
     control.set_signal(slot --[[@as uint]], nil)
   end
 
-  local misc_slot = config.network_slot_start
+  local net_slot = config.network_slot_start
+  local misc_slot = config.slot_start
   for _, signal in pairs(previous) do
     local type = signal.signal.type
     local name = signal.signal.name
 
     if type == "virtual" and config.cs_signals[name] ~= nil then
       control.set_signal(config.cs_signals[name].slot, signal)
-    else
+    elseif type == "virtual" and net_slot <= config.network_slot_end then
+      control.set_signal(net_slot, signal)
+      net_slot = net_slot + 1
+    elseif misc_slot <= config.slot_end then
       control.set_signal(misc_slot, signal)
       misc_slot = misc_slot + 1
-      if misc_slot > config.total_slot_count then break end
     end
   end
 end
 
 --- @private
---- @deprecated Not using sorting for now
 --- @return boolean
 function CC:needs_sorting()
   if not self:is_valid_entity() then return false end
@@ -360,25 +382,11 @@ function CC:needs_sorting()
 
       if type == "virtual" and cs_signal ~= nil then
         result = result or cs_signal.slot ~= slot
-
-        if signal.count == cs_signal.default then
-          local is_r_threshold = name == constants.SETTINGS.CS_REQUEST_THRESHOLD
-          local is_p = name == constants.SETTINGS.CS_PRIORITY
-          local is_l = name == constants.SETTINGS.CS_LOCKED_SLOTS
-          local e_r = settings.global[constants.SETTINGS.EMIT_DEFAULT_REQUEST_THRESHOLD].value
-          local e_p = settings.global[constants.SETTINGS.EMIT_DEFAULT_PRIORITY].value
-          local e_l = settings.global[constants.SETTINGS.EMIT_DEFAULT_LOCKED_SLOTS].value
-          if (is_r_threshold and not e_r) or (is_p and not e_p) or (is_l and not e_l) then
-            --- @diagnostic disable-next-line param-type-mismatch
-            control.set_signal(slot --[[@as uint]], nil)
-          end
-        elseif signal.count == 0 then
-          --- @diagnostic disable-next-line param-type-mismatch
-          control.set_signal(slot --[[@as uint]], nil)
-        end
       end
 
-      if slot <= config.cs_slot_count and config.cs_signals[name] == nil then
+      if slot < config.slot_start and type ~= "virtual" then
+        result = true
+      elseif slot <= config.cs_slot_count and config.cs_signals[name] == nil then
         result = true
       end
     end

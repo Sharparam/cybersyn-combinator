@@ -9,6 +9,8 @@ Date: ????
   Bugfixes:
     - Combinator will no longer allow the input of invalid signals, some of which crashed the game.
     - Fix combinator recipe not unlocking when mod added to save where Cybersyn tech was already researched.
+    - Fix signals from regular constant combinators not transferring properly to Cybersyn constant combinator.
+    - Fix "emit default" settings having no effect.
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.0
 Date: 2023-03-27
