@@ -27,6 +27,16 @@ styles["cybersyn-combinator_cs-signal-reset"] = {
   horizontally_stretchable = "off"
 }
 
+styles["cybersyn-combinator_signal-count"] = {
+  type = "label_style",
+  parent = "count_label",
+  size = 36,
+  width = 36,
+  horizontal_align = "right",
+  vertical_align = "bottom",
+  right_padding = 2,
+}
+
 styles["cybersyn-combinator_network-list_info-sprite"] = {
   type = "image_style",
   parent = "image",
