@@ -15,6 +15,31 @@ It functions like a regular constant combinator, but has built-in support for se
  - Panel to input network masks with options to display them in various formats.
  - You could use it instead of a constant combinator for purposes other than Cybersyn, if you want to (perhaps for the higher slot count)
 
+### Network masks
+
+On the left side of the combinator window is an area to input network masks.
+You can read more about how the masks themselves work on the [Cybersyn][cybersyn] mod page.
+
+At the moment, the interface only has manual input of mask values, but there's a plan to add a friendlier GUI option down the line.
+
+There are options to display masks as decimal, hexadecimal, binary, or octal numbers, with or without a prefix.
+
+For inputting mask values, you first select a signal (has to be virtual) and then put the value of the network mask in the text field.
+By default you can either write decimal numbers as normal, or use hexadecimal/binary/octal by prefixing with `0x`, `0b`, or `0o`, respectively.
+
+Example: Writing the mask as "0x80" is 128 in decimal, or "1000 0000" in binary (the eigth bit is set).
+
+There's also an option to always assume hexadecimal input, but then no other formats will be accepted and any input will be assumed to be hexadecimal.
+
+After pressing the green confirm button, the new network mask will be added to the list, which shows the virtual signal along with the value of the mask.
+Left clicking an item in the list will populate the fields above for it to be edited, or you can right click to remove it from the combinator.
+
+More functionality is planned here as well for easier managing of masks.
+
+### Copy-pasting settings
+
+Because the Cybersyn constant combinator is based on a regular constant combinator, you can copy and paste signals between them like regular constant combinators.
+
 ## Bugs/support/feature requests/questions
 
 You can use the discussion area on the Factorio mods site, but you are more likely to receive a timely response by communicating via the [repository on GitHub][github].
