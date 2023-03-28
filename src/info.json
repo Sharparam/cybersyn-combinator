@@ -14,6 +14,12 @@
   ],
   "package": {
     "readme": "information.md",
-    "faq": "faq.md"
+    "faq": "faq.md",
+    "gallery": [
+      "../gallery/combinator_window.png",
+      "../gallery/hex_network_masks.png",
+      "../gallery/binary_network_masks.png",
+      "../gallery/prefixed_network_masks.png"
+    ]
   }
 }
