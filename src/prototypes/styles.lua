@@ -21,6 +21,12 @@ styles["cybersyn-combinator_cs-signal-text"] = {
   horizontally_stretchable = "off"
 }
 
+styles["cybersyn-combinator_cs-signal-reset"] = {
+  type = "button_style",
+  parent = "tool_button_red",
+  horizontally_stretchable = "off"
+}
+
 styles["cybersyn-combinator_network-list_info-sprite"] = {
   type = "image_style",
   parent = "image",

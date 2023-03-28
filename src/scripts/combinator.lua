@@ -89,7 +89,7 @@ function CC:get_cs_value(name)
 end
 
 --- @param name string
---- @param value integer
+--- @param value integer?
 function CC:set_cs_value(name, value)
   if not self:is_valid_entity() then return end
   if not config.cs_signals[name] then
@@ -98,14 +98,39 @@ function CC:set_cs_value(name, value)
   end
 
   local slot = config.cs_signals[name].slot
-  local signal = {
-    signal = { type = "virtual", name = name },
-    count = value
-  }
+
+  --- @type Signal?
+  local signal = nil
+
+  if value ~= nil then
+    signal = {
+      signal = { type = "virtual", name = name },
+      count = value
+    }
+  end
 
   local control = self:get_control_behavior()
   if not control then return end
+
+  --- @diagnostic disable-next-line param-type-mismatch
   control.set_signal(slot, signal)
+
+  self:validate_cs_signals()
+end
+
+--- @param name string
+function CC:reset_cs_value(name)
+  if not config.cs_signals[name] then
+    log:warn("reset_cs_value: ", name, " is not a valid cybersyn signal")
+    return
+  end
+
+  self:set_cs_value(name, config.cs_signals[name].default)
+end
+
+--- @param name string
+function CC:remove_cs_value(name)
+  self:set_cs_value(name, nil)
 end
 
 --- @param slot uint?

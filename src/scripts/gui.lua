@@ -104,9 +104,14 @@ end
 local function update_cs_signals(state)
   for name, data in pairs(config.cs_signals) do
     local value = state.combinator:get_cs_value(name)
+    local default = settings.global[name].value or data.default
     local element = state[name]
+    local reset = state[name .. "_reset"]
     if element then
       element.text = tostring(value)
+    end
+    if reset then
+      reset.enabled = value ~= default
     end
   end
 end
@@ -363,7 +368,29 @@ local function handle_cs_signal_value_changed(event)
     min = config.cs_signals[signal_name].min
     max = config.cs_signals[signal_name].max
   end
-  state.combinator:set_cs_value(signal_name, util.clamp(value, min, max))
+  value = util.clamp(value, min, max)
+  state.combinator:set_cs_value(signal_name, value)
+  local default = settings.global[signal_name].value or config.cs_signals[signal_name].default
+  local is_default = value == default
+  local reset = state[signal_name .. "_reset"]
+  if reset then reset.enabled = not is_default end
+end
+
+--- @param event EventData.on_gui_click
+local function handle_cs_signal_reset(event)
+  local element = event.element
+  if not element then return end
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  local name = element.tags.signal_name --[[@as string?]]
+  if not name then return end
+  local cs_signal = config.cs_signals[name]
+  if not cs_signal then return end
+  local field = state[name]
+  if not field then return end
+  state.combinator:reset_cs_value(name)
+  field.text = tostring(cs_signal.default)
+  element.enabled = false
 end
 
 --- @param event EventData.on_gui_elem_changed
@@ -675,7 +702,7 @@ local function create_window(player, entity)
                         {
                           type = "table",
                           name = "cs_signals_table",
-                          column_count = 3,
+                          column_count = 4,
                           style_mods = { cell_padding = 2, horizontally_stretchable = true, vertical_align = "center" }
                         }
                       }
@@ -867,7 +894,21 @@ local function create_window(player, entity)
         signal_name = signal_name
       }
     })
+    local _, reset = flib_gui.add(cs_signals_table, {
+      type = "sprite-button",
+      style = "cybersyn-combinator_cs-signal-reset",
+      sprite = "utility/reset",
+      tooltip = { "cybersyn-combinator-window.cs-signal-reset" },
+      mouse_button_filter = { "left" },
+      handler = {
+        [defines.events.on_gui_click] = handle_cs_signal_reset
+      },
+      tags = {
+        signal_name = signal_name
+      }
+    })
     state[signal_name] = field
+    state[signal_name .. "_reset"] = reset
   end
 
   local preview = named.preview
@@ -1034,6 +1075,7 @@ function cc_gui:register()
     [WINDOW_ID .. "_signal_value_confirmed"] = handle_signal_value_confirmed,
     [WINDOW_ID .. "_signal_value_confirm"] = handle_signal_value_confirm,
     [WINDOW_ID .. "_cs_signal_value_changed"] = handle_cs_signal_value_changed,
+    [WINDOW_ID .. "_cs_signal_reset"] = handle_cs_signal_reset,
     [WINDOW_ID .. "_network_mask_signal_click"] = handle_network_mask_signal_click,
     [WINDOW_ID .. "_network_mask_signal_changed"] = handle_network_mask_signal_changed,
     [WINDOW_ID .. "_network_mask_changed"] = handle_network_mask_changed,
