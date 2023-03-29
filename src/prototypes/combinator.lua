@@ -62,6 +62,35 @@ combi_recipe.ingredients = {
 combi_recipe.enabled = false
 combi_recipe.subgroup = data.raw.recipe["train-stop"].subgroup
 
+if mods["nullius"] then
+  combi.localised_name = { "entity-name." .. name }
+  combi.minable.mining_time = 1
+  -- Place item and recipe after Project Cybersyn's
+  combi_item.order = "nullius-eca-b"
+  combi_item.localised_name = { "item-name." .. name }
+  combi_recipe.order = "nullius-eca-b"
+  combi_recipe.localised_name = { "recipe-name." .. name }
+  combi_recipe.category = "tiny-crafting"
+  combi_recipe.always_show_made_in = true
+  combi_recipe.energy_required = 2
+  combi_recipe.ingredients = {
+    { "constant-combinator", 1 },
+    { "decider-combinator", 1 }
+  }
+else
+  local cybersyn_item = data.raw.item["cybersyn-combinator"]
+  local cybersyn_recipe = data.raw.recipe["cybersyn-combinator"]
+  if cybersyn_item and cybersyn_item.order then
+    combi_item.order = cybersyn_item.order .. "-b"
+  else
+    combi_item.order = data.raw.item["constant-combinator"].order .. "-b"
+  end
+
+  if cybersyn_recipe and cybersyn_recipe.order then
+    combi_recipe.order = cybersyn_recipe.order .. "-b"
+  end
+end
+
 data:extend {
   combi,
   combi_item,
