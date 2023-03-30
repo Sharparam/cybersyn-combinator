@@ -21,9 +21,11 @@ local constants = {
     NETWORK_MASK_PARSE_MODE = "cybersyn-combinator-network-mask-parse-mode",
     NETWORK_MASK_DISPLAY_MODE = "cybersyn-combinator-network-mask-display-mode",
     NETWORK_MASK_DISPLAY_PREFIX = "cybersyn-combinator-network-mask-display-prefix",
+    NETWORK_MASK_USE_CS_DEFAULT = "cybersyn-combinator-network-mask-use-cs-default",
     CS_REQUEST_THRESHOLD = "cybersyn-request-threshold",
     CS_PRIORITY = "cybersyn-priority",
-    CS_LOCKED_SLOTS = "cybersyn-locked-slots"
+    CS_LOCKED_SLOTS = "cybersyn-locked-slots",
+    CS_NETWORK_FLAG = "cybersyn-network-flag"
   },
   ENTITY_NAME = "cybersyn-constant-combinator"
 }

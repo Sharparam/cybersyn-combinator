@@ -1,6 +1,8 @@
 ---------------------------------------------------------------------------------------------------
-Version: 0.3.4
+Version: 0.4.0
 Date: 2023-03-29
+  Features:
+    - New option to use the default network mask when entering new network masks.
   Changes:
     - Support for Nullius has been added.
 ---------------------------------------------------------------------------------------------------

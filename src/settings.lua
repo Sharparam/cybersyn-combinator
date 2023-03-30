@@ -135,5 +135,12 @@ data:extend {
     setting_type = "runtime-per-user",
     default_value = false,
     order = "c[cybersyn]-c[combinator]-m[masks]-d[display]-p[prefix]"
+  },
+  {
+    type = "bool-setting",
+    name = NAMES.NETWORK_MASK_USE_CS_DEFAULT,
+    setting_type = "runtime-per-user",
+    default_value = true,
+    order = "c[cybersyn]-c[combinator]-m[masks]-d[default]-c[cybersyn]"
   }
 }

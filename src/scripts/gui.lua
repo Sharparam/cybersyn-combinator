@@ -427,8 +427,18 @@ local function handle_network_mask_signal_changed(event)
   end
   state.network_mask.signal = signal
   log:debug("network signal changed to ", serpent.block(signal))
-  if state.network_mask.mask ~= nil then
-    signal.count = state.network_mask.mask
+  --- @type integer?
+  local new_count = nil
+  local use_cs_default = settings.get_player_settings(event.player_index)[constants.SETTINGS.NETWORK_MASK_USE_CS_DEFAULT].value
+  local cs_default = settings.global[constants.SETTINGS.CS_NETWORK_FLAG].value
+  if use_cs_default and cs_default ~= nil then
+    new_count = cs_default --[[@as integer]]
+  elseif state.network_mask.mask then
+    new_count = state.network_mask.mask
+  end
+  if new_count ~= nil then
+    signal.count = new_count
+    state.network_mask.textfield.text = masking.format_for_input(new_count, event.player_index)
     state.network_mask.add_button.enabled = true
   else
     state.network_mask.add_button.enabled = false
