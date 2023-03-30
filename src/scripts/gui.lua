@@ -470,7 +470,7 @@ local function handle_network_mask_changed(event)
     return
   end
   state.network_mask.mask = mask
-  state.network_mask.add_button.enabled = true
+  state.network_mask.add_button.enabled = state.network_mask.signal ~= nil
 end
 
 --- @param event EventData.on_gui_confirmed
