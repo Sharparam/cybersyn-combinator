@@ -1,0 +1,38 @@
+labels:
+  - question
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What is your question?
+      validations:
+        required: true
+  - type: markdown
+    attributes:
+      value: |
+        ## Game details
+        Only relevant if this question deals with in-game stuff.
+  - type: input
+    id: mod-version
+    attributes:
+      label: Mod version
+      description: The version of Cybersyn Combinator you are using.
+      placeholder: v1.0.0
+      validations:
+        required: false
+  - type: input
+    id: factorio-version
+    attributes:
+      label: Factorio version
+      description: The version of Factorio you are playing.
+      placeholder: '1.1.76'
+      validations:
+        required: false
+  - type: textarea
+    id: third-party
+    attributes:
+      label: Other mods or software
+      description: Any other mods or software you are using alongside Cybersyn Combinator.
+      validations:
+        required: false
