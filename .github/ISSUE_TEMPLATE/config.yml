@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Mod Portal discussions
+    url: https://mods.factorio.com/mod/cybersyn-combinator/discussion
+    about: If you don't have a GitHub account and prefer reporting things in the Mod Portal, you can go here.

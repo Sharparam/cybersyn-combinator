@@ -35,39 +35,7 @@ A mod for Factorio that adds a special combinator for use with the [Project Cybe
   3. Open the repo folder in VS Code or your favourite editor
   4. Hack away!
 
-There is a [known issue about the Factorio modding extension for VS Code not being portable][fmtk-portable], so for now there are some non-portable entries in `.vscode/settings.json`.
-If you edit these, make sure to not check your changes into Git before pushing.
-(There are some other settings in there that *should* be shared, which is why the entire file is not ignored in `.gitignore`, pending a better way to structure things&hellip;)
-
-## Testing
-
-There are some basic tests using [busted][] that you can run.
-Simply run the `busted` command in the root of the repo.
-
-If you don't have busted, you can install it using [LuaRocks][]:
-
-```sh
-luarocks install busted
-```
-
-The tests are written in [MoonScript][], so you will additionally need to install that:
-
-```sh
-luarocks install moonscript
-```
-
-## Building/Packaging
-
-The `bin/build` script can be used to package a zip of the mod. Run `./bin/build -h` for help on the available options.
-
-For the common operation of packaging to a zip and removing any intermediate build files, run `./bin/build -vc` (`-v` enables verbose, and `-c` enables cleaning up intermediate files).
-
-### Migrations
-
-Use the `bin/migrate` helper script to create a new Lua or JSON migration, any arguments passed to the script will be interpreted as the migration name.
-Pass `-j` as the first argument to generate a JSON migration.
-
-The new migration file will have the current date and time (in UTC) as a prefix, followed by the current version number as determined by `git describe`.
+See the [CONTRIBUTING][] document for more information on developing/contributing!
 
 ## Acknowledgements
 
@@ -92,7 +60,4 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 [sharparam]: https://sharparam.com
 [cybersyn]: https://mods.factorio.com/mod/cybersyn
 [ltnc]: https://mods.factorio.com/mod/LTN_Combinator_Modernized
-[fmtk-portable]: https://github.com/justarandomgeek/vscode-factoriomod-debug/issues/84
-[busted]: https://github.com/lunarmodules/busted
-[luarocks]: https://luarocks.org/
-[moonscript]: https://moonscript.org/
+[contributing]: https://github.com/Sharparam/cybersyn-combinator/blob/main/CONTRIBUTING.md
