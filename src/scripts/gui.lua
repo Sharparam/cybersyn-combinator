@@ -7,6 +7,16 @@ local CybersynCombinator = require "combinator"
 local util = require "__core__.lualib.util"
 local flib_gui = require "__flib__.gui-lite"
 
+local gsub = string.gsub
+
+--- @param count number
+--- @return string
+local function format_signal_count(count)
+  local formatted = util.format_number(count, true)
+  local trimmed = gsub(formatted, "^(%d%d%d)[%.,]%d+", "%1")
+  return trimmed
+end
+
 local WINDOW_ID = "cybersyn-constant-combinator-window"
 
 local RED = "utility/status_not_working"
@@ -96,7 +106,7 @@ local function update_signal_table(state, slot, signal)
   if not signal or not signal.signal then return end
   local button = state.signals[slot].button
   button.elem_value = signal.signal
-  button.label.caption = util.format_number(signal.count, true)
+  button.label.caption = format_signal_count(signal.count)
   button.locked = true
 end
 
@@ -169,7 +179,7 @@ local function set_new_signal_value(state, value)
   state.signal_value_items.enabled = false
   state.signal_value_stacks.enabled = false
   state.signal_value_confirm.enabled = false
-  state.signals[state.selected_slot].button.label.caption = util.format_number(new_value, true)
+  state.signals[state.selected_slot].button.label.caption = format_signal_count(new_value)
   state.selected_slot = nil
   state.stack_size = nil
 end
