@@ -1,10 +1,18 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.4.0
 Date: 2023-03-29
+  Major Features:
+    - New option to enable expressions in stack, item, and Cybersyn signal fields.
   Features:
     - New option to use the default network mask when entering new network masks.
   Changes:
     - Support for Nullius has been added.
+  Bugfixes:
+    - Fix add button for network mask sometimes being enabled when it shouldn't.
+    - Fix textfield focusing not working in "prefer stacks" mode.
+  Gui:
+    - Improve display of item signal counts.
+    - Widen textfields for stack and item inputs.
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.3
 Date: 2023-03-28
