@@ -40,6 +40,18 @@ More functionality is planned here as well for easier managing of masks.
 
 Because the Cybersyn constant combinator is based on a regular constant combinator, you can copy and paste signals between them like regular constant combinators.
 
+### Expression inputs
+
+If you enable the per-player option of using expressions in inputs, you can use mathematical expressions instead of regular numbers in the following places:
+
+ - Stack input for item signals
+ - Non-stack input for item signals
+ - Cybersyn signal values
+
+This lets you, for example, input something like `50 * 288 * 4`, which will then evaluate to `57600` when you confirm it (press **Enter** or use the green confirm button).
+
+Note that for the Cybersyn signals, the values are updated as you type, but you can press enter to evaluate it and see the resulting value from your expression.
+
 ## Bugs/support/feature requests/questions
 
 You can use the discussion area on the Factorio mods site, but you are more likely to receive a timely response by communicating via the [repository on GitHub][github].
