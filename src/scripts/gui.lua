@@ -7,6 +7,8 @@ local CybersynCombinator = require "combinator"
 local util = require "__core__.lualib.util"
 local flib_gui = require "__flib__.gui-lite"
 
+local ceil = math.ceil
+local floor = math.floor
 local gsub = string.gsub
 
 --- @param count number
@@ -345,7 +347,7 @@ local function handle_signal_value_changed(event)
   state.signal_value_confirm.enabled = true
   if element.name == "signal_value_items" then
     local stack = value / state.stack_size
-    state.signal_value_stacks.text = tostring(stack >= 0 and math.ceil(stack) or math.floor(stack))
+    state.signal_value_stacks.text = tostring(stack >= 0 and ceil(stack) or floor(stack))
   elseif element.name == "signal_value_stacks" then
     state.signal_value_items.text = tostring(value * state.stack_size)
   end
