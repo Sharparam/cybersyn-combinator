@@ -6,14 +6,21 @@ local INVALID_VIRTUAL_SIGNALS = {
   ["signal-each"] = true
 }
 
---- @param player_index uint
+--- @param player_index PlayerIdentification?
 --- @return table?
 function cc_util.get_player_data(player_index)
-  if not global.player_data then global.player_data = {} end
-  local player = game.get_player(player_index)
+  if not player_index then return end
+  --- @type LuaPlayer?
+  local player
+  if type(player_index) == "number" or type(player_index) == "string" then
+    player = game.get_player(player_index)
+  else
+    player = player_index --[[@as LuaPlayer]]
+  end
   if not player or not player.valid then
     return nil
   end
+  if not global.player_data then global.player_data = {} end
   if not global.player_data[player_index] then
     global.player_data[player_index] = {}
   end

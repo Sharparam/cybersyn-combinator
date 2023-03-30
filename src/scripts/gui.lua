@@ -72,7 +72,7 @@ local cc_gui = {}
 --- @field stack_size integer?
 --- @field network_mask NetworkMaskState
 
---- @param player_index uint?
+--- @param player_index PlayerIdentification?
 --- @return UiState?
 local function get_player_state(player_index)
   if not player_index then return nil end
