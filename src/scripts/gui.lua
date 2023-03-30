@@ -241,12 +241,18 @@ end
 --- @param player PlayerIdentification?
 --- @param update_element boolean
 local function set_cs_signal_value(element, player, update_element)
-  local value = resolve_textfield_number(element, player)
-  if not value then return end
   local state = get_player_state(player)
   if not state then return end
   local signal_name = element.tags.signal_name --[[@as string]]
-  log:debug("cs_signal_value_changed: ", signal_name, " changed to ", value)
+  local current = state.combinator:get_cs_value(signal_name)
+  local value = resolve_textfield_number(element, player)
+  if value then
+    log:debug("cs_signal_value_changed: ", signal_name, " changed to ", value)
+  else
+    log:debug("cs_signal_value_changed: invalid new value, resetting to current (", current, ")")
+    value = current
+  end
+  if not value then return end
   local min = constants.INT32_MIN
   local max = constants.INT32_MAX
   if config.cs_signals[signal_name] then
@@ -430,8 +436,16 @@ end
 local function handle_signal_value_confirmed(event)
   local state = get_player_state(event.player_index)
   if not state or not state.selected_slot then return end
+  local current = state.combinator:get_item_slot(state.selected_slot)
   local value = resolve_textfield_number(state.signal_value_items, event.player_index)
   if not value then
+    if current and current.count then
+      state.signal_value_items.text = tostring(current.count)
+      if state.stack_size then
+        local stacks = current.count / state.stack_size
+        state.signal_value_stacks.text = tostring(stacks >= 0 and ceil(stacks) or floor(stacks))
+      end
+    end
     state.signal_value_confirm.enabled = false
     return
   end
