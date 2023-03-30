@@ -48,7 +48,28 @@ You can use the discussion area on the Factorio mods site, but you are more like
 
 This mod was made with inspiration from the similar mod [LTN Combinator Modernized][ltnc] for the [Logistic Train Network][ltn] mod.
 
+## Compatibility
+
+This mod should probably work with most other mods, provided they don't do very drastic changes and/or overhauls.
+
+Special compatibility notes will be listed in this section as they are discovered.
+
+If there's a mod that is not compatible, please let me know and I'll look into whether it can be made to support it!
+
+### [LTN Combinator Modernized][ltnc]
+
+There's no issue using both mods at the same time, but the option to enable "upgrading constant combinators" might not work as intended if enabled on both mods at the same time.
+One mod would get precedence based on load order.
+So if you're using both, make sure you only enable the "upgrade" option on the mod you wish to be able to upgrade to from constant combinators (if at all).
+
+### [Nullius][]
+
+Since version 0.3.4, there is support for using this mod with [Nullius][].
+
+The recipe is altered to use 1x Logic Circuit and 1x Memory Circuit, as well as some energy, to match the cost of making an LTN Combinator in Nullius.
+
 [github]: https://github.com/Sharparam/cybersyn-combinator
 [cybersyn]: https://mods.factorio.com/mod/cybersyn
 [ltnc]: https://mods.factorio.com/mod/LTN_Combinator_Modernized
 [ltn]: https://mods.factorio.com/mod/LogisticTrainNetwork
+[nullius]: https://mods.factorio.com/mod/nullius
