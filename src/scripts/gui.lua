@@ -142,10 +142,10 @@ local function change_signal_count(state, event)
   local value = signal.count
   log:debug("change_signal_count: signal type is ", signal_type, ", name is ", signal_name)
 
+  local focus_stacks = false
+
   state.signal_value_items.enabled = true
   state.signal_value_items.text = tostring(value)
-  state.signal_value_items.focus()
-  state.signal_value_items.select_all()
   state.signal_value_confirm.enabled = true
 
   if signal_type == "item" or signal_type == "fluid" then
@@ -155,9 +155,7 @@ local function change_signal_count(state, event)
       stack_size = game.item_prototypes[signal_name].stack_size
       state.signal_value_stacks.enabled = true
       if settings.get_player_settings(event.player_index)[constants.SETTINGS.USE_STACKS].value then
-        state.signal_value_stacks.focus()
-        log:debug("selecting all text in stack textbox")
-        state.signal_value_stacks.select_all()
+        focus_stacks = true
       end
     elseif signal_type == "fluid" then
       stack_size = 1
@@ -168,6 +166,14 @@ local function change_signal_count(state, event)
   else
     state.signal_value_stacks.enabled = false
     state.stack_size = 1
+  end
+
+  if focus_stacks then
+    state.signal_value_stacks.focus()
+    state.signal_value_stacks.select_all()
+  else
+    state.signal_value_items.focus()
+    state.signal_value_items.select_all()
   end
 end
 
