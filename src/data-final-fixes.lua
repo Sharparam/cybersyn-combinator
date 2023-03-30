@@ -1,4 +1,6 @@
 local constants = require "scripts.constants"
+local recipe = data.raw.recipe[constants.ENTITY_NAME]
+local item = data.raw.item[constants.ENTITY_NAME]
 
 if mods["cybersyn"] and data.raw.technology["cybersyn-train-network"] then
   table.insert(
@@ -14,4 +16,7 @@ end
 
 data.raw["constant-combinator"]["constant-combinator"].fast_replaceable_group = "constant-combinator"
 
-data.raw.item[constants.ENTITY_NAME].order = data.raw.item["cybersyn-combinator"].order .. "-b"
+if mods["nullius"] then
+  recipe.subgroup = data.raw["train-stop"]["train-stop"].subgroup
+  item.subgroup = data.raw.item["train-stop"].subgroup
+end

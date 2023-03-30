@@ -2,7 +2,12 @@ name: build
 on:
   push:
     branches:
-      - '*'
+      - main
+      - develop
+      - 'feature/**'
+      - 'release/**'
+      - 'hotfix/**'
+      - 'support/**'
     tags:
       - 'v*'
 
