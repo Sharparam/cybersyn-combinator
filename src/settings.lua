@@ -100,6 +100,13 @@ data:extend {
   },
   {
     type = "bool-setting",
+    name = NAMES.ENABLE_EXPRESSIONS,
+    setting_type = "runtime-per-user",
+    default_value = false,
+    order = "c[cybersyn]-c[combinator]-e[expressions]-e[enable]"
+  },
+  {
+    type = "bool-setting",
     name = NAMES.DISABLE_BUILT,
     setting_type = "runtime-per-user",
     default_value = false,

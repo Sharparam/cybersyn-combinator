@@ -16,6 +16,7 @@ local constants = {
     EMIT_DEFAULT_PRIORITY = "cybersyn-combinator-emit-default-priority",
     EMIT_DEFAULT_LOCKED_SLOTS = "cybersyn-combinator-emit-default-locked-slots",
     USE_STACKS = "cybersyn-combinator-use-stacks",
+    ENABLE_EXPRESSIONS = "cybersyn-combinator-expressions-enable",
     DISABLE_BUILT = "cybersyn-combinator-disable-built",
     DISABLE_NONPLAYER_BUILT = "cybersyn-combinator-disable-built-nonplayer",
     NETWORK_MASK_PARSE_MODE = "cybersyn-combinator-network-mask-parse-mode",

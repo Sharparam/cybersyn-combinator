@@ -3,6 +3,7 @@ local config = require "scripts.config"
 local log = require("scripts.logger").gui
 local cc_util = require "scripts.cc_util"
 local masking = require "scripts.masking"
+local expression = require "scripts.expression"
 local CybersynCombinator = require "combinator"
 local util = require "__core__.lualib.util"
 local flib_gui = require "__flib__.gui-lite"
@@ -10,6 +11,10 @@ local flib_gui = require "__flib__.gui-lite"
 local ceil = math.ceil
 local floor = math.floor
 local gsub = string.gsub
+
+--- @param num number
+--- @return number
+local function round(num) return floor(num + 0.5) end
 
 --- @param count number
 --- @return string
@@ -92,6 +97,40 @@ local function set_player_state(player_index, state)
     return -- TODO: Throw error?
   end
   data.state = state
+end
+
+--- @param element LuaGuiElement
+--- @param player PlayerIdentification?
+--- @return number?
+local function resolve_textfield_number(element, player)
+  if not element or not element.text then return nil end
+  local min = tonumber(element.tags.min) or constants.INT32_MIN
+  local max = tonumber(element.tags.max) or constants.INT32_MAX
+  local enable_expressions = false
+  if player then
+    enable_expressions = settings.get_player_settings(player)[constants.SETTINGS.ENABLE_EXPRESSIONS].value == true
+  end
+
+  --- @type number?
+  local value
+
+  if enable_expressions then
+    value = expression.parse(element.text)
+  else
+    value = tonumber(element.text)
+  end
+
+  if not value then return nil end
+
+  if value < 0 and element.tags.allow_negative == false then
+    value = 0
+  end
+
+  if element.tags.allow_decimal == false then
+    value = round(value)
+  end
+
+  return util.clamp(value, min, max)
 end
 
 --- @param slot uint?
@@ -188,9 +227,39 @@ local function set_new_signal_value(state, value)
   state.signal_value_items.enabled = false
   state.signal_value_stacks.enabled = false
   state.signal_value_confirm.enabled = false
+  state.signal_value_items.text = tostring(new_value)
+  if state.stack_size then
+    local stacks = value / state.stack_size
+    state.signal_value_stacks.text = tostring(stacks >= 0 and ceil(stacks) or floor(stacks))
+  end
   state.signals[state.selected_slot].button.label.caption = format_signal_count(new_value)
   state.selected_slot = nil
   state.stack_size = nil
+end
+
+--- @param element LuaGuiElement
+--- @param player PlayerIdentification?
+--- @param update_element boolean
+local function set_cs_signal_value(element, player, update_element)
+  local value = resolve_textfield_number(element, player)
+  if not value then return end
+  local state = get_player_state(player)
+  if not state then return end
+  local signal_name = element.tags.signal_name --[[@as string]]
+  log:debug("cs_signal_value_changed: ", signal_name, " changed to ", value)
+  local min = constants.INT32_MIN
+  local max = constants.INT32_MAX
+  if config.cs_signals[signal_name] then
+    min = config.cs_signals[signal_name].min
+    max = config.cs_signals[signal_name].max
+  end
+  value = util.clamp(value, min, max)
+  state.combinator:set_cs_value(signal_name, value)
+  local default = settings.global[signal_name].value or config.cs_signals[signal_name].default
+  local is_default = value == default
+  local reset = state[signal_name .. "_reset"]
+  if reset then reset.enabled = not is_default end
+  if update_element then element.text = tostring(value) end
 end
 
 local handle_network_list_item_click
@@ -340,11 +409,14 @@ end
 --- @param event EventData.on_gui_text_changed
 local function handle_signal_value_changed(event)
   local element = event.element
-  local value = tonumber(element.text)
-  if not value then return end
-  log:debug("value of ", element.name, " changed to : ", value)
   local state = get_player_state(event.player_index)
   if not state then return end
+  local value = resolve_textfield_number(element, event.player_index)
+  if not value then
+    state.signal_value_confirm.enabled = false
+    return
+  end
+  log:debug("value of ", element.name, " changed to : ", value)
   state.signal_value_confirm.enabled = true
   if element.name == "signal_value_items" then
     local stack = value / state.stack_size
@@ -358,8 +430,11 @@ end
 local function handle_signal_value_confirmed(event)
   local state = get_player_state(event.player_index)
   if not state or not state.selected_slot then return end
-  local value = tonumber(state.signal_value_items.text)
-  if not value then return end
+  local value = resolve_textfield_number(state.signal_value_items, event.player_index)
+  if not value then
+    state.signal_value_confirm.enabled = false
+    return
+  end
   set_new_signal_value(state, value)
 end
 
@@ -367,32 +442,26 @@ end
 local function handle_signal_value_confirm(event)
   local state = get_player_state(event.player_index)
   if not state or not state.selected_slot then return end
-  local value = tonumber(state.signal_value_items.text)
-  if not value then return end
+  local value = resolve_textfield_number(state.signal_value_items, event.player_index)
+  if not value then
+    state.signal_value_confirm.enabled = false
+    return
+  end
   set_new_signal_value(state, value)
 end
 
 --- @param event EventData.on_gui_text_changed
 local function handle_cs_signal_value_changed(event)
   local element = event.element
-  local value = tonumber(element.text)
-  if not value then return end
-  local state = get_player_state(event.player_index)
-  if not state then return end
-  local signal_name = element.tags.signal_name --[[@as string]]
-  log:debug("cs_signal_value_changed: ", signal_name, " changed to ", value)
-  local min = constants.INT32_MIN
-  local max = constants.INT32_MAX
-  if config.cs_signals[signal_name] then
-    min = config.cs_signals[signal_name].min
-    max = config.cs_signals[signal_name].max
-  end
-  value = util.clamp(value, min, max)
-  state.combinator:set_cs_value(signal_name, value)
-  local default = settings.global[signal_name].value or config.cs_signals[signal_name].default
-  local is_default = value == default
-  local reset = state[signal_name .. "_reset"]
-  if reset then reset.enabled = not is_default end
+  if not element then return end
+  set_cs_signal_value(element, event.player_index, false)
+end
+
+--- @param event EventData.on_gui_confirmed
+local function handle_cs_signal_value_confirmed(event)
+  local element = event.element
+  if not element then return end
+  set_cs_signal_value(element, event.player_index, true)
 end
 
 --- @param event EventData.on_gui_click
@@ -805,14 +874,19 @@ local function create_window(player, entity)
                           type = "textfield",
                           name = "signal_value_stacks",
                           enabled = false,
-                          style = "short_number_textfield",
                           style_mods = { horizontal_align = "right", horizontally_stretchable = false, width = 100 },
                           lose_focus_on_confirm = true,
                           clear_and_focus_on_right_click = true,
-                          elem_mods = { numeric = true, text = "0", allow_negative = true },
+                          elem_mods = { numeric = false, text = "0" },
                           handler = {
                             [defines.events.on_gui_text_changed] = handle_signal_value_changed,
                             [defines.events.on_gui_confirmed] = handle_signal_value_confirmed
+                          },
+                          tags = {
+                            allow_decimal = true,
+                            allow_negative = true,
+                            min = constants.INT32_MIN,
+                            max = constants.INT32_MAX
                           }
                         },
                         {
@@ -824,14 +898,19 @@ local function create_window(player, entity)
                           type = "textfield",
                           name = "signal_value_items",
                           enabled = false,
-                          style = "short_number_textfield",
                           style_mods = { horizontal_align = "right", horizontally_stretchable = false, width = 100 },
                           lose_focus_on_confirm = true,
                           clear_and_focus_on_right_click = true,
-                          elem_mods = { numeric = true, text = "0", allow_negative = true },
+                          elem_mods = { numeric = false, text = "0" },
                           handler = {
                             [defines.events.on_gui_text_changed] = handle_signal_value_changed,
                             [defines.events.on_gui_confirmed] = handle_signal_value_confirmed
+                          },
+                          tags = {
+                            allow_decimal = false,
+                            allow_negative = true,
+                            min = constants.INT32_MIN,
+                            max = constants.INT32_MAX
                           }
                         },
                         {
@@ -911,16 +990,19 @@ local function create_window(player, entity)
       name = "cybersyn-combinator_cs-signal__" .. signal_name,
       style = "cybersyn-combinator_cs-signal-text",
       text = tostring(default),
-      numeric = true,
-      allow_decimal = false,
-      allow_negative = data.min < 0,
+      numeric = false,
       clear_and_focus_on_right_click = true,
       lose_focus_on_confirm = true,
       handler = {
-        [defines.events.on_gui_text_changed] = handle_cs_signal_value_changed
+        [defines.events.on_gui_text_changed] = handle_cs_signal_value_changed,
+        [defines.events.on_gui_confirmed] = handle_cs_signal_value_confirmed
       },
       tags = {
-        signal_name = signal_name
+        signal_name = signal_name,
+        allow_decimal = false,
+        allow_negative = data.min < 0,
+        min = data.min,
+        max = data.max
       }
     })
     local _, reset = flib_gui.add(cs_signals_table, {
@@ -1104,6 +1186,7 @@ function cc_gui:register()
     [WINDOW_ID .. "_signal_value_confirmed"] = handle_signal_value_confirmed,
     [WINDOW_ID .. "_signal_value_confirm"] = handle_signal_value_confirm,
     [WINDOW_ID .. "_cs_signal_value_changed"] = handle_cs_signal_value_changed,
+    [WINDOW_ID .. "_cs_signal_value_confirmed"] = handle_cs_signal_value_confirmed,
     [WINDOW_ID .. "_cs_signal_reset"] = handle_cs_signal_reset,
     [WINDOW_ID .. "_network_mask_signal_click"] = handle_network_mask_signal_click,
     [WINDOW_ID .. "_network_mask_signal_changed"] = handle_network_mask_signal_changed,
