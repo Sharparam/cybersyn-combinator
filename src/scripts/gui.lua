@@ -163,7 +163,8 @@ local function change_signal_count(state, event)
       stack_size = 1
       state.signal_value_stacks.enabled = false
     end
-    state.signal_value_stacks.text = tostring(value / stack_size)
+    local stacks = value / stack_size
+    state.signal_value_stacks.text = tostring(stacks >= 0 and ceil(stacks) or floor(stacks))
     state.stack_size = stack_size
   else
     state.signal_value_stacks.enabled = false
