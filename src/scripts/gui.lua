@@ -20,7 +20,7 @@ local function round(num) return floor(num + 0.5) end
 --- @return string
 local function format_signal_count(count)
   local formatted = util.format_number(count, true)
-  local trimmed = gsub(formatted, "^(%d%d%d)[%.,]%d+", "%1")
+  local trimmed = gsub(formatted, "(%d%d%d)[%.,]%d+", "%1")
   return trimmed
 end
 
