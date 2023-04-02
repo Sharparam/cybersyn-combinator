@@ -3,6 +3,10 @@ Version: 0.4.1
 Date: ????
   Gui:
     - Improve display of negative item signal counts.
+  Translation:
+    - Swedish (sv-SE) translations added.
+    - Russian (ru) translations added (thanks to @Eldrinn-Elantey and @iassasin on GitHub).
+    - Simplified Chinese (zh-CN) translations added (thanks to @luaotix on GitHub).
 ---------------------------------------------------------------------------------------------------
 Version: 0.4.0
 Date: 2023-03-29
