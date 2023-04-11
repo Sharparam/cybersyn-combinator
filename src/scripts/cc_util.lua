@@ -32,6 +32,7 @@ end
 function cc_util.is_valid_output_signal(signal)
   if not signal or type(signal) ~= "table" then return false end
   if signal.signal then signal = signal.signal end
+  if not signal.name or signal.name == "" then return false end
   if signal.type ~= "virtual" then return true end
   return not INVALID_VIRTUAL_SIGNALS[signal.name]
 end
