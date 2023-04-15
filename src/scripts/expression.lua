@@ -11,7 +11,7 @@ function expr.parse(input)
   log:debug("parsing expression: ", input)
   if not input then return 0 end
   local e = gsub(input, NONMATH_PATTERN, "")
-  local f, err = load("return " .. e, nil, "t")
+  local f, err = load("return " .. e, nil, "t", {})
   if not f then
     log:warn("The given input '", input, "' could not be parsed as a math expression: ", err)
     return 0
