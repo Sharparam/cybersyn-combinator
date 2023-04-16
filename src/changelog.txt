@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.4.4
+Date: 2023-04-16
+  Changes:
+    - Switch to using built-in expression evaluator in Factorio.
+    - Now falls back to previous valid value if invalid signal count is entered.
+---------------------------------------------------------------------------------------------------
 Version: 0.4.3
 Date: 2023-04-15
   Bugfixes:

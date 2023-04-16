@@ -6,23 +6,21 @@ local NONMATH_PATTERN = "[^0-9%.+%-*/%%^()]"
 local expr = {}
 
 --- @param input string?
+--- @param fallback number?
 --- @return number
-function expr.parse(input)
+function expr.parse(input, fallback)
+  fallback = fallback or 0
   log:debug("parsing expression: ", input)
-  if not input then return 0 end
-  local e = gsub(input, NONMATH_PATTERN, "")
-  local f, err = load("return " .. e, nil, "t", {})
-  if not f then
-    log:warn("The given input '", input, "' could not be parsed as a math expression: ", err)
-    return 0
-  end
-  local success, result = pcall(f)
+  if not input then return fallback end
+
+  local success, result = pcall(game.evaluate_expression, input)
+
   if not success then
     log:warn("The given input '", input, "' could not be evaluated as a math expression: ", result)
-    return 0
+    return fallback
   end
-  log:debug("expression '", input, "' parsed as: ", result)
-  return tonumber(result) or 0
+
+  return result
 end
 
 return expr
