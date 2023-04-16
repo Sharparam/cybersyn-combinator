@@ -1,7 +1,4 @@
 local log = require("scripts.logger").expression
-local gsub = string.gsub
-
-local NONMATH_PATTERN = "[^0-9%.+%-*/%%^()]"
 local ssub = string.sub
 
 local expr = {}
