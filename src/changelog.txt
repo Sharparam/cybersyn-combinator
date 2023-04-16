@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.4.5
+Date: 2023-04-16
+  Bugfixes:
+    - Fix issue entering numbers starting with a negative sign with new expression evaluator.
+---------------------------------------------------------------------------------------------------
 Version: 0.4.4
 Date: 2023-04-16
   Changes:
