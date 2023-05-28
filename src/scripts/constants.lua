@@ -19,6 +19,7 @@ local constants = {
     ENABLE_EXPRESSIONS = "cybersyn-combinator-expressions-enable",
     DISABLE_BUILT = "cybersyn-combinator-disable-built",
     DISABLE_NONPLAYER_BUILT = "cybersyn-combinator-disable-built-nonplayer",
+    NEGATIVE_SIGNALS = "cybersyn-combinator-negative-signals",
     NETWORK_MASK_PARSE_MODE = "cybersyn-combinator-network-mask-parse-mode",
     NETWORK_MASK_DISPLAY_MODE = "cybersyn-combinator-network-mask-display-mode",
     NETWORK_MASK_DISPLAY_PREFIX = "cybersyn-combinator-network-mask-display-prefix",

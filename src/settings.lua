@@ -149,5 +149,12 @@ data:extend {
     setting_type = "runtime-per-user",
     default_value = true,
     order = "c[cybersyn]-c[combinator]-m[masks]-d[default]-c[cybersyn]"
+  },
+  {
+    type = "bool-setting",
+    name = NAMES.NEGATIVE_SIGNALS,
+    setting_type = "runtime-per-user",
+    default_value = false,
+    order = "c[cybersyn]-c[combinator]-s[signals]-n[negative]"
   }
 }

@@ -220,10 +220,16 @@ local function change_signal_count(state, event)
   end
 end
 
+--- @param player_index uint
 --- @param state UiState
 --- @param value integer
-local function set_new_signal_value(state, value)
+local function set_new_signal_value(player_index, state, value)
   local new_value = util.clamp(value, constants.INT32_MIN, constants.INT32_MAX)
+  local convert = settings.get_player_settings(player_index)[constants.SETTINGS.NEGATIVE_SIGNALS].value == true
+  local current = state.combinator:get_item_slot(state.selected_slot)
+  if convert and current.signal.type ~= "virtual" and new_value > 0 then
+    new_value = -new_value
+  end
   state.combinator:set_item_slot_value(state.selected_slot, new_value)
   state.signal_value_items.enabled = false
   state.signal_value_stacks.enabled = false
@@ -450,7 +456,7 @@ local function handle_signal_value_confirmed(event)
     state.signal_value_confirm.enabled = false
     return
   end
-  set_new_signal_value(state, value)
+  set_new_signal_value(event.player_index, state, value)
 end
 
 --- @param event EventData.on_gui_click
@@ -463,7 +469,7 @@ local function handle_signal_value_confirm(event)
     state.signal_value_confirm.enabled = false
     return
   end
-  set_new_signal_value(state, value)
+  set_new_signal_value(event.player_index, state, value)
 end
 
 --- @param event EventData.on_gui_text_changed
