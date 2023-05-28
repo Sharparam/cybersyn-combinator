@@ -1,11 +1,11 @@
 {
     "Lua.workspace.library": [
-      "~/factorio/data",
-      "~/.config/Code/User/workspaceStorage/19194ab926a005c1b8add80c8d001947/justarandomgeek.factoriomod-debug/sumneko-3rd/factorio/library",
-      "/home/sharparam/factorio/mods/flib"
+      "/home/sharparam/factorio/mods/flib",
+      "/home/sharparam/factorio/data",
+      "/home/sharparam/.config/Code - Insiders/User/workspaceStorage/19194ab926a005c1b8add80c8d001947/justarandomgeek.factoriomod-debug/sumneko-3rd/factorio/library"
     ],
     "Lua.workspace.userThirdParty": [
-      "~/.config/Code/User/workspaceStorage/19194ab926a005c1b8add80c8d001947/justarandomgeek.factoriomod-debug/sumneko-3rd"
+      "/home/sharparam/.config/Code - Insiders/User/workspaceStorage/19194ab926a005c1b8add80c8d001947/justarandomgeek.factoriomod-debug/sumneko-3rd"
     ],
     "Lua.diagnostics.globals": [
       "__DebugAdapter",
@@ -23,7 +23,7 @@
     "Lua.runtime.special": {
       "__object_name": "type"
     },
-    "Lua.runtime.plugin": "~/.config/Code/User/workspaceStorage/19194ab926a005c1b8add80c8d001947/justarandomgeek.factoriomod-debug/sumneko-3rd/factorio/plugin.lua",
+    "Lua.runtime.plugin": "/home/sharparam/.config/Code - Insiders/User/workspaceStorage/19194ab926a005c1b8add80c8d001947/justarandomgeek.factoriomod-debug/sumneko-3rd/factorio/plugin.lua",
     "factorio.package.tagName": "v$VERSION",
     "factorio.package.movedToCommitMessage": "Update version to $VERSION",
     "factorio.package.preparingCommitMessage": "Prepare release of version $VERSION",
@@ -37,5 +37,6 @@
     ],
     "[lua]": {
       "editor.codeLens": false
-    }
+    },
+    "lua.targetVersion": "5.2"
 }
