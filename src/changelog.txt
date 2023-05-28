@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.5.0
+Date: 2023-05-28
+  Features:
+    - New option to convert all item and fluid signals to negative values.
+  Translation:
+    - Fix minor typo in Swedish (sv-SE) translation.
+---------------------------------------------------------------------------------------------------
 Version: 0.4.5
 Date: 2023-04-16
   Bugfixes:
