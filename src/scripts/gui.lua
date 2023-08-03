@@ -905,7 +905,7 @@ local function create_window(player, entity)
                         }
                       }
                     },
-                    {
+                    { -- Request totals
                       type = "flow",
                       style_mods = { horizontal_align = "right", horizontally_stretchable = true },
                       direction = "horizontal",
@@ -917,7 +917,7 @@ local function create_window(player, entity)
                             {
                               type = "label",
                               style = "heading_3_label",
-                              caption = "Items"
+                              caption = { "cybersyn-combinator-window.item-total" }
                             },
                             {
                               type = "label",
@@ -935,7 +935,7 @@ local function create_window(player, entity)
                             {
                               type = "label",
                               style = "heading_3_label",
-                              caption = "Item stacks"
+                              caption = { "cybersyn-combinator-window.item-stacks" }
                             },
                             {
                               type = "label",
@@ -953,7 +953,7 @@ local function create_window(player, entity)
                             {
                               type = "label",
                               style = "heading_3_label",
-                              caption = "Fluids"
+                              caption = { "cybersyn-combinator-window.fluid-total" }
                             },
                             {
                               type = "label",
