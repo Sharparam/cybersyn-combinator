@@ -69,6 +69,9 @@ local cc_gui = {}
 --- @field status_label LuaGuiElement
 --- @field entity_preview LuaGuiElement
 --- @field on_off LuaGuiElement
+--- @field item_total_label LuaGuiElement
+--- @field item_stacks_label LuaGuiElement
+--- @field fluid_total_label LuaGuiElement
 --- @field signal_value_stacks LuaGuiElement
 --- @field signal_value_items LuaGuiElement
 --- @field signal_value_confirm LuaGuiElement
@@ -134,22 +137,68 @@ local function resolve_textfield_number(element, player, fallback)
   return util.clamp(value, min, max)
 end
 
---- @param slot uint?
---- @param signal Signal?
-local function update_signal_table(state, slot, signal)
+--- @param state UiState
+local function update_signal_table(state)
   if not state then return end
-  if state and not slot and not signal then
-    for s = 1, config.slot_count do
-      local sig = state.combinator:get_item_slot(s --[[@as uint]])
-      update_signal_table(state, s --[[@as uint]], sig)
+
+  local item_request_total = 0
+  local item_request_stacks = 0
+  local fluid_request_total = 0
+
+  for slot = 1, config.slot_count do
+    local signal = state.combinator:get_item_slot(slot --[[@as uint]])
+    if signal and signal.signal then
+      local button = state.signals[slot].button
+      button.elem_value = signal.signal
+      button.label.caption = format_signal_count(signal.count)
+      button.locked = true
+      if signal.signal.type == "item" then
+        local stack_size = game.item_prototypes[signal.signal.name].stack_size
+        local stacks = math.ceil(signal.count / stack_size)
+        item_request_total = item_request_total + signal.count
+        item_request_stacks = item_request_stacks + stacks
+      elseif signal.signal.type == "fluid" then
+        fluid_request_total = fluid_request_total + signal.count
+      end
     end
-    return
   end
-  if not signal or not signal.signal then return end
-  local button = state.signals[slot].button
-  button.elem_value = signal.signal
-  button.label.caption = format_signal_count(signal.count)
-  button.locked = true
+
+  state.item_total_label.caption = format_signal_count(item_request_total)
+  state.item_total_label.tooltip = util.format_number(item_request_total, false)
+  state.item_stacks_label.caption = format_signal_count(item_request_stacks)
+  state.item_stacks_label.tooltip = util.format_number(item_request_stacks, false)
+  state.fluid_total_label.caption = format_signal_count(fluid_request_total)
+  state.fluid_total_label.tooltip = util.format_number(fluid_request_total, false)
+end
+
+--- @param state UiState
+local function update_totals(state)
+  if not state then return end
+
+  local item_request_total = 0
+  local item_request_stacks = 0
+  local fluid_request_total = 0
+
+  for slot = 1, config.slot_count do
+    local signal = state.combinator:get_item_slot(slot --[[@as uint]])
+    if signal and signal.signal then
+      if signal.signal.type == "item" then
+        local stack_size = game.item_prototypes[signal.signal.name].stack_size
+        local stacks = math.ceil(signal.count / stack_size)
+        item_request_total = item_request_total + signal.count
+        item_request_stacks = item_request_stacks + stacks
+      elseif signal.signal.type == "fluid" then
+        fluid_request_total = fluid_request_total + signal.count
+      end
+    end
+  end
+
+  state.item_total_label.caption = format_signal_count(item_request_total)
+  state.item_total_label.tooltip = util.format_number(item_request_total, false)
+  state.item_stacks_label.caption = format_signal_count(item_request_stacks)
+  state.item_stacks_label.tooltip = util.format_number(item_request_stacks, false)
+  state.fluid_total_label.caption = format_signal_count(fluid_request_total)
+  state.fluid_total_label.tooltip = util.format_number(fluid_request_total, false)
 end
 
 --- @param state UiState
@@ -242,6 +291,7 @@ local function set_new_signal_value(player_index, state, value)
   state.signals[state.selected_slot].button.label.caption = format_signal_count(new_value)
   state.selected_slot = nil
   state.stack_size = nil
+  update_totals(state)
 end
 
 --- @param element LuaGuiElement
@@ -829,25 +879,92 @@ local function create_window(player, entity)
                     }
                   }
                 },
-                { -- On/off switch
+                {
                   type = "flow",
-                  style_mods = { horizontal_align = "left" },
-                  direction = "vertical",
+                  direction = "horizontal",
+                  style_mods = { top_margin = 8 },
                   children = {
-                    {
-                      type = "label",
-                      style = "heading_3_label",
-                      style_mods = { top_margin = 8 },
-                      caption = { "gui-constant.output" }
+                    { -- On/off switch
+                      type = "flow",
+                      style_mods = { horizontal_align = "left" },
+                      direction = "vertical",
+                      children = {
+                        {
+                          type = "label",
+                          style = "heading_3_label",
+                          caption = { "gui-constant.output" }
+                        },
+                        {
+                          type = "switch",
+                          name = "on_off",
+                          handler = {
+                            [defines.events.on_gui_switch_state_changed] = handle_on_off
+                          },
+                          left_label_caption = { "gui-constant.off" },
+                          right_label_caption = { "gui-constant.on" }
+                        }
+                      }
                     },
                     {
-                      type = "switch",
-                      name = "on_off",
-                      handler = {
-                        [defines.events.on_gui_switch_state_changed] = handle_on_off
-                      },
-                      left_label_caption = { "gui-constant.off" },
-                      right_label_caption = { "gui-constant.on" }
+                      type = "flow",
+                      style_mods = { horizontal_align = "right", horizontally_stretchable = true },
+                      direction = "horizontal",
+                      children = {
+                        {
+                          type = "flow",
+                          direction = "vertical",
+                          children = {
+                            {
+                              type = "label",
+                              style = "heading_3_label",
+                              caption = "Items"
+                            },
+                            {
+                              type = "label",
+                              name = "item_total",
+                              style_mods = { minimal_width = 80 },
+                              caption = "0",
+                              tooltip = "0"
+                            }
+                          }
+                        },
+                        {
+                          type = "flow",
+                          direction = "vertical",
+                          children = {
+                            {
+                              type = "label",
+                              style = "heading_3_label",
+                              caption = "Item stacks"
+                            },
+                            {
+                              type = "label",
+                              name = "item_stacks",
+                              style_mods = { minimal_width = 80 },
+                              caption = "0",
+                              tooltip = "0"
+                            }
+                          }
+                        },
+                        {
+                          type = "flow",
+                          direction = "vertical",
+                          children = {
+                            {
+                              type = "label",
+                              style = "heading_3_label",
+                              caption = "Fluids"
+                            },
+                            {
+                              type = "label",
+                              name = "fluid_total",
+                              style_mods = { minimal_width = 80 },
+                              caption = "0",
+                              tooltip = "0"
+                            }
+                          }
+                        }
+                      }
                     }
                   }
                 },
@@ -1053,6 +1170,9 @@ local function create_window(player, entity)
   state.status_label = named.status_label
   state.entity_preview = preview
   state.on_off = named.on_off
+  state.item_total_label = named.item_total
+  state.item_stacks_label = named.item_stacks
+  state.fluid_total_label = named.fluid_total
   state.signal_value_stacks = named.signal_value_stacks
   state.signal_value_items = named.signal_value_items
   state.signal_value_confirm = named.signal_value_confirm
