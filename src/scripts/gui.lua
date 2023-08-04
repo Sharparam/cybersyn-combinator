@@ -923,7 +923,12 @@ local function create_window(player, entity)
                             {
                               type = "label",
                               style = "heading_3_label",
-                              caption = { "cybersyn-combinator-window.item-total" }
+                              caption = {
+                                "",
+                                { "cybersyn-combinator-window.item-total" },
+                                " [img=info]"
+                              },
+                              tooltip = { "cybersyn-combinator-window.item-total-description" }
                             },
                             {
                               type = "label",
@@ -941,7 +946,12 @@ local function create_window(player, entity)
                             {
                               type = "label",
                               style = "heading_3_label",
-                              caption = { "cybersyn-combinator-window.item-stacks" }
+                              caption = {
+                                "",
+                                { "cybersyn-combinator-window.item-stacks" },
+                                " [img=info]"
+                              },
+                              tooltip = { "cybersyn-combinator-window.item-stacks-description" }
                             },
                             {
                               type = "label",
@@ -959,7 +969,12 @@ local function create_window(player, entity)
                             {
                               type = "label",
                               style = "heading_3_label",
-                              caption = { "cybersyn-combinator-window.fluid-total" }
+                              caption = {
+                                "",
+                                { "cybersyn-combinator-window.fluid-total" },
+                                " [img=info]"
+                              },
+                              tooltip = { "cybersyn-combinator-window.fluid-total-description" }
                             },
                             {
                               type = "label",
