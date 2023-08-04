@@ -1,4 +1,13 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.6.0
+Date: ????-??-??
+  Features:
+    - Now shows the total amount of requested items and fluids (thanks to @Eldrinn-Elantey on GitHub for the suggestion!).
+  Translation:
+    - Updated translations for Russian (ru) thanks to @Eldrinn-Elantey on GitHub.
+  Info:
+    - Fixed typo in mod homepage link (thanks to @sparr on GitHub).
+---------------------------------------------------------------------------------------------------
 Version: 0.5.0
 Date: 2023-05-28
   Features:
