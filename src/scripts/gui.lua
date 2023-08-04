@@ -152,17 +152,20 @@ local function update_signal_table(state)
       button.elem_value = signal.signal
       button.label.caption = format_signal_count(signal.count)
       button.locked = true
-      if signal.signal.type == "item" then
+      if signal.signal.type == "item" and signal.count < 0 then
         local stack_size = game.item_prototypes[signal.signal.name].stack_size
         local stacks = math.ceil(signal.count / stack_size)
         item_request_total = item_request_total + signal.count
         item_request_stacks = item_request_stacks + stacks
-      elseif signal.signal.type == "fluid" then
+      elseif signal.signal.type == "fluid" and signal.count < 0 then
         fluid_request_total = fluid_request_total + signal.count
       end
     end
   end
 
+  item_request_total = math.abs(item_request_total)
+  item_request_stacks = math.abs(item_request_stacks)
+  fluid_request_total = math.abs(fluid_request_total)
   state.item_total_label.caption = format_signal_count(item_request_total)
   state.item_total_label.tooltip = util.format_number(item_request_total, false)
   state.item_stacks_label.caption = format_signal_count(item_request_stacks)
@@ -182,17 +185,20 @@ local function update_totals(state)
   for slot = 1, config.slot_count do
     local signal = state.combinator:get_item_slot(slot --[[@as uint]])
     if signal and signal.signal then
-      if signal.signal.type == "item" then
+      if signal.signal.type == "item" and signal.count < 0 then
         local stack_size = game.item_prototypes[signal.signal.name].stack_size
         local stacks = math.ceil(signal.count / stack_size)
         item_request_total = item_request_total + signal.count
         item_request_stacks = item_request_stacks + stacks
-      elseif signal.signal.type == "fluid" then
+      elseif signal.signal.type == "fluid" and signal.count < 0 then
         fluid_request_total = fluid_request_total + signal.count
       end
     end
   end
 
+  item_request_total = math.abs(item_request_total)
+  item_request_stacks = math.abs(item_request_stacks)
+  fluid_request_total = math.abs(fluid_request_total)
   state.item_total_label.caption = format_signal_count(item_request_total)
   state.item_total_label.tooltip = util.format_number(item_request_total, false)
   state.item_stacks_label.caption = format_signal_count(item_request_stacks)
