@@ -748,7 +748,7 @@ local function create_window(player, entity)
                           caption = {
                             "",
                             { "cybersyn-combinator-window.network-list-title" },
-                            " [font=default-tiny-bold][virtual-signal=signal-info][/font]"
+                            " [img=info]"
                           },
                           tooltip = { "cybersyn-combinator-window.network-list-tooltip" }
                         },
