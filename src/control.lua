@@ -17,6 +17,15 @@ init_cs_default(constants.SETTINGS.CS_REQUEST_THRESHOLD)
 init_cs_default(constants.SETTINGS.CS_PRIORITY)
 init_cs_default(constants.SETTINGS.CS_LOCKED_SLOTS)
 
+script.on_configuration_changed(function(data)
+  if not data.mod_changes[constants.MOD_NAME] then return end
+  for player_index, player in pairs(game.players) do
+    if player.gui.screen[cc_gui.WINDOW_ID] then
+      cc_gui:close(player_index, true)
+    end
+  end
+end)
+
 script.on_load(function()
   if not global.player_data then return end
   for _, player_data in pairs(global.player_data) do

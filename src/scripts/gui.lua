@@ -50,7 +50,9 @@ local STATUS_NAMES = {
 }
 local DEFAULT_STATUS_NAME = { "entity-status.disabled" }
 
-local cc_gui = {}
+local cc_gui = {
+  WINDOW_ID = WINDOW_ID
+}
 
 --- @class SignalEntry
 --- @field button LuaGuiElement
@@ -1276,8 +1278,8 @@ local function destroy(player, window_id)
   return true
 end
 
---- @param player_index uint?
-function cc_gui:close(player_index)
+--- @param player_index string|uint?
+function cc_gui:close(player_index, silent)
   if not player_index then return end
   local player = game.get_player(player_index)
   if not player then return end
@@ -1289,7 +1291,9 @@ function cc_gui:close(player_index)
     player_data.state = nil
   end
   if not destroyed then return end
-  player.play_sound { path = constants.ENTITY_CLOSE_SOUND }
+  if not silent then
+    player.play_sound { path = constants.ENTITY_CLOSE_SOUND }
+  end
 end
 
 --- @param event EventData.on_gui_opened
