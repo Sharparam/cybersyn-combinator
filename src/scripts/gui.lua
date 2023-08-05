@@ -913,7 +913,11 @@ local function create_window(player, entity)
                     },
                     { -- Request totals
                       type = "flow",
-                      style_mods = { horizontal_align = "right", horizontally_stretchable = true },
+                      style_mods = {
+                        horizontal_align = "right",
+                        horizontally_stretchable = true,
+                        left_margin = 10
+                      },
                       direction = "horizontal",
                       children = {
                         {
