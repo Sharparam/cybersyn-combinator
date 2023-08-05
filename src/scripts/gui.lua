@@ -79,6 +79,7 @@ local cc_gui = {}
 --- @field entity LuaEntity
 --- @field combinator CybersynCombinator
 --- @field selected_slot uint?
+--- @field selected_slot_button LuaGuiElement?
 --- @field stack_size integer?
 --- @field network_mask NetworkMaskState
 
@@ -435,6 +436,7 @@ local function handle_signal_changed(event)
   if not signal.signal then return end
   if not cc_util.is_valid_output_signal(signal) then
     element.elem_value = nil
+    element.style = "flib_slot_button_default"
     local player = game.get_player(event.player_index)
     if not player then return end
     player.print({ "cybersyn-combinator-window.invalid-signal" })
@@ -442,8 +444,10 @@ local function handle_signal_changed(event)
   end
   log:debug("elem changed, slot ", slot, ": ", element.elem_value)
   state.selected_slot = slot
+  state.selected_slot_button = element
   state.combinator:set_item_slot(slot, signal)
   element.locked = true
+  element.style = "flib_selected_slot_button_default"
   change_signal_count(state, {
     button = defines.mouse_button_type.left,
     element = { number = 0 },
@@ -464,6 +468,7 @@ local function handle_signal_click(event)
     element.locked = false
     element.elem_value = nil
     element.label.caption = ""
+    element.style = "flib_slot_button_default"
     if state.selected_slot == slot then
       state.signal_value_stacks.enabled = false
       state.signal_value_items.enabled = false
@@ -471,6 +476,8 @@ local function handle_signal_click(event)
     end
   elseif event.button == defines.mouse_button_type.left and element.elem_value then
     state.selected_slot = slot
+    state.selected_slot_button = element
+    element.style = "flib_selected_slot_button_default"
     change_signal_count(state, event)
   end
 end
@@ -499,6 +506,8 @@ end
 local function handle_signal_value_confirmed(event)
   local state = get_player_state(event.player_index)
   if not state or not state.selected_slot then return end
+  local slot_button = state.selected_slot_button
+  if slot_button then slot_button.style = "flib_slot_button_default" end
   local current = state.combinator:get_item_slot(state.selected_slot)
   local value = resolve_textfield_number(state.signal_value_items, event.player_index, current.count or 0)
   if not value then
@@ -519,6 +528,8 @@ end
 local function handle_signal_value_confirm(event)
   local state = get_player_state(event.player_index)
   if not state or not state.selected_slot then return end
+  local slot_button = state.selected_slot_button
+  if slot_button then slot_button.style = "flib_slot_button_default" end
   local current = state.combinator:get_item_slot(state.selected_slot)
   local value = resolve_textfield_number(state.signal_value_items, event.player_index, current.count or 0)
   if not value then

@@ -3,6 +3,7 @@ Version: 0.6.0
 Date: ????-??-??
   Features:
     - Now shows the total amount of requested items and fluids (thanks to @Eldrinn-Elantey on GitHub for the suggestion!).
+    - Now shows which signal is currently being edited.
   Changes:
     - Item name has been updated to "Cybersyn Constant Combinator" to be more explicit and more different from the Cybernetic Combinator.
   Translation:
