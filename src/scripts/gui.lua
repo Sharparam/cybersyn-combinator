@@ -445,6 +445,9 @@ local function handle_signal_changed(event)
     return
   end
   log:debug("elem changed, slot ", slot, ": ", element.elem_value)
+  if state.selected_slot_button then
+    state.selected_slot_button.style = "flib_slot_button_default"
+  end
   state.selected_slot = slot
   state.selected_slot_button = element
   state.combinator:set_item_slot(slot, signal)
@@ -477,6 +480,9 @@ local function handle_signal_click(event)
       state.signal_value_confirm.enabled = false
     end
   elseif event.button == defines.mouse_button_type.left and element.elem_value then
+    if state.selected_slot_button then
+      state.selected_slot_button.style = "flib_slot_button_default"
+    end
     state.selected_slot = slot
     state.selected_slot_button = element
     element.style = "flib_selected_slot_button_default"
