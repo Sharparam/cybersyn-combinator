@@ -503,7 +503,22 @@ local function handle_signal_value_changed(event)
   log:debug("value of ", element.name, " changed to : ", value)
   state.signal_value_confirm.enabled = true
   if element.name == "signal_value_items" then
-    local stack = value / state.stack_size
+    local stack_size = state.stack_size
+    if state.stack_size == nil then
+      -- Try to recover stack size
+      if state.selected_slot == nil then
+        log:error("Unexpected nil values in handle_signal_value_changed while handling change in ", element.name, " please tell a developer")
+        return
+      end
+      log:warn("stack size for current selection unexpectedly nil")
+      local combi_sig = state.combinator:get_item_slot(state.selected_slot)
+      if combi_sig.signal.type == "item" then
+        stack_size = game.item_prototypes[combi_sig.signal.name].stack_size
+      else
+        stack_size = 1
+      end
+    end
+    local stack = value / stack_size
     state.signal_value_stacks.text = tostring(stack >= 0 and ceil(stack) or floor(stack))
   elseif element.name == "signal_value_stacks" then
     state.signal_value_items.text = tostring(value * state.stack_size)
