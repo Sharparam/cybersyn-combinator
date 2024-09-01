@@ -11,3 +11,6 @@
 /graphics/combinator-entity/constant-combinator.png
 /graphics/combinator-entity/hr-constant-combinator.png
 /graphics/combinator-icon/constant-combinator.png
+
+# Ignore graphic exports
+/graphics/semitransparent-pixel/semitransparent-pixel.png

@@ -87,3 +87,28 @@ styles["cybersyn-combinator_network-list_item-active"] = {
   default_font_color = styles.button.selected_font_color,
   default_vertical_offset = styles.button.selected_vertical_offset
 }
+
+styles["cybersyn-combinator_frame_semitransparent"] = {
+  type = "frame_style",
+  graphical_set = {
+    base = {
+      type = "composition",
+      filename = "__cybersyn-combinator__/graphics/frame/semitransparent-pixel.png",
+      corner_size = 1,
+      position = {0, 0}
+    }
+  }
+}
+
+styles["cybersyn-combinator_encoder_bit-button"] = {
+  type = "button_style",
+  parent = "flib_standalone_slot_button_grey",
+  size = 32,
+  hovered_graphical_set = styles.flib_standalone_slot_button_grey.default_graphical_set
+}
+
+styles["cybersyn-combinator_encoder_bit-button_pressed"] = {
+  type = "button_style",
+  parent = "flib_selected_standalone_slot_button_grey",
+  size = 32
+}

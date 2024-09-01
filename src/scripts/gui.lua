@@ -25,6 +25,7 @@ local function format_signal_count(count)
 end
 
 local WINDOW_ID = "cybersyn-constant-combinator-window"
+local ENCODER_ID = "cybersyn-constant-combinator-encoder"
 
 local RED = "utility/status_not_working"
 local GREEN = "utility/status_working"
@@ -50,8 +51,17 @@ local STATUS_NAMES = {
 }
 local DEFAULT_STATUS_NAME = { "entity-status.disabled" }
 
+local BIT_BUTTON_STYLE = "cybersyn-combinator_encoder_bit-button"
+local BIT_BUTTON_PRESSED_STYLE = "cybersyn-combinator_encoder_bit-button_pressed"
+
+--- @param pressed boolean
+local function bit_button_style(pressed)
+  return pressed and BIT_BUTTON_PRESSED_STYLE or BIT_BUTTON_STYLE
+end
+
 local cc_gui = {
-  WINDOW_ID = WINDOW_ID
+  WINDOW_ID = WINDOW_ID,
+  ENCODER_ID = ENCODER_ID
 }
 
 --- @class SignalEntry
@@ -64,6 +74,19 @@ local cc_gui = {
 --- @field add_button LuaGuiElement
 --- @field signal Signal?
 --- @field mask integer?
+--- @field slot integer?
+
+--- @class EncoderState
+--- @field dialog LuaGuiElement?
+--- @field signal_button LuaGuiElement
+--- @field textfield LuaGuiElement
+--- @field bit_buttons LuaGuiElement
+--- @field mask integer?
+--- @field display_dec LuaGuiElement
+--- @field display_hex LuaGuiElement
+--- @field display_bin LuaGuiElement
+--- @field display_oct LuaGuiElement
+--- @field confirm_button LuaGuiElement
 
 --- @class UiState
 --- @field main_window LuaGuiElement
@@ -84,6 +107,8 @@ local cc_gui = {
 --- @field selected_slot_button LuaGuiElement?
 --- @field stack_size integer?
 --- @field network_mask NetworkMaskState
+--- @field encoder EncoderState?
+--- @field dimmer LuaGuiElement?
 
 --- @param player_index PlayerIdentification?
 --- @return UiState?
@@ -594,37 +619,76 @@ local function handle_cs_signal_reset(event)
 end
 
 --- @param event EventData.on_gui_elem_changed
-local function handle_network_mask_signal_changed(event)
+--- @param on_failure function
+--- @return Signal|false
+local function handle_mask_signal_changed(event, on_failure)
   local state = get_player_state(event.player_index)
-  if not state then return end
+  if not state then return false end
   local element = event.element
-  if not element then return end
+  if not element then return false end
   --- @type Signal
   local signal = { signal = element.elem_value --[[@as SignalID]], count = 0 }
   if not signal.signal then
-    state.network_mask.signal = nil
-    state.network_mask.add_button.enabled = false
-    return
+    on_failure()
+    return false
   end
   if not cc_util.is_valid_output_signal(signal) then
     event.element.elem_value = nil
-    state.network_mask.signal = nil
-    state.network_mask.add_button.enabled = false
+    on_failure()
     local player = game.get_player(event.player_index)
-    if not player then return end
+    if not player then return false end
     player.print({ "cybersyn-combinator-window.invalid-signal" })
-    return
+    return false
   end
   if signal.signal.type ~= "virtual" then
     event.element.elem_value = nil
-    state.network_mask.signal = nil
-    state.network_mask.add_button.enabled = false
+    on_failure()
     log:info("attempt to use non-virtual signal as network mask")
     local player = game.get_player(event.player_index)
-    if not player then return end
+    if not player then return false end
     player.print { "cybersyn-combinator-window.non-virtual-network-mask", signal.signal.type, signal.signal.name }
-    return
+    return false
   end
+  return signal
+end
+
+--- @param event EventData.on_gui_elem_changed
+local function handle_network_mask_signal_changed(event)
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  -- local element = event.element
+  -- if not element then return end
+  -- --- @type Signal
+  -- local signal = { signal = element.elem_value --[[@as SignalID]], count = 0 }
+  -- if not signal.signal then
+  --   state.network_mask.signal = nil
+  --   state.network_mask.add_button.enabled = false
+  --   return
+  -- end
+  -- if not cc_util.is_valid_output_signal(signal) then
+  --   event.element.elem_value = nil
+  --   state.network_mask.signal = nil
+  --   state.network_mask.add_button.enabled = false
+  --   local player = game.get_player(event.player_index)
+  --   if not player then return end
+  --   player.print({ "cybersyn-combinator-window.invalid-signal" })
+  --   return
+  -- end
+  -- if signal.signal.type ~= "virtual" then
+  --   event.element.elem_value = nil
+  --   state.network_mask.signal = nil
+  --   state.network_mask.add_button.enabled = false
+  --   log:info("attempt to use non-virtual signal as network mask")
+  --   local player = game.get_player(event.player_index)
+  --   if not player then return end
+  --   player.print { "cybersyn-combinator-window.non-virtual-network-mask", signal.signal.type, signal.signal.name }
+  --   return
+  -- end
+  local signal = handle_mask_signal_changed(event, function()
+    state.network_mask.signal = nil
+    state.network_mask.add_button.enabled = false
+  end)
+  if not signal then return end
   state.network_mask.signal = signal
   log:debug("network signal changed to ", serpent.block(signal))
   --- @type integer?
@@ -686,6 +750,430 @@ local function handle_network_mask_add_click(event)
 end
 
 --- @param event EventData.on_gui_click
+local function handle_encoder_close(event)
+  log:debug("encoder close button clicked")
+  cc_gui:close_encoder(event.player_index, true)
+end
+
+--- @param event EventData.on_gui_click
+local function handle_encoder_confirm(event)
+  log:debug("encoder confirm button clicked")
+  local state = get_player_state(event.player_index)
+  if not state then
+    cc_gui:close_encoder(event.player_index, true)
+    return
+  end
+  state.network_mask.signal.signal = state.encoder.signal_button.elem_value --[[@as SignalID]]
+  state.network_mask.signal.count = masking.uint_to_int(state.encoder.mask)
+  cc_gui:close_encoder(event.player_index, true)
+  add_network_mask(event.player_index, state)
+end
+
+--- @param player_index integer
+--- @param state UiState
+--- @param update_textfield boolean
+local function refresh_encoder(player_index, state, update_textfield)
+  state.encoder.confirm_button.enabled = state.encoder.signal_button.elem_value ~= nil
+  if not state.encoder.bit_buttons then return end
+  local mask = state.encoder.mask
+  if not mask then return end
+  if update_textfield then
+    state.encoder.textfield.text = masking.format_for_input(mask, player_index)
+  end
+  state.encoder.display_dec.caption = masking.format_explicit(mask, masking.Mode.DECIMAL, false, true)
+  state.encoder.display_hex.caption = masking.format_explicit(mask, masking.Mode.HEX, false, true)
+  state.encoder.display_bin.caption = masking.format_explicit(mask, masking.Mode.BINARY, false, true)
+  state.encoder.display_oct.caption = masking.format_explicit(mask, masking.Mode.OCTAL, false, true)
+  for i, button in ipairs(state.encoder.bit_buttons.children) do
+    local bit_index = i - 1
+    local bit_value = bit32.extract(state.encoder.mask, bit_index)
+    if bit_value == 1 then
+      button.style = BIT_BUTTON_PRESSED_STYLE
+    else
+      button.style = BIT_BUTTON_STYLE
+    end
+  end
+end
+
+--- @param event EventData.on_gui_elem_changed
+local function handle_encoder_signal_changed(event)
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  local signal = handle_mask_signal_changed(event, function()
+    state.encoder.signal_button.elem_value = nil
+  end)
+  refresh_encoder(event.player_index, state, true)
+  if not signal then return end
+  state.encoder.textfield.focus()
+  state.encoder.textfield.select_all()
+end
+
+--- @param event EventData.on_gui_click
+local function handle_encoder_signal_click(event)
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  refresh_encoder(event.player_index, state, true)
+end
+
+--- @param event EventData.on_gui_text_changed
+local function handle_encoder_mask_changed(event)
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  local text = event.element.text
+  local mask = masking.parse(text, event.player_index)
+  state.encoder.mask = mask
+  refresh_encoder(event.player_index, state, false)
+end
+
+-- --- @param event EventData.on_gui_confirmed
+-- local function handle_encoder_mask_confirmed(event)
+--   local state = get_player_state(event.player_index)
+--   if not state then return end
+-- end
+
+--- @param event EventData.on_gui_click
+local function handle_encoder_bit_button_click(event)
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  local index = event.element.tags.index
+  local bit_index = event.element.tags.bit_index --[[@as integer]]
+  state.encoder.mask = bit32.bxor(state.encoder.mask, bit32.lshift(1, bit_index))
+  log:debug("Pressed bit button ", index, " (bit ", bit_index, ")")
+  refresh_encoder(event.player_index, state, true)
+end
+
+--- @param event EventData.on_gui_click
+local function handle_encoder_all(event)
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  state.encoder.mask = 0xFFFFFFFF
+  refresh_encoder(event.player_index, state, true)
+end
+
+--- @param event EventData.on_gui_click
+local function handle_encoder_none(event)
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  state.encoder.mask = 0
+  refresh_encoder(event.player_index, state, true)
+end
+
+local function handle_dimmer_click(event)
+  local state = get_player_state(event.player_index)
+  if not state or not state.encoder then return end
+  state.encoder.dialog.bring_to_front()
+end
+
+--- @param player_index integer
+--- @param state UiState
+local function create_encoder(player_index, state)
+  local player = game.players[player_index]
+  local screen = player.gui.screen
+  -- local wide = settings.get_player_settings(player)[constants.SETTINGS.NETWORK_MASK_DISPLAY_MODE].value == "BINARY"
+  -- local rows = settings.startup[constants.SETTINGS.SLOT_ROWS].value
+  -- local dim_width = wide and 825 or 685
+  -- local dim_height = 352 + 40 * rows
+  -- local _, dimmer = flib_gui.add(screen, {
+  --   type = "frame",
+  --   name = "cybersyn-combinator_dimmer",
+  --   style = "cybersyn-combinator_frame_semitransparent",
+  --   style_mods = {
+  --     width = dim_width,
+  --     height = dim_height,
+  --     padding = 0,
+  --     use_header_filler = false
+  --   },
+  --   handler = {
+  --     [defines.events.on_gui_click] = handle_dimmer_click
+  --   }
+  -- })
+  -- dimmer.location = state.main_window.location
+  -- state.dimmer = dimmer
+  local named, dialog = flib_gui.add(screen, {
+    {
+      type = "frame",
+      direction = "vertical",
+      name = ENCODER_ID,
+      tags = {
+        unit_number = state.entity.unit_number
+      },
+      style_mods = {
+        -- minimal_width = 240
+        width = 400
+      },
+      children = {
+        {
+          type = "flow",
+          direction = "horizontal",
+          drag_target = ENCODER_ID,
+          children = {
+            {
+              type = "label",
+              style = "frame_title",
+              caption = { "cybersyn-combinator-encoder.title" },
+              elem_mods = { ignored_by_interaction = true }
+            },
+            {
+              type = "empty-widget",
+              style = "flib_titlebar_drag_handle",
+              elem_mods = { ignored_by_interaction = true }
+            }
+          }
+        },
+        {
+          type = "frame",
+          direction = "vertical",
+          style = "inside_shallow_frame_with_padding",
+          style_mods = {
+            horizontally_stretchable = true,
+            vertically_stretchable = true,
+            horizontal_align = "center",
+            padding = 8
+          },
+          children = {
+            { -- Signal and text field
+              type = "flow",
+              direction = "horizontal",
+              style_mods = {
+                horizontally_stretchable = true,
+                vertical_align = "center"
+              },
+              children = {
+                {
+                  type = "choose-elem-button",
+                  name = "encoder_signal_button",
+                  elem_type = "signal",
+                  style_mods = { width = 48, height = 48 },
+                  handler = {
+                    [defines.events.on_gui_elem_changed] = handle_encoder_signal_changed,
+                    [defines.events.on_gui_click] = handle_encoder_signal_click
+                  }
+                },
+                {
+                  type = "textfield",
+                  name = "encoder_mask_textfield",
+                  style = "cybersyn-combinator_network-mask-text-input",
+                  style_mods = { horizontally_stretchable = true, maximal_width = 400 },
+                  numeric = false,
+                  clear_and_focus_on_right_click = true,
+                  lose_focus_on_confirm = true,
+                  handler = {
+                    [defines.events.on_gui_text_changed] = handle_encoder_mask_changed
+                    -- [defines.events.on_gui_confirmed] = handle_encoder_mask_confirmed
+                  }
+                }
+              }
+            },
+            { -- Bit buttons
+              type = "flow",
+              direction = "vertical",
+              style_mods = {
+                horizontally_stretchable = true,
+                horizontal_align = "center"
+              },
+              children = {
+                {
+                  type = "table",
+                  name = "bit_buttons",
+                  column_count = 8
+                }
+              }
+            },
+            { -- All/None buttons
+              type = "flow",
+              direction = "horizontal",
+              style_mods = {
+                horizontally_stretchable = true,
+                horizontal_align = "center"
+              },
+              children = {
+                {
+                  type = "button",
+                  caption = { "cybersyn-combinator-encoder.all" },
+                  handler = handle_encoder_all
+                },
+                {
+                  type = "button",
+                  caption = { "cybersyn-combinator-encoder.none" },
+                  handler = handle_encoder_none
+                }
+              }
+            },
+            {
+              type = "table",
+              name = "mask_display_table",
+              column_count = 2,
+              style_mods = {
+                horizontally_stretchable = true
+              },
+              children = {
+                {
+                  type = "label",
+                  caption = { "cybersyn-combinator-encoder.decimal" }
+                },
+                {
+                  type = "flow",
+                  direction = "vertical",
+                  style_mods = {
+                    horizontally_stretchable = true,
+                    horizontal_align = "right"
+                  },
+                  children = {
+                    {
+                      type = "label",
+                      name = "display_dec",
+                      style_mods = {
+                        horizontal_align = "right",
+                        horizontally_stretchable = true
+                      }
+                    }
+                  }
+                },
+                {
+                  type = "label",
+                  caption = { "cybersyn-combinator-encoder.hexadecimal" }
+                },
+                {
+                  type = "flow",
+                  direction = "vertical",
+                  style_mods = {
+                    horizontally_stretchable = true,
+                    horizontal_align = "right"
+                  },
+                  children = {
+                    {
+                      type = "label",
+                      name = "display_hex",
+                      style_mods = {
+                        horizontal_align = "right",
+                        horizontally_stretchable = true
+                      }
+                    }
+                  }
+                },
+                {
+                  type = "label",
+                  caption = { "cybersyn-combinator-encoder.binary" }
+                },
+                {
+                  type = "flow",
+                  direction = "vertical",
+                  style_mods = {
+                    horizontally_stretchable = true,
+                    horizontal_align = "right"
+                  },
+                  children = {
+                    {
+                      type = "label",
+                      name = "display_bin",
+                      style_mods = {
+                        horizontal_align = "right",
+                        horizontally_stretchable = true
+                      }
+                    }
+                  }
+                },
+                {
+                  type = "label",
+                  caption = { "cybersyn-combinator-encoder.octal" }
+                },
+                {
+                  type = "flow",
+                  direction = "vertical",
+                  style_mods = {
+                    horizontally_stretchable = true,
+                    horizontal_align = "right"
+                  },
+                  children = {
+                    {
+                      type = "label",
+                      name = "display_oct",
+                      style_mods = {
+                        horizontal_align = "right",
+                        horizontally_stretchable = true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          type = "flow",
+          direction = "horizontal",
+          style_mods = {
+            horizontal_spacing = 0
+          },
+          children = {
+            {
+              type = "button",
+              style = "back_button",
+              caption = { "gui.cancel" },
+              name = ENCODER_ID .. "_close",
+              handler = handle_encoder_close
+            },
+            {
+              type = "empty-widget",
+              style = "flib_dialog_footer_drag_handle",
+              drag_target = ENCODER_ID
+            },
+            {
+              type = "button",
+              name = "confirm_button",
+              style = "confirm_button",
+              caption = { "gui.confirm" },
+              tooltip = nil,
+              handler = handle_encoder_confirm
+            }
+          }
+        }
+      }
+    }
+  })
+  local bit_buttons = named.bit_buttons
+  state.encoder = {
+    mask = state.network_mask.mask,
+    dialog = dialog,
+    signal_button = named.encoder_signal_button,
+    textfield = named.encoder_mask_textfield,
+    bit_buttons = bit_buttons,
+    display_dec = named.display_dec,
+    display_hex = named.display_hex,
+    display_bin = named.display_bin,
+    display_oct = named.display_oct,
+    confirm_button = named.confirm_button
+  }
+  local signal = state.network_mask.signal
+  if not signal then
+    cc_gui:close_encoder(player_index, true)
+    return
+  end
+  state.encoder.signal_button.elem_value = signal.signal
+  state.encoder.textfield.text = masking.format_for_input(signal.count, player_index)
+  for i = 1, 32 do
+    local bit_index = i - 1
+    local is_active = bit32.extract(state.encoder.mask, bit_index) == 1
+    local bb_style = bit_button_style(is_active)
+    flib_gui.add(bit_buttons, {
+      type = "sprite-button",
+      caption = tostring(i),
+      style = bb_style,
+      mouse_button_filter = { "left" },
+      tags = {
+        index = i,
+        bit_index = bit_index
+      },
+      handler = handle_encoder_bit_button_click
+    })
+  end
+  refresh_encoder(player_index, state, true)
+  dialog.force_auto_center()
+  state.main_window.visible = false
+  -- player.opened = dialog
+end
+
+--- @param event EventData.on_gui_click
 handle_network_list_item_click = function(event)
   local state = get_player_state(event.player_index)
   if not state then return end
@@ -705,10 +1193,16 @@ handle_network_list_item_click = function(event)
   if not signal then return end
   state.network_mask.signal = signal
   state.network_mask.mask = signal.count
-  state.network_mask.signal_button.elem_value = signal.signal
-  state.network_mask.textfield.text = masking.format_for_input(signal.count, event.player_index)
-  state.network_mask.add_button.enabled = true
-  focus_network_mask_input(state)
+  state.network_mask.slot = slot
+  if event.control then
+    log:debug("Showing network encoder!")
+    create_encoder(event.player_index, state)
+  else
+    state.network_mask.signal_button.elem_value = signal.signal
+    state.network_mask.textfield.text = masking.format_for_input(signal.count, event.player_index)
+    state.network_mask.add_button.enabled = true
+    focus_network_mask_input(state)
+  end
 end
 
 --- @param player LuaPlayer
@@ -740,7 +1234,10 @@ local function create_window(player, entity)
               type = "label",
               style = "frame_title",
               caption = { "cybersyn-combinator-window.title" },
-              elem_mods = { ignored_by_interaction = true }
+              elem_mods = { ignored_by_interaction = true },
+              style_mods = {
+                maximal_width = 600
+              }
             },
             {
               type = "empty-widget",
@@ -926,7 +1423,10 @@ local function create_window(player, entity)
                   children = {
                     { -- On/off switch
                       type = "flow",
-                      style_mods = { horizontal_align = "left" },
+                      style_mods = {
+                        horizontal_align = "left",
+                        maximal_width = 110
+                      },
                       direction = "vertical",
                       children = {
                         {
@@ -957,6 +1457,7 @@ local function create_window(player, entity)
                         {
                           type = "flow",
                           direction = "vertical",
+                          style_mods = { maximal_width = 105 },
                           children = {
                             {
                               type = "label",
@@ -980,6 +1481,7 @@ local function create_window(player, entity)
                         {
                           type = "flow",
                           direction = "vertical",
+                          style_mods = { maximal_width = 105 },
                           children = {
                             {
                               type = "label",
@@ -1003,6 +1505,7 @@ local function create_window(player, entity)
                         {
                           type = "flow",
                           direction = "vertical",
+                          style_mods = { maximal_width = 105 },
                           children = {
                             {
                               type = "label",
@@ -1299,12 +1802,39 @@ local function destroy(player, window_id)
   return true
 end
 
+function cc_gui:close_encoder(player_index, silent)
+  if not player_index then return end
+  local player = game.get_player(player_index)
+  if not player then return end
+  local player_data = cc_util.get_player_data(player_index)
+  local state = player_data and player_data.state
+  if state and not state.encoder then return end
+  log:debug("Encoder close, player index ", player_index)
+  local destroyed = destroy(player, ENCODER_ID)
+  if state and state.encoder then
+    state.encoder = nil
+  end
+  if not destroyed then return end
+  if state and state.dimmer then
+    state.dimmer.destroy()
+    state.dimmer = nil
+  end
+  if not silent then
+    player.play_sound { path = constants.ENTITY_CLOSE_SOUND }
+  end
+  if state then
+    state.main_window.visible = true
+    player.opened = state.main_window
+  end
+end
+
 --- @param player_index string|uint?
 function cc_gui:close(player_index, silent)
   if not player_index then return end
   local player = game.get_player(player_index)
   if not player then return end
   log:debug("GUI close, player index ", player_index)
+  self:close_encoder(player_index, true)
   local destroyed = destroy(player, WINDOW_ID)
   local player_data = cc_util.get_player_data(player_index)
   if player_data and player_data.state and player_data.state.combinator then
@@ -1396,7 +1926,16 @@ function cc_gui:register()
     [WINDOW_ID .. "_network_mask_changed"] = handle_network_mask_changed,
     [WINDOW_ID .. "_network_mask_confirmed"] = handle_network_mask_confirmed,
     [WINDOW_ID .. "_network_mask_add_click"] = handle_network_mask_add_click,
-    [WINDOW_ID .. "_network_list_item_click"] = handle_network_list_item_click
+    [WINDOW_ID .. "_network_list_item_click"] = handle_network_list_item_click,
+    [ENCODER_ID .. "_close"] = handle_encoder_close,
+    [ENCODER_ID .. "_confirm"] = handle_encoder_confirm,
+    [ENCODER_ID .. "_signal_changed"] = handle_encoder_signal_changed,
+    [ENCODER_ID .. "_signal_click"] = handle_encoder_signal_click,
+    [ENCODER_ID .. "_mask_changed"] = handle_encoder_mask_changed,
+    [ENCODER_ID .. "_bit_button_click"] = handle_encoder_bit_button_click,
+    [ENCODER_ID .. "_all"] = handle_encoder_all,
+    [ENCODER_ID .. "_none"] = handle_encoder_none,
+    ["cybersyn-combinator_dimmer_click"] = handle_dimmer_click
   }
   flib_gui.handle_events()
   script.on_event(defines.events.on_gui_opened, function(event) self:on_gui_opened(event) end)

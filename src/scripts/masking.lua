@@ -166,7 +166,8 @@ local function get_is_hex_mode(player)
 end
 
 local masking = {
-  Mode = Mode
+  Mode = Mode,
+  uint_to_int = uint_to_int
 }
 
 local PRETTIFIERS = {
