@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.0.0
+Date: TBD
+  Major Features:
+    - Added new GUI for encoding network signals.
+  Bugfixes:
+    - Add possible fix for obscure issue with stack sizes.
+      (For more context, see issue #32 in the repository.)
+---------------------------------------------------------------------------------------------------
 Version: 0.6.1
 Date: 2023-08-06
   Bugfixes:
