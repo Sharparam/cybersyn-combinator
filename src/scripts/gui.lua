@@ -906,11 +906,17 @@ local function create_encoder(player_index, state)
           type = "flow",
           direction = "horizontal",
           drag_target = ENCODER_ID,
+          tooltip = { "cybersyn-combinator-encoder.tooltip" },
           children = {
             {
               type = "label",
               style = "frame_title",
-              caption = { "cybersyn-combinator-encoder.title" },
+              caption = {
+                "",
+                { "cybersyn-combinator-encoder.title" },
+                " [img=info]"
+              },
+              tooltip = { "cybersyn-combinator-encoder.tooltip" },
               elem_mods = { ignored_by_interaction = true }
             },
             {
