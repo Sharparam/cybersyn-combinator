@@ -24,6 +24,8 @@ local constants = {
     NETWORK_MASK_DISPLAY_MODE = "cybersyn-combinator-network-mask-display-mode",
     NETWORK_MASK_DISPLAY_PREFIX = "cybersyn-combinator-network-mask-display-prefix",
     NETWORK_MASK_USE_CS_DEFAULT = "cybersyn-combinator-network-mask-use-cs-default",
+    ENCODER_ZERO_INDEX = "cybersyn-combinator-encoder-zero-index",
+    -- Project Cybersyn settings
     CS_REQUEST_THRESHOLD = "cybersyn-request-threshold",
     CS_PRIORITY = "cybersyn-priority",
     CS_LOCKED_SLOTS = "cybersyn-locked-slots",
