@@ -152,6 +152,13 @@ data:extend {
   },
   {
     type = "bool-setting",
+    name = NAMES.ENCODER_ZERO_INDEX,
+    setting_type = "runtime-per-user",
+    default_value = false,
+    order = "c[cybersyn]-c[combinator]-e[encoder]-z[zeroindex]"
+  },
+  {
+    type = "bool-setting",
     name = NAMES.NEGATIVE_SIGNALS,
     setting_type = "runtime-per-user",
     default_value = false,

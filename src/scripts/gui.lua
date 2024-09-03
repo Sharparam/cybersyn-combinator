@@ -1151,13 +1151,15 @@ local function create_encoder(player_index, state)
   end
   state.encoder.signal_button.elem_value = signal.signal
   state.encoder.textfield.text = masking.format_for_input(signal.count, player_index)
+  local settings = settings.get_player_settings(player_index)
+  local zeroIndex = settings[constants.SETTINGS.ENCODER_ZERO_INDEX].value
   for i = 1, 32 do
     local bit_index = i - 1
     local is_active = bit32.extract(state.encoder.mask, bit_index) == 1
     local bb_style = bit_button_style(is_active)
     flib_gui.add(bit_buttons, {
       type = "sprite-button",
-      caption = tostring(i),
+      caption = tostring(zeroIndex and bit_index or i),
       style = bb_style,
       mouse_button_filter = { "left" },
       tags = {
