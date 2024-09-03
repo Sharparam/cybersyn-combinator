@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.0
-Date: TBD
+Date: 2024-09-03
   Major Features:
     - Added new GUI for encoding network signals.
   Bugfixes:
