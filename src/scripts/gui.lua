@@ -899,7 +899,7 @@ local function create_encoder(player_index, state)
       },
       style_mods = {
         -- minimal_width = 240
-        width = 400
+        width = 450
       },
       children = {
         {
@@ -934,11 +934,15 @@ local function create_encoder(player_index, state)
             { -- Signal and text field
               type = "flow",
               direction = "horizontal",
+              style = "centering_horizontal_flow",
               style_mods = {
-                horizontally_stretchable = true,
-                vertical_align = "center"
+                bottom_margin = 4
               },
               children = {
+                {
+                  type = "flow",
+                  style_mods = { horizontally_stretchable = true }
+                },
                 {
                   type = "choose-elem-button",
                   name = "encoder_signal_button",
@@ -953,7 +957,7 @@ local function create_encoder(player_index, state)
                   type = "textfield",
                   name = "encoder_mask_textfield",
                   style = "cybersyn-combinator_network-mask-text-input",
-                  style_mods = { horizontally_stretchable = true, maximal_width = 400 },
+                  style_mods = { left_margin = 8, width = 200 },
                   numeric = false,
                   clear_and_focus_on_right_click = true,
                   lose_focus_on_confirm = true,
@@ -961,7 +965,11 @@ local function create_encoder(player_index, state)
                     [defines.events.on_gui_text_changed] = handle_encoder_mask_changed
                     -- [defines.events.on_gui_confirmed] = handle_encoder_mask_confirmed
                   }
-                }
+                },
+                {
+                  type = "flow",
+                  style_mods = { horizontally_stretchable = true }
+                },
               }
             },
             { -- Bit buttons
@@ -969,7 +977,9 @@ local function create_encoder(player_index, state)
               direction = "vertical",
               style_mods = {
                 horizontally_stretchable = true,
-                horizontal_align = "center"
+                horizontal_align = "center",
+                top_margin = 4,
+                bottom_margin = 4
               },
               children = {
                 {
@@ -984,7 +994,9 @@ local function create_encoder(player_index, state)
               direction = "horizontal",
               style_mods = {
                 horizontally_stretchable = true,
-                horizontal_align = "center"
+                horizontal_align = "center",
+                top_margin = 4,
+                bottom_margin = 4
               },
               children = {
                 {
