@@ -34,7 +34,15 @@ There's also an option to always assume hexadecimal input, but then no other for
 After pressing the green confirm button, the new network mask will be added to the list, which shows the virtual signal along with the value of the mask.
 Left clicking an item in the list will populate the fields above for it to be edited, or you can right click to remove it from the combinator.
 
-More functionality is planned here as well for easier managing of masks.
+#### Encoder
+
+If you don't fancy manually writing out network masks, since version v1.0.0 there is now a friendly GUI encoder you can use!
+
+At the moment, you will have to add a network mask to the list as described above first, then you can **Control + Left-click** on it to open the encoder interface.
+
+In the encoder, you can use numbered buttons to toggle each bit in the network mask, and also see the resulting value in decimal, hexadecimal, binary, and octal.
+
+(The encoder also still has a text field you can use to write the mask yourself, and see the buttons update in real-time as you type.)
 
 ### Copy-pasting settings
 
