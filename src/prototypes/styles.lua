@@ -53,7 +53,7 @@ styles["cybersyn-combinator_network-mask-text-input"] = {
 -- Credit to FactoryPlanner for list-box/scroll-pane styles
 styles["cybersyn-combinator_network-list_scroll-pane"] = {
   type = "scroll_pane_style",
-  parent = "scroll_pane_with_dark_background_under_subheader",
+  parent = "list_box_in_shallow_frame_scroll_pane",
   background_graphical_set = { -- rubber grid
       position = { 282, 17 },
       corner_size = 8,

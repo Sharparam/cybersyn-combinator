@@ -940,8 +940,8 @@ local function create_encoder(player_index, state)
             { -- Signal and text field
               type = "flow",
               direction = "horizontal",
-              style = "centering_horizontal_flow",
               style_mods = {
+                vertical_align = "center",
                 bottom_margin = 4
               },
               children = {
@@ -1268,7 +1268,7 @@ local function create_window(player, entity)
               type = "sprite-button",
               style = "frame_action_button",
               mouse_button_filter = { "left" },
-              sprite = "utility/close_white",
+              sprite = "utility/close",
               hovered_sprite = "utility/close_black",
               clicked_sprite = "utility/close_black",
               name = WINDOW_ID .. "_close",
@@ -1384,7 +1384,6 @@ local function create_window(player, entity)
                       children = {
                         { -- Status
                           type = "flow",
-                          style = "status_flow",
                           direction = "horizontal",
                           style_mods = { vertical_align = "center", horizontally_stretchable = true, bottom_padding = 4 },
                           children = {
@@ -1451,7 +1450,7 @@ local function create_window(player, entity)
                       children = {
                         {
                           type = "label",
-                          style = "heading_3_label",
+                          style = "semibold_label",
                           caption = { "gui-constant.output" }
                         },
                         {
@@ -1481,7 +1480,7 @@ local function create_window(player, entity)
                           children = {
                             {
                               type = "label",
-                              style = "heading_3_label",
+                              style = "semibold_label",
                               caption = {
                                 "",
                                 { "cybersyn-combinator-window.item-total" },
@@ -1505,7 +1504,7 @@ local function create_window(player, entity)
                           children = {
                             {
                               type = "label",
-                              style = "heading_3_label",
+                              style = "semibold_label",
                               caption = {
                                 "",
                                 { "cybersyn-combinator-window.item-stacks" },
@@ -1529,7 +1528,7 @@ local function create_window(player, entity)
                           children = {
                             {
                               type = "label",
-                              style = "heading_3_label",
+                              style = "semibold_label",
                               caption = {
                                 "",
                                 { "cybersyn-combinator-window.fluid-total" },
@@ -1557,7 +1556,7 @@ local function create_window(player, entity)
                 },
                 {
                   type = "label",
-                  style = "heading_3_label",
+                  style = "semibold_label",
                   style_mods = { top_margin = 0 },
                   caption = { "gui-constant.output-signals" }
                 },
