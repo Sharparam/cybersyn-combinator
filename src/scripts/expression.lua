@@ -15,7 +15,7 @@ function expr.parse(input, fallback)
     input = "0" .. input
   end
 
-  local success, result = pcall(game.evaluate_expression, input)
+  local success, result = pcall(helpers.evaluate_expression, input)
 
   if not success then
     log:warn("The given input '", input, "' could not be evaluated as a math expression: ", result)
