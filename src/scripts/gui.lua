@@ -1258,8 +1258,7 @@ local function create_window(player, entity)
               style = "frame_action_button",
               mouse_button_filter = { "left" },
               sprite = "utility/close",
-              hovered_sprite = "utility/close_black",
-              clicked_sprite = "utility/close_black",
+              invert_colors_of_picture_when_hovered_or_toggled = true,
               name = WINDOW_ID .. "_close",
               handler = handle_close
             }
