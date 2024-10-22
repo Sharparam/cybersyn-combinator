@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.0.0
+Date: 2024-10-23
+  Major Features:
+    - Support for Factorio 2.0. Migrating from 1.1 to 2.0 might not work due to API changes in Factorio.
+---------------------------------------------------------------------------------------------------
 Version: 1.0.0
 Date: 2024-09-03
   Major Features:
