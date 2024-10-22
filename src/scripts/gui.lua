@@ -414,19 +414,8 @@ local function add_network_mask(player, state)
   local rich = "[" .. rich_type .. "=" .. signal.signal.name .. "] " .. formatted_mask
   log:debug("result rich text: ", rich)
 
-  local result = state.combinator:add_or_update_network_signal(signal)
+  state.combinator:add_or_update_network_signal(signal)
   refresh_network_list(player, state)
-
-  if not result then
-    log:info("Reached maximum number of network signals on combinator")
-    local actual_player = player
-    if type(player) == "number" or type(player) == "string" then
-      actual_player = game.get_player(player)
-    end
-    if actual_player then
-      actual_player.print { "cybersyn-combinator-window.max-network-signals", config.network_slot_count }
-    end
-  end
 
   state.network_mask.signal_button.elem_value = nil
   state.network_mask.signal = nil
