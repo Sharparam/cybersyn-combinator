@@ -27,8 +27,8 @@ script.on_configuration_changed(function(data)
 end)
 
 script.on_load(function()
-  if not global.player_data then return end
-  for _, player_data in pairs(global.player_data) do
+  if not storage.player_data then return end
+  for _, player_data in pairs(storage.player_data) do
     if player_data and player_data.state and player_data.state.combinator then
       setmetatable(player_data.state.combinator, { __index = CybersynCombinator })
     end
