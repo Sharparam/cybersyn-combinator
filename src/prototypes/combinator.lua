@@ -9,7 +9,6 @@ combi.icon_size = 32
 combi.icon_mipmaps = nil
 combi.next_upgrade = nil
 combi.fast_replaceable_group = "constant-combinator"
-combi.item_slot_count = config.total_slot_count
 combi.sprites = make_4way_animation_from_spritesheet {
   layers = {
     {
