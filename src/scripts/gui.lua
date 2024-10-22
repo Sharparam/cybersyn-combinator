@@ -181,7 +181,7 @@ local function update_signal_table(state)
       button.label.caption = format_signal_count(signal.count)
       button.locked = true
       if signal.signal.type == "item" and signal.count < 0 then
-        local stack_size = game.item_prototypes[signal.signal.name].stack_size
+        local stack_size = prototypes.item[signal.signal.name].stack_size
         local stacks = math.ceil(signal.count / stack_size)
         item_request_total = item_request_total + signal.count
         item_request_stacks = item_request_stacks + stacks
@@ -214,7 +214,7 @@ local function update_totals(state)
     local signal = state.combinator:get_item_slot(slot --[[@as uint]])
     if signal and signal.signal then
       if signal.signal.type == "item" and signal.count < 0 then
-        local stack_size = game.item_prototypes[signal.signal.name].stack_size
+        local stack_size = prototypes.item[signal.signal.name].stack_size
         local stacks = math.ceil(signal.count / stack_size)
         item_request_total = item_request_total + signal.count
         item_request_stacks = item_request_stacks + stacks
@@ -277,7 +277,7 @@ local function change_signal_count(state, event)
     --- @type integer
     local stack_size
     if signal_type == "item" then
-      stack_size = game.item_prototypes[signal_name].stack_size
+      stack_size = prototypes.item[signal_name].stack_size
       state.signal_value_stacks.enabled = true
       if settings.get_player_settings(event.player_index)[constants.SETTINGS.USE_STACKS].value then
         focus_stacks = true
@@ -538,7 +538,7 @@ local function handle_signal_value_changed(event)
       log:warn("stack size for current selection unexpectedly nil")
       local combi_sig = state.combinator:get_item_slot(state.selected_slot)
       if combi_sig.signal.type == "item" then
-        stack_size = game.item_prototypes[combi_sig.signal.name].stack_size
+        stack_size = prototypes.item[combi_sig.signal.name].stack_size
       else
         stack_size = 1
       end
