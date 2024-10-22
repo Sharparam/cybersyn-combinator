@@ -56,8 +56,8 @@ combi_item.place_result = name
 
 local combi_recipe = flib_data_util.copy_prototype(data.raw.recipe["constant-combinator"], name)
 combi_recipe.ingredients = {
-  { "constant-combinator", 1 },
-  { "electronic-circuit", 1 }
+  { type = "item", name = "constant-combinator", amount = 1 },
+  { type = "item", name = "electronic-circuit", amount = 1 }
 }
 combi_recipe.enabled = false
 combi_recipe.subgroup = data.raw.recipe["train-stop"].subgroup
