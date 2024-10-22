@@ -1654,7 +1654,7 @@ local function create_window(player, entity)
     local _, button = flib_gui.add(signal_table, {
       type = "choose-elem-button",
       name = "cybersyn-combinator_signal-button__" .. i,
-      style = "flib_slot_button_default",
+      style = "slot_button",
       elem_type = "signal",
       handler = {
         [defines.events.on_gui_elem_changed] = handle_signal_changed,

@@ -35,6 +35,7 @@ styles["cybersyn-combinator_signal-count"] = {
   horizontal_align = "right",
   vertical_align = "bottom",
   right_padding = 2,
+  parent_hovered_font_color = { 1, 1, 1 }
 }
 
 styles["cybersyn-combinator_network-list_info-sprite"] = {
