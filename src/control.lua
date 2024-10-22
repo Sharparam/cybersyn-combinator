@@ -75,7 +75,7 @@ end, entity_event_filters)
 
 script.on_event(defines.events.on_built_entity, function(event)
   local player = game.get_player(event.player_index)
-  local entity = event.created_entity
+  local entity = event.entity
   if not player or not entity then return end
   local pname = player.name
   log:debug(entity.name, "[", entity.unit_number, "] built by ", pname)
@@ -108,7 +108,7 @@ script.on_event(defines.events.script_raised_built, on_script_raised_built_or_re
 script.on_event(defines.events.script_raised_revive, on_script_raised_built_or_revive, entity_event_filters)
 
 script.on_event(defines.events.on_robot_built_entity, function(event)
-  local entity = event.created_entity
+  local entity = event.entity
   if not entity then return end
   local robot = event.robot
   local player = entity.last_user or robot.last_user
