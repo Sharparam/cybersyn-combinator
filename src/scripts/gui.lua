@@ -6,7 +6,7 @@ local masking = require "scripts.masking"
 local expression = require "scripts.expression"
 local CybersynCombinator = require "combinator"
 local util = require "__core__.lualib.util"
-local flib_gui = require "__flib__.gui-lite"
+local flib_gui = require "__flib__.gui"
 
 local ceil = math.ceil
 local floor = math.floor
