@@ -31,8 +31,12 @@
     "factorio.versions": [
       {
         "name": "Stable",
-        "factorioPath": "/home/sharparam/factorio/bin/x64/factorio",
+        "factorioPath": "/home/sharparam/games/factorio/latest/bin/x64/factorio",
         "active": true
+      },
+      {
+        "name": "Space Age (Stable)",
+        "factorioPath": "/home/sharparam/games/factorio/sa_latest/bin/x64/factorio"
       }
     ],
     "[lua]": {
