@@ -17,8 +17,38 @@ init_cs_default(constants.SETTINGS.CS_REQUEST_THRESHOLD)
 init_cs_default(constants.SETTINGS.CS_PRIORITY)
 init_cs_default(constants.SETTINGS.CS_LOCKED_SLOTS)
 
+local function sort_all_combinators()
+  log:info("Sorting all Cybersyn Constant Combinators")
+  ---@type EntitySearchFilters
+  local filter = {
+    name = constants.ENTITY_NAME
+  }
+  for surface_name, surface in pairs(game.surfaces) do
+    log:info("Processing surface ", surface_name)
+    local entities = surface.find_entities_filtered(filter)
+    for _, entity in pairs(entities) do
+      if entity.valid then
+        log:debug("Sorting combinator ", entity.unit_number)
+        local combinator = CybersynCombinator:new(entity, false)
+        combinator:sort_signals()
+      end
+    end
+    log:info("Done with surface ", surface_name)
+  end
+  log:info("Done sorting combinators")
+end
+
 script.on_configuration_changed(function(data)
-  if not data.mod_changes[constants.MOD_NAME] then return end
+  -- local previous_is_old_map = data.old_version and data.old_version:match("^1%.")
+  -- local current_is_new_map = data.new_version and data.new_version:match("^[^01]%.")
+  local cc_changes = data.mod_changes[constants.MOD_NAME]
+  -- local cc_old_ver_pre2 = cc_changes and cc_changes.old_version and (cc_changes.old_version:match("^[01]%.") or cc_changes.old_version == "2.0.0")
+  -- local cc_new_ver_post2 = cc_changes and cc_changes.new_version and cc_changes.new_version:match("^[^01]%.")
+  -- if (previous_is_old_map and current_is_new_map) or (cc_old_ver_pre2 and cc_new_ver_post2) then
+  --   log:info("Map or mod version upgraded from old v0 or v1 (or v2.0.0), sorting combinators")
+  --   sort_all_combinators()
+  -- end
+  if not cc_changes then return end
   for player_index, player in pairs(game.players) do
     if player.gui.screen[cc_gui.WINDOW_ID] then
       cc_gui:close(player_index, true)
@@ -131,6 +161,20 @@ script.on_event(defines.events.on_entity_settings_pasted, function(event)
   if dest.name ~= constants.ENTITY_NAME then return end
   CybersynCombinator:new(dest, true)
 end)
+
+local function sort_combinator(command)
+  local player = game.get_player(command.player_index)
+  if not player then return end
+  local entity = player.selected
+  if not entity or not entity.valid then return end
+  if entity.name ~= constants.ENTITY_NAME then return end
+  local combinator = CybersynCombinator:new(entity, false)
+  combinator:sort_signals()
+end
+
+
+commands.add_command("cc_sort", { "cybersyn-combinator-commands.sort" }, sort_combinator)
+commands.add_command("cc_sort_all", { "cybersyn-combinator-commands.sort-all" }, sort_all_combinators)
 
 cc_gui:register()
 cc_remote:register()

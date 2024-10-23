@@ -384,7 +384,6 @@ local function find_empty_slot(section)
   return section.filters_count + 1
 end
 
---- @private
 function CC:sort_signals()
   log:debug("performing sort")
   if not self:is_valid_entity() then return end
