@@ -4,6 +4,14 @@ This mod adds a new fancy combinator to the game, made to be used with the [Proj
 
 It functions like a regular constant combinator, but has built-in support for setting the various Cybersyn-specific signals.
 
+## 2.0 changes
+
+With Factorio 2.0, the internal behaviour of constant combinators was changed.
+As of v2.1.0 of this mod, there's a migration in place that should handle converting old combinators to make them work
+with the new system. If this still doesn't work, there's also new commands added to forcefully try to fix them:
+ - `/cc_sort_all` will try to fix all combinators across all surfaces.
+ - `/cc_sort` will try to fix the currently hovered combinator.
+
 ## Features
 
  - More slots than a regular constant combinator (configurable)
