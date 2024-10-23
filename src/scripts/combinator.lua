@@ -223,7 +223,7 @@ function CC:get_network_signals()
     local value = filter.value
     if value and value.name then
       signals[#signals + 1] = {
-        signal = { type = value.type, name = value.name },
+        signal = value,
         count = filter.min
       }
     end
@@ -234,9 +234,11 @@ end
 --- @param signal Signal
 function CC:add_or_update_network_signal(signal)
   self:sort_network_signals()
+  local quality = signal.signal.quality or "normal"
   local signals = self:get_network_signals()
   for slot, existing in ipairs(signals) do
-    if existing.signal.type == signal.signal.type and existing.signal.name == signal.signal.name then
+    local e_quality = existing.signal.quality or "normal"
+    if existing.signal.type == signal.signal.type and existing.signal.name == signal.signal.name and e_quality == quality then
       self:set_network_slot_value(slot --[[@as uint]], signal.count)
       return
     end
@@ -271,7 +273,7 @@ function CC:set_slot(slot, signal, section_id)
     value = {
       type = signal.signal.type,
       name = signal.signal.name,
-      quality = "normal"
+      quality = signal.signal.quality or "normal"
     },
     min = signal.count
   }

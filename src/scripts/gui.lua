@@ -372,7 +372,8 @@ local function refresh_network_list(player, state)
     local mask = signal.count
     local formatted_mask = masking.format(mask, player, true)
     local rich_type = signal.signal.type == "virtual" and "virtual-signal" or signal.signal.type
-    local rich = "[" .. rich_type .. "=" .. signal.signal.name .. "] " .. formatted_mask
+    local quality = signal.signal.quality or "normal"
+    local rich = "[" .. rich_type .. "=" .. signal.signal.name .. ",quality=" .. quality .. "] " .. formatted_mask
     local dec = masking.format_explicit(mask, masking.Mode.DECIMAL, false, true)
     local hex = masking.format_explicit(mask, masking.Mode.HEX, false, true)
     local bin = masking.format_explicit(mask, masking.Mode.BINARY, false, true)
