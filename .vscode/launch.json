@@ -9,6 +9,9 @@
             "request": "launch",
             "name": "Factorio Mod Debug",
             "adjustMods": {
+              "elevated-rails": true,
+              "quality": true,
+              "space-age": true,
               "cybersyn": true,
               "cybersyn-combinator": true,
               "EditorExtensions": true,
