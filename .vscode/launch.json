@@ -13,10 +13,10 @@
               "cybersyn-combinator": true,
               "EditorExtensions": true,
               "flib": true,
-              "LogisticTrainNetwork": true,
-              "LTN_Combinator_Modernized": true,
-              "factoryplanner": true,
-              "RecipeBook": true
+              "LogisticTrainNetwork": false,
+              "LTN_Combinator_Modernized": false,
+              "factoryplanner": false,
+              "RecipeBook": false
             },
             "checkGlobals": [
               "cybersyn-combinator"
