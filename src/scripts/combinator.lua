@@ -31,7 +31,12 @@ end
 --- @param sort_all boolean? `true` if all signals should be sorted, otherwise `false` or `nil`.
 --- @return CybersynCombinator
 function CC:new(entity, sort_all)
-  if not entity or not entity.valid or entity.name ~= constants.ENTITY_NAME then
+  if not entity or not entity.valid then
+    log:error("new: entity must be valid")
+    error("CybersynCombinator:new: entity must be valid")
+  end
+  local name = entity.name == "entity-ghost" and entity.ghost_name or entity.name
+  if name ~= constants.ENTITY_NAME then
     log:error("new: entity must be valid instance of ", constants.ENTITY_NAME, ", but ", entity.name, " was passed")
     error("CybersynCombinator:new: entity has to be a valid instance of " .. constants.ENTITY_NAME)
   end

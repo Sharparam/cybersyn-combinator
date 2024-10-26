@@ -33,6 +33,7 @@ local YELLOW = "utility/status_yellow"
 local STATUS_SPRITES = {
   [defines.entity_status.working] = GREEN,
   [defines.entity_status.normal] = GREEN,
+  [defines.entity_status.ghost] = YELLOW,
   [defines.entity_status.no_power] = RED,
   [defines.entity_status.low_power] = YELLOW,
   [defines.entity_status.disabled_by_control_behavior] = RED,
@@ -40,9 +41,11 @@ local STATUS_SPRITES = {
   [defines.entity_status.marked_for_deconstruction] = RED
 }
 local DEFAULT_STATUS_SPRITE = RED
+local GHOST_STATUS_SPRITE = YELLOW
 local STATUS_NAMES = {
   [defines.entity_status.working] = { "entity-status.working" },
   [defines.entity_status.normal] = { "entity-status.normal" },
+  [defines.entity_status.ghost] = { "entity-status.ghost" },
   [defines.entity_status.no_power] = { "entity-status.no-power" },
   [defines.entity_status.low_power] = { "entity-status.low-power" },
   [defines.entity_status.disabled_by_control_behavior] = { "entity-status.disabled" },
@@ -50,6 +53,7 @@ local STATUS_NAMES = {
   [defines.entity_status.marked_for_deconstruction] = { "entity-status.marked-for-deconstruction" }
 }
 local DEFAULT_STATUS_NAME = { "entity-status.disabled" }
+local GHOST_STATUS_NAME = { "entity-status.ghost" }
 
 local BIT_BUTTON_STYLE = "cybersyn-combinator_encoder_bit-button"
 local BIT_BUTTON_PRESSED_STYLE = "cybersyn-combinator_encoder_bit-button_pressed"
@@ -439,8 +443,9 @@ local function handle_on_off(event)
   log:debug("combinator switch changed to ", enabled)
   state.combinator:set_enabled(enabled)
   local status = state.entity.status
-  state.status_sprite.sprite = STATUS_SPRITES[status] or DEFAULT_STATUS_SPRITE
-  state.status_label.caption = STATUS_NAMES[status] or DEFAULT_STATUS_NAME
+  local is_ghost = state.entity.name == "entity-ghost"
+  state.status_sprite.sprite = is_ghost and GHOST_STATUS_SPRITE or STATUS_SPRITES[status] or DEFAULT_STATUS_SPRITE
+  state.status_label.caption = is_ghost and GHOST_STATUS_NAME or STATUS_NAMES[status] or DEFAULT_STATUS_NAME
 end
 
 --- @param event EventData.on_gui_elem_changed
@@ -1379,14 +1384,14 @@ local function create_window(player, entity)
                             {
                               type = "sprite",
                               name = "status_sprite",
-                              sprite = STATUS_SPRITES[entity.status] or DEFAULT_STATUS_SPRITE,
+                              sprite = entity.name == "entity-ghost" and GHOST_STATUS_SPRITE or STATUS_SPRITES[entity.status] or DEFAULT_STATUS_SPRITE,
                               style = "status_image",
                               style_mods = { stretch_image_to_widget_size = true }
                             },
                             {
                               type = "label",
                               name = "status_label",
-                              caption = STATUS_NAMES[entity.status] or DEFAULT_STATUS_NAME
+                              caption = entity.name == "entity-ghost" and GHOST_STATUS_NAME or STATUS_NAMES[entity.status] or DEFAULT_STATUS_NAME
                             }
                           },
                         },
@@ -1858,8 +1863,10 @@ end
 --- @param event EventData.on_gui_opened
 function cc_gui:on_gui_opened(event)
   local entity = event.entity
+  if not entity or not entity.valid then return end
   local player_index = event.player_index
-  if not entity or not entity.valid or entity.name ~= constants.ENTITY_NAME then
+  local name = entity.name == "entity-ghost" and entity.ghost_name or entity.name
+  if name ~= constants.ENTITY_NAME then
     return
   end
   log:debug("on_gui_opened: opening")
