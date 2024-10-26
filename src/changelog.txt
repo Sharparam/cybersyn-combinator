@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.1.3
+Date: 2024-10-26
+  Graphics:
+    - Fix old low-res graphics being used instead of high-res.
+  Bugfixes:
+    - Fix custom GUI not working for entity ghosts.
+---------------------------------------------------------------------------------------------------
 Version: 2.1.2
 Date: 2024-10-23
   Bugfixes:
