@@ -1,3 +1,14 @@
+preserve_hierarchy: true
 files:
   - source: /src/locale/en/*.cfg
     translation: /src/locale/%locale%/%original_file_name%
+    type: ini
+
+commit_message: Update %language% translations in %original_file_name%
+append_commit_message: false
+pull_request_labels:
+  - l10n
+pull_request_assignees:
+  - Sharparam
+pull_request_reviewers:
+  - Sharparam
