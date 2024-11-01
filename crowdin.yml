@@ -1,7 +1,7 @@
 preserve_hierarchy: true
 files:
   - source: /src/locale/en/*.cfg
-    dest: /src/locale/%file_name%.ini
+    dest: /src/locale/en/%file_name%.ini
     translation: /src/locale/%locale%/%file_name%.cfg
     type: ini
 
