@@ -194,6 +194,13 @@ function CC:remove_item_slot(slot)
   self:remove_slot(slot, SIGNALS_SECTION_ID)
 end
 
+--- @param signal SignalID|table|string
+--- @param exclude_slot uint?
+--- @return boolean, integer?
+function CC:has_item_signal(signal, exclude_slot)
+  return self:has_signal(signal, SIGNALS_SECTION_ID, exclude_slot)
+end
+
 --- @param slot uint?
 --- @return Signal
 function CC:get_network_slot(slot)
@@ -307,6 +314,27 @@ function CC:remove_slot(slot, section_id)
   local section = self:get_or_create_section(section_id)
   if not section then return end
   section.clear_slot(slot)
+end
+
+--- @param signal SignalID|table|string
+--- @param section_id integer
+--- @param exclude_slot uint?
+--- @return boolean, integer?
+function CC:has_signal(signal, section_id, exclude_slot)
+  if not self:is_valid_entity() then return false end
+  if type(signal) == "string" then signal = { name = signal } end
+  if not signal or not signal.name then return false end
+  local section = self:get_or_create_section(section_id)
+  if not section then return false end
+  local signal_quality = signal.quality or "normal"
+  for filter_index, filter in pairs(section.filters) do
+    if not filter or not filter.value or filter_index == exclude_slot then goto continue end
+    if filter.value.name ~= signal.name then goto continue end
+    local filter_quality = filter.value.quality or "normal"
+    if filter_quality == signal_quality then return true, filter_index end
+    ::continue::
+  end
+  return false
 end
 
 --- @private

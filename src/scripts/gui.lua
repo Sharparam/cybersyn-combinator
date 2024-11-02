@@ -464,7 +464,16 @@ local function handle_signal_changed(event)
     player.print({ "cybersyn-combinator-window.invalid-signal" })
     return
   end
-  log:debug("elem changed, slot ", slot, ": ", element.elem_value)
+  local is_dupe, orig_slot = state.combinator:has_item_signal(signal.signal, slot)
+  if is_dupe then
+    element.elem_value = nil
+    element.style = "flib_slot_button_default"
+    local player = game.get_player(event.player_index)
+    if not player then return end
+    player.print({ "gui-logistic-section.conflict-error", orig_slot })
+    return
+  end
+  log:debug("elem changed, slot ", slot, ": ", serpent.line(element.elem_value))
   if state.selected_slot_button then
     state.selected_slot_button.style = "flib_slot_button_default"
   end
