@@ -20,6 +20,7 @@ function cc_util.get_player_data(player_index)
   if not player or not player.valid then
     return nil
   end
+  player_index = player.index
   if not storage.player_data then storage.player_data = {} end
   if not storage.player_data[player_index] then
     storage.player_data[player_index] = {}
