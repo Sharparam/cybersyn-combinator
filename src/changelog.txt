@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.2.0
+Date: 2024-11-05
+  Gui:
+    - Can now confirm encoder dialog with confirm key binding (default "E").
+    - Improved display of encoder dialog, now shows on top of main window instead of hiding it.
+---------------------------------------------------------------------------------------------------
 Version: 2.1.4
 Date: 2024-11-02
   Bugfixes:

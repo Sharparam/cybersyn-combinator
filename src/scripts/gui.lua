@@ -26,6 +26,7 @@ end
 
 local WINDOW_ID = "cybersyn-constant-combinator-window"
 local ENCODER_ID = "cybersyn-constant-combinator-encoder"
+local DIMMER_ID = "cybersyn-constant-combinator-dimmer"
 
 local RED = "utility/status_not_working"
 local GREEN = "utility/status_working"
@@ -132,6 +133,24 @@ local function set_player_state(player_index, state)
     return -- TODO: Throw error?
   end
   data.state = state
+end
+
+--- @param player LuaPlayer
+--- @param window_id string
+--- @return boolean
+local function destroy(player, window_id)
+  local screen = player.gui.screen
+  if window_id == DIMMER_ID then
+    local state = get_player_state(player)
+    if state then state.dimmer = nil end
+  end
+  if not screen[window_id] then
+    log:debug("destroy called on ", window_id, " but it doesn't exist")
+    return false
+  end
+  screen[window_id].destroy()
+  log:debug("destroyed ", window_id)
+  return true
 end
 
 --- @param element LuaGuiElement
@@ -756,21 +775,33 @@ end
 --- @param event EventData.on_gui_click
 local function handle_encoder_close(event)
   log:debug("encoder close button clicked")
-  cc_gui:close_encoder(event.player_index, true)
+  local player = game.get_player(event.player_index)
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  if state.main_window then
+    player.opened = state.main_window
+  end
+end
+
+--- @param player_index integer
+---@param close boolean
+local function confirm_encoder(player_index, close)
+  local state = get_player_state(player_index)
+  if not state then return end
+  state.network_mask.signal.signal = state.encoder.signal_button.elem_value --[[@as SignalID]]
+  state.network_mask.signal.count = masking.uint_to_int(state.encoder.mask)
+  add_network_mask(player_index, state)
+  if not close then return end
+  local player = game.get_player(player_index)
+  if player and state.main_window then
+    player.opened = state.main_window
+  end
 end
 
 --- @param event EventData.on_gui_click
 local function handle_encoder_confirm(event)
   log:debug("encoder confirm button clicked")
-  local state = get_player_state(event.player_index)
-  if not state then
-    cc_gui:close_encoder(event.player_index, true)
-    return
-  end
-  state.network_mask.signal.signal = state.encoder.signal_button.elem_value --[[@as SignalID]]
-  state.network_mask.signal.count = masking.uint_to_int(state.encoder.mask)
-  cc_gui:close_encoder(event.player_index, true)
-  add_network_mask(event.player_index, state)
+  confirm_encoder(event.player_index, true)
 end
 
 --- @param player_index integer
@@ -862,10 +893,44 @@ local function handle_encoder_none(event)
   refresh_encoder(event.player_index, state, true)
 end
 
+--- @param event EventData.on_gui_click
 local function handle_dimmer_click(event)
   local state = get_player_state(event.player_index)
-  if not state or not state.encoder then return end
-  state.encoder.dialog.bring_to_front()
+  if not state then return end
+  local player = game.get_player(event.player_index)
+  if not player then return end
+  destroy(player, DIMMER_ID)
+  if state.main_window then
+    player.opened = state.main_window
+  end
+end
+
+--- @param player_index integer
+local function create_dimmer(player_index)
+  local player = game.get_player(player_index)
+  if not player then return end
+  local screen = player.gui.screen
+  if screen[DIMMER_ID] then
+    log:debug("dimmer already exists")
+    return
+  end
+  local _, dimmer = flib_gui.add(screen, {
+    type = "frame",
+    name = DIMMER_ID,
+    style = "invisible_frame",
+    style_mods = {
+      natural_width = 1000000,
+      natural_height = 1000000,
+      padding = 0,
+      use_header_filler = false
+    },
+    handler = {
+      [defines.events.on_gui_click] = handle_dimmer_click
+    }
+  })
+  dimmer.location = { 0, 0 }
+  local state = get_player_state(player_index)
+  if state then state.dimmer = dimmer end
 end
 
 --- @param player_index integer
@@ -873,26 +938,11 @@ end
 local function create_encoder(player_index, state)
   local player = game.players[player_index]
   local screen = player.gui.screen
-  -- local wide = settings.get_player_settings(player)[constants.SETTINGS.NETWORK_MASK_DISPLAY_MODE].value == "BINARY"
-  -- local rows = settings.startup[constants.SETTINGS.SLOT_ROWS].value
-  -- local dim_width = wide and 825 or 685
-  -- local dim_height = 352 + 40 * rows
-  -- local _, dimmer = flib_gui.add(screen, {
-  --   type = "frame",
-  --   name = "cybersyn-combinator_dimmer",
-  --   style = "cybersyn-combinator_frame_semitransparent",
-  --   style_mods = {
-  --     width = dim_width,
-  --     height = dim_height,
-  --     padding = 0,
-  --     use_header_filler = false
-  --   },
-  --   handler = {
-  --     [defines.events.on_gui_click] = handle_dimmer_click
-  --   }
-  -- })
-  -- dimmer.location = state.main_window.location
-  -- state.dimmer = dimmer
+  local signal = state.network_mask.signal
+  if not signal then
+    return
+  end
+  create_dimmer(player_index)
   local named, dialog = flib_gui.add(screen, {
     {
       type = "frame",
@@ -1166,11 +1216,6 @@ local function create_encoder(player_index, state)
     display_oct = named.display_oct,
     confirm_button = named.confirm_button
   }
-  local signal = state.network_mask.signal
-  if not signal then
-    cc_gui:close_encoder(player_index, true)
-    return
-  end
   state.encoder.signal_button.elem_value = signal.signal
   state.encoder.textfield.text = masking.format_for_input(signal.count, player_index)
   local settings = settings.get_player_settings(player_index)
@@ -1193,8 +1238,8 @@ local function create_encoder(player_index, state)
   end
   refresh_encoder(player_index, state, true)
   dialog.force_auto_center()
-  state.main_window.visible = false
-  -- player.opened = dialog
+  -- state.main_window.visible = false
+  player.opened = dialog
 end
 
 --- @param event EventData.on_gui_click
@@ -1810,53 +1855,12 @@ function cc_gui:open(player_index, entity)
   return true
 end
 
---- @param player LuaPlayer
---- @param window_id string
---- @return boolean
-local function destroy(player, window_id)
-  local screen = player.gui.screen
-  if not screen[window_id] then
-    log:debug("destroy called on ", window_id, " but it doesn't exist")
-    return false
-  end
-  screen[window_id].destroy()
-  log:debug("destroyed ", window_id)
-  return true
-end
-
-function cc_gui:close_encoder(player_index, silent)
-  if not player_index then return end
-  local player = game.get_player(player_index)
-  if not player then return end
-  local player_data = cc_util.get_player_data(player_index)
-  local state = player_data and player_data.state
-  if state and not state.encoder then return end
-  log:debug("Encoder close, player index ", player_index)
-  local destroyed = destroy(player, ENCODER_ID)
-  if state and state.encoder then
-    state.encoder = nil
-  end
-  if not destroyed then return end
-  if state and state.dimmer then
-    state.dimmer.destroy()
-    state.dimmer = nil
-  end
-  if not silent then
-    player.play_sound { path = constants.ENTITY_CLOSE_SOUND }
-  end
-  if state then
-    state.main_window.visible = true
-    player.opened = state.main_window
-  end
-end
-
 --- @param player_index string|uint?
 function cc_gui:close(player_index, silent)
   if not player_index then return end
   local player = game.get_player(player_index)
   if not player then return end
   log:debug("GUI close, player index ", player_index)
-  self:close_encoder(player_index, true)
   local destroyed = destroy(player, WINDOW_ID)
   local player_data = cc_util.get_player_data(player_index)
   if player_data and player_data.state and player_data.state.combinator then
@@ -1885,9 +1889,25 @@ end
 --- @param event EventData.on_gui_closed
 function cc_gui:on_gui_closed(event)
   local element = event.element
-  if not element or element.name ~= WINDOW_ID then return end
-  log:debug("on_gui_closed: ", element.name)
+  if not element then return end
   local player_index = event.player_index
+  local player = game.get_player(player_index)
+  if not player then return end
+  local state = get_player_state(player_index)
+  if element.name == ENCODER_ID then
+    destroy(player, ENCODER_ID)
+    destroy(player, DIMMER_ID)
+    if state then
+      state.encoder = nil
+      if state.main_window then
+        state.main_window.visible = true
+        player.opened = state.main_window
+      end
+    end
+    return
+  end
+  if element.name ~= WINDOW_ID then return end
+  if state and state.encoder then return end
   self:close(player_index)
 end
 
@@ -1910,6 +1930,12 @@ function cc_gui:on_input_confirm(event)
   local player = game.get_player(event.player_index)
   if not player then return end
   local screen = player.gui.screen
+  local encoder = screen[ENCODER_ID]
+  if encoder and state.encoder then
+    confirm_encoder(event.player_index, false)
+    return
+  end
+  ---@type LuaGuiElement?
   local window = screen[WINDOW_ID]
   if not window then return end
   log:debug("input_confirm from ", event.player_index)
@@ -1959,7 +1985,7 @@ function cc_gui:register()
     [ENCODER_ID .. "_bit_button_click"] = handle_encoder_bit_button_click,
     [ENCODER_ID .. "_all"] = handle_encoder_all,
     [ENCODER_ID .. "_none"] = handle_encoder_none,
-    ["cybersyn-combinator_dimmer_click"] = handle_dimmer_click
+    [DIMMER_ID .. "_click"] = handle_dimmer_click
   }
   flib_gui.handle_events()
   script.on_event(defines.events.on_gui_opened, function(event) self:on_gui_opened(event) end)
