@@ -1798,7 +1798,10 @@ local function create_window(player, entity)
               style_mods = { horizontal_align = "right", horizontally_stretchable = false, width = 100 },
               lose_focus_on_confirm = true,
               clear_and_focus_on_right_click = true,
-              elem_mods = { numeric = false, text = "0" },
+              text = "0",
+              numeric = not enable_expressions,
+              allow_decimal = false,
+              allow_negative = true,
               handler = {
                 [defines.events.on_gui_text_changed] = handle_signal_value_changed,
                 [defines.events.on_gui_confirmed] = handle_signal_value_confirmed
@@ -1822,10 +1825,10 @@ local function create_window(player, entity)
               style_mods = { horizontal_align = "right", horizontally_stretchable = false, width = 100 },
               lose_focus_on_confirm = true,
               clear_and_focus_on_right_click = true,
-              elem_mods = {
-                numeric = not enable_expressions,
-                text = "0"
-              },
+              text = "0",
+              numeric = not enable_expressions,
+              allow_decimal = false,
+              allow_negative = true,
               handler = {
                 [defines.events.on_gui_text_changed] = handle_signal_value_changed,
                 [defines.events.on_gui_confirmed] = handle_signal_value_confirmed
