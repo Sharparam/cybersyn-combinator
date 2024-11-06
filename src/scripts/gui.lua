@@ -25,8 +25,9 @@ local function format_signal_count(count)
 end
 
 local WINDOW_ID = "cybersyn-constant-combinator-window"
-local ENCODER_ID = "cybersyn-constant-combinator-encoder"
 local DIMMER_ID = "cybersyn-constant-combinator-dimmer"
+local ENCODER_ID = "cybersyn-constant-combinator-encoder"
+local DESC_EDIT_ID = "cybersyn-constant-combinator-description-edit"
 
 local RED = "utility/status_not_working"
 local GREEN = "utility/status_working"
@@ -93,6 +94,10 @@ local cc_gui = {
 --- @field display_oct LuaGuiElement
 --- @field confirm_button LuaGuiElement
 
+--- @class DescriptionEditState
+--- @field dialog LuaGuiElement?
+--- @field textfield LuaGuiElement
+
 --- @class UiState
 --- @field main_window LuaGuiElement
 --- @field status_sprite LuaGuiElement
@@ -112,8 +117,13 @@ local cc_gui = {
 --- @field selected_slot_button LuaGuiElement?
 --- @field stack_size integer?
 --- @field network_mask NetworkMaskState
---- @field encoder EncoderState?
+--- @field add_description_button LuaGuiElement.add_param.button
+--- @field description_header LuaGuiElement.add_param.flow
+--- @field description_scroll LuaGuiElement.add_param.scroll_pane
+--- @field description_label LuaGuiElement
 --- @field dimmer LuaGuiElement?
+--- @field encoder EncoderState?
+--- @field description_edit DescriptionEditState?
 
 --- @param player_index PlayerIdentification?
 --- @return UiState?
@@ -773,8 +783,8 @@ local function handle_network_mask_add_click(event)
 end
 
 --- @param event EventData.on_gui_click
-local function handle_encoder_close(event)
-  log:debug("encoder close button clicked")
+local function handle_dialog_close(event)
+  log:debug("dialog close button clicked")
   local player = game.get_player(event.player_index)
   local state = get_player_state(event.player_index)
   if not state then return end
@@ -798,10 +808,34 @@ local function confirm_encoder(player_index, close)
   end
 end
 
+--- @param player_index integer
+--- @param close boolean
+local function confirm_description(player_index, close)
+  local state = get_player_state(player_index)
+  if not state then return end
+  state.entity.combinator_description = state.description_edit.textfield.text
+  state.description_label.caption = state.entity.combinator_description
+  local has_description = state.entity.combinator_description and state.entity.combinator_description ~= ""
+  state.add_description_button.visible = not has_description
+  state.description_header.visible = has_description
+  state.description_scroll.visible = has_description
+  if not close then return end
+  local player = game.get_player(player_index)
+  if player and state.main_window then
+    player.opened = state.main_window
+  end
+end
+
 --- @param event EventData.on_gui_click
 local function handle_encoder_confirm(event)
   log:debug("encoder confirm button clicked")
   confirm_encoder(event.player_index, true)
+end
+
+--- @param event EventData.on_gui_click
+local function handle_description_edit_confirm(event)
+  log:debug("description edit confirm button clicked")
+  confirm_description(event.player_index, true)
 end
 
 --- @param player_index integer
@@ -1183,7 +1217,7 @@ local function create_encoder(player_index, state)
               style = "back_button",
               caption = { "gui.cancel" },
               name = ENCODER_ID .. "_close",
-              handler = handle_encoder_close
+              handler = handle_dialog_close
             },
             {
               type = "empty-widget",
@@ -1242,6 +1276,128 @@ local function create_encoder(player_index, state)
   player.opened = dialog
 end
 
+---@param player_index integer
+---@param state UiState
+local function create_description_edit(player_index, state)
+  local player = game.players[player_index]
+  local screen = player.gui.screen
+  create_dimmer(player_index)
+  local named, dialog
+  do
+    named, dialog = flib_gui.add(screen, {
+      name = DESC_EDIT_ID,
+      type = "frame",
+      style = "inset_frame_container_frame",
+      direction = "vertical",
+      style_mods = {
+        width = 400,
+        maximal_height = 1290
+      },
+      children = {
+        { -- Titlebar
+          type = "flow",
+          direction = "horizontal",
+          drag_target = DESC_EDIT_ID,
+          style = "frame_header_flow",
+          style_mods = {
+            vertically_stretchable = false
+          },
+          children = {
+            {
+              type = "label",
+              style = "frame_title",
+              caption = { "gui-edit-label.edit-description" },
+              drag_target = DESC_EDIT_ID,
+              style_mods = {
+                vertically_stretchable = true,
+                horizontally_squashable = true,
+                top_margin = -3,
+                bottom_padding = 3
+              }
+            },
+            {
+              type = "empty-widget",
+              style = "draggable_space_header",
+              drag_target = DESC_EDIT_ID,
+              style_mods = {
+                height = 24,
+                natural_height = 24,
+                horizontally_stretchable = true,
+                vertically_stretchable = true
+              }
+            },
+            {
+              type = "sprite-button",
+              style = "cancel_close_button",
+              name = DESC_EDIT_ID .. "_close",
+              sprite = "utility/close",
+              handler = {
+                [defines.events.on_gui_click] = handle_dialog_close
+              }
+            }
+          }
+        },
+        { -- Content
+          type = "flow",
+          direction = "vertical",
+          style = "inset_frame_container_vertical_flow",
+          style_mods = {
+            horizontal_align = "right",
+            top_margin = -12
+          },
+          children = {
+            {
+              type = "text-box",
+              name = "description",
+              style = "edit_blueprint_description_textbox",
+              style_mods = {
+                horizontally_stretchable = true
+              },
+              text = state.combinator.entity.combinator_description or "",
+              icon_selector = true
+            },
+            {
+              type = "flow",
+              style = "horizontal_flow",
+              direction = "horizontal",
+              children = {
+                {
+                  type = "empty-widget",
+                  style = "draggable_space",
+                  style_mods = {
+                    left_margin = 0,
+                    horizontally_stretchable = true,
+                    vertically_stretchable = true
+                  },
+                  drag_target = DESC_EDIT_ID
+                },
+                {
+                  type = "button",
+                  style = "confirm_button",
+                  caption = { "gui-edit-label.save-description" },
+                  handler = {
+                    [defines.events.on_gui_click] = handle_description_edit_confirm
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    })
+  end
+
+  ---@type DescriptionEditState
+  state.description_edit = {
+    dialog = dialog,
+    textfield = named.description
+  }
+
+  dialog.force_auto_center()
+  named.description.focus()
+  player.opened = dialog
+end
+
 --- @param event EventData.on_gui_click
 handle_network_list_item_click = function(event)
   local state = get_player_state(event.player_index)
@@ -1274,6 +1430,14 @@ handle_network_list_item_click = function(event)
   end
 end
 
+--- @param event EventData.on_gui_click
+local function handle_description_edit_click(event)
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  log:debug("Showing description editor")
+  create_description_edit(event.player_index, state)
+end
+
 --- @param player LuaPlayer
 --- @param entity LuaEntity
 --- @return UiState
@@ -1286,423 +1450,526 @@ local function create_window(player, entity)
     network_list_width = 340
   end
 
-  local named, main_window = flib_gui.add(screen, {
-    {
-      type = "frame",
-      direction = "vertical",
-      name = WINDOW_ID,
-      tags = {
-        unit_number = entity.unit_number
-      },
+  local named, main_window
+
+  do
+    local titlebar = {
+      type = "flow",
+      drag_target = WINDOW_ID,
       children = {
-        { -- Titlebar
-          type = "flow",
-          drag_target = WINDOW_ID,
-          children = {
-            {
-              type = "label",
-              style = "frame_title",
-              caption = { "cybersyn-combinator-window.title" },
-              elem_mods = { ignored_by_interaction = true },
-              style_mods = {
-                maximal_width = 600
-              }
-            },
-            {
-              type = "empty-widget",
-              style = "flib_titlebar_drag_handle",
-              elem_mods = { ignored_by_interaction = true }
-            },
-            {
-              type = "sprite-button",
-              style = "frame_action_button",
-              mouse_button_filter = { "left" },
-              sprite = "utility/close",
-              invert_colors_of_picture_when_hovered_or_toggled = true,
-              name = WINDOW_ID .. "_close",
-              handler = handle_close
-            }
+        {
+          type = "label",
+          style = "frame_title",
+          caption = { "cybersyn-combinator-window.title" },
+          elem_mods = { ignored_by_interaction = true },
+          style_mods = {
+            maximal_width = 600
           }
         },
-        { -- Content
+        {
+          type = "empty-widget",
+          style = "flib_titlebar_drag_handle",
+          elem_mods = { ignored_by_interaction = true }
+        },
+        {
+          type = "sprite-button",
+          style = "frame_action_button",
+          mouse_button_filter = { "left" },
+          sprite = "utility/close",
+          invert_colors_of_picture_when_hovered_or_toggled = true,
+          name = WINDOW_ID .. "_close",
+          handler = handle_close
+        }
+      }
+    }
+
+    local network_list = { -- Network list
+      type = "frame",
+      style = "deep_frame_in_shallow_frame",
+      style_mods = { width = network_list_width, vertically_stretchable = true },
+      direction = "vertical",
+      children = {
+        {
           type = "frame",
-          direction = "horizontal",
-          style = "inside_shallow_frame_with_padding",
-          style_mods = { padding = 8 },
+          style = "subheader_frame",
+          direction = "vertical",
+          style_mods = { horizontally_stretchable = true, maximal_height = 90 },
           children = {
             {
-              type = "frame",
-              style = "deep_frame_in_shallow_frame",
-              style_mods = { width = network_list_width, vertically_stretchable = true },
-              direction = "vertical",
+              type = "flow",
+              direction = "horizontal",
+              style_mods = { left_padding = 8 },
               children = {
                 {
-                  type = "frame",
-                  style = "subheader_frame",
-                  direction = "vertical",
-                  style_mods = { horizontally_stretchable = true, maximal_height = 90 },
-                  children = {
-                    {
-                      type = "flow",
-                      direction = "horizontal",
-                      style_mods = { left_padding = 8 },
-                      children = {
-                        {
-                          type = "label",
-                          style = "caption_label",
-                          caption = {
-                            "",
-                            { "cybersyn-combinator-window.network-list-title" },
-                            " [img=info]"
-                          },
-                          tooltip = { "cybersyn-combinator-window.network-list-tooltip" }
-                        },
-                        {
-                          type = "empty-widget",
-                          style = "flib_horizontal_pusher"
-                        }
-                      }
-                    },
-                    {
-                      type = "flow",
-                      direction = "horizontal",
-                      style_mods = { left_padding = 3, right_padding = 3 },
-                      children = {
-                        {
-                          type = "choose-elem-button",
-                          name = "network_mask_signal_button",
-                          elem_type = "signal",
-                          style_mods = { width = 32, height = 32 },
-                          handler = {
-                            [defines.events.on_gui_elem_changed] = handle_network_mask_signal_changed,
-                            [defines.events.on_gui_click] = handle_network_mask_signal_click
-                          }
-                        },
-                        {
-                          type = "textfield",
-                          name = "network_mask_textfield",
-                          style = "cybersyn-combinator_network-mask-text-input",
-                          style_mods = { horizontally_stretchable = true, minimal_width = 50, maximal_width = 300 },
-                          text = "",
-                          numeric = false,
-                          clear_and_focus_on_right_click = true,
-                          lose_focus_on_confirm = true,
-                          handler = {
-                            [defines.events.on_gui_text_changed] = handle_network_mask_changed,
-                            [defines.events.on_gui_confirmed] = handle_network_mask_confirmed
-                          }
-                        },
-                        {
-                          type = "sprite-button",
-                          name = "network_mask_add_button",
-                          sprite = "utility/check_mark",
-                          style = "flib_tool_button_light_green",
-                          enabled = false,
-                          mouse_button_filter = { "left" },
-                          handler = {
-                            [defines.events.on_gui_click] = handle_network_mask_add_click
-                          }
-                        }
-                      }
-                    }
-                  }
+                  type = "label",
+                  style = "caption_label",
+                  caption = {
+                    "",
+                    { "cybersyn-combinator-window.network-list-title" },
+                    " [img=info]"
+                  },
+                  tooltip = { "cybersyn-combinator-window.network-list-tooltip" }
                 },
                 {
-                  type = "scroll-pane",
-                  name = "network_list",
-                  style = "cybersyn-combinator_network-list_scroll-pane",
-                  vertical_scroll_policy = "auto"
+                  type = "empty-widget",
+                  style = "flib_horizontal_pusher"
                 }
               }
             },
             {
               type = "flow",
-              direction = "vertical",
-              style_mods = { left_margin = 8 },
+              direction = "horizontal",
+              style_mods = { left_padding = 3, right_padding = 3 },
               children = {
-                { -- status, preview, CS signals
-                  type = "flow",
-                  direction = "horizontal",
-                  children = {
-                    -- Combinator status and preview
-                    {
-                      type = "flow",
-                      direction = "vertical",
-                      style_mods = { horizontal_align = "left" },
-                      children = {
-                        { -- Status
-                          type = "flow",
-                          direction = "horizontal",
-                          style_mods = { vertical_align = "center", horizontally_stretchable = true, bottom_padding = 4 },
-                          children = {
-                            {
-                              type = "sprite",
-                              name = "status_sprite",
-                              sprite = entity.name == "entity-ghost" and GHOST_STATUS_SPRITE or STATUS_SPRITES[entity.status] or DEFAULT_STATUS_SPRITE,
-                              style = "status_image",
-                              style_mods = { stretch_image_to_widget_size = true }
-                            },
-                            {
-                              type = "label",
-                              name = "status_label",
-                              caption = entity.name == "entity-ghost" and GHOST_STATUS_NAME or STATUS_NAMES[entity.status] or DEFAULT_STATUS_NAME
-                            }
-                          },
-                        },
-                        { -- Preview
-                          type = "frame",
-                          style = "deep_frame_in_shallow_frame",
-                          style_mods = { minimal_width = 0, horizontally_stretchable = true, padding = 0 },
-                          children = {
-                            {
-                              type = "entity-preview",
-                              name = "preview",
-                              style = "wide_entity_button",
-                              style_mods = {
-                                width = 128,
-                                height = 128,
-                                horizontally_stretchable = true
-                              }
-                            }
-                          }
-                        }
-                      }
-                    },
-                    { -- CS signal pane
-                      type = "flow",
-                      direction = "vertical",
-                      style_mods = { top_margin = 25, left_padding = 8, width = 300, horizontal_align = "center", vertically_stretchable = true },
-                      children = {
-                        {
-                          type = "table",
-                          name = "cs_signals_table",
-                          column_count = 4,
-                          style_mods = { cell_padding = 2, horizontally_stretchable = true, vertical_align = "center" }
-                        }
-                      }
-                    }
+                {
+                  type = "choose-elem-button",
+                  name = "network_mask_signal_button",
+                  elem_type = "signal",
+                  style_mods = { width = 32, height = 32 },
+                  handler = {
+                    [defines.events.on_gui_elem_changed] = handle_network_mask_signal_changed,
+                    [defines.events.on_gui_click] = handle_network_mask_signal_click
                   }
                 },
                 {
-                  type = "flow",
-                  direction = "horizontal",
-                  style_mods = { top_margin = 8 },
-                  children = {
-                    { -- On/off switch
-                      type = "flow",
-                      style_mods = {
-                        horizontal_align = "left",
-                        maximal_width = 110
-                      },
-                      direction = "vertical",
-                      children = {
-                        {
-                          type = "label",
-                          style = "semibold_label",
-                          caption = { "gui-constant.output" }
-                        },
-                        {
-                          type = "switch",
-                          name = "on_off",
-                          handler = {
-                            [defines.events.on_gui_switch_state_changed] = handle_on_off
-                          },
-                          left_label_caption = { "gui-constant.off" },
-                          right_label_caption = { "gui-constant.on" }
-                        }
-                      }
-                    },
-                    { -- Request totals
-                      type = "flow",
-                      style_mods = {
-                        horizontal_align = "right",
-                        horizontally_stretchable = true,
-                        left_margin = 10
-                      },
-                      direction = "horizontal",
-                      children = {
-                        {
-                          type = "flow",
-                          direction = "vertical",
-                          style_mods = { maximal_width = 105 },
-                          children = {
-                            {
-                              type = "label",
-                              style = "semibold_label",
-                              caption = {
-                                "",
-                                { "cybersyn-combinator-window.item-total" },
-                                " [img=info]"
-                              },
-                              tooltip = { "cybersyn-combinator-window.item-total-description" }
-                            },
-                            {
-                              type = "label",
-                              name = "item_total",
-                              style_mods = { minimal_width = 80 },
-                              caption = "0",
-                              tooltip = "0"
-                            }
-                          }
-                        },
-                        {
-                          type = "flow",
-                          direction = "vertical",
-                          style_mods = { maximal_width = 105 },
-                          children = {
-                            {
-                              type = "label",
-                              style = "semibold_label",
-                              caption = {
-                                "",
-                                { "cybersyn-combinator-window.item-stacks" },
-                                " [img=info]"
-                              },
-                              tooltip = { "cybersyn-combinator-window.item-stacks-description" }
-                            },
-                            {
-                              type = "label",
-                              name = "item_stacks",
-                              style_mods = { minimal_width = 80 },
-                              caption = "0",
-                              tooltip = "0"
-                            }
-                          }
-                        },
-                        {
-                          type = "flow",
-                          direction = "vertical",
-                          style_mods = { maximal_width = 105 },
-                          children = {
-                            {
-                              type = "label",
-                              style = "semibold_label",
-                              caption = {
-                                "",
-                                { "cybersyn-combinator-window.fluid-total" },
-                                " [img=info]"
-                              },
-                              tooltip = { "cybersyn-combinator-window.fluid-total-description" }
-                            },
-                            {
-                              type = "label",
-                              name = "fluid_total",
-                              style_mods = { minimal_width = 80 },
-                              caption = "0",
-                              tooltip = "0"
-                            }
-                          }
-                        }
-                      }
-                    }
+                  type = "textfield",
+                  name = "network_mask_textfield",
+                  style = "cybersyn-combinator_network-mask-text-input",
+                  style_mods = { horizontally_stretchable = true, minimal_width = 50, maximal_width = 300 },
+                  text = "",
+                  numeric = false,
+                  clear_and_focus_on_right_click = true,
+                  lose_focus_on_confirm = true,
+                  handler = {
+                    [defines.events.on_gui_text_changed] = handle_network_mask_changed,
+                    [defines.events.on_gui_confirmed] = handle_network_mask_confirmed
                   }
                 },
-                -- Separator
                 {
-                  type = "line",
-                  style_mods = { top_margin = 5 },
-                },
-                {
-                  type = "label",
-                  style = "semibold_label",
-                  style_mods = { top_margin = 0 },
-                  caption = { "gui-constant.output-signals" }
-                },
-                { -- Signals container
-                  type = "flow",
-                  direction = "vertical",
-                  style_mods = { top_margin = 4, horizontal_align = "center", horizontally_stretchable = true },
-                  children = {
-                    {
-                      type = "frame",
-                      direction = "vertical",
-                      style = "slot_button_deep_frame",
-                      style_mods = { horizontal_align = "center" },
-                      children = {
-                        {
-                          type = "table",
-                          style = "slot_table",
-                          name = "signal_table",
-                          -- style_mods = { minimal_height = 80 },
-                          column_count = config.slot_cols
-                        }
-                      }
-                    },
-                    {
-                      type = "flow",
-                      direction = "horizontal",
-                      style_mods = { horizontal_align = "right" },
-                      children = {
-                        {
-                          type = "label",
-                          style_mods = { top_margin = 5 },
-                          caption = { "cybersyn-combinator-window.stacks" }
-                        },
-                        {
-                          type = "textfield",
-                          name = "signal_value_stacks",
-                          enabled = false,
-                          style_mods = { horizontal_align = "right", horizontally_stretchable = false, width = 100 },
-                          lose_focus_on_confirm = true,
-                          clear_and_focus_on_right_click = true,
-                          elem_mods = { numeric = false, text = "0" },
-                          handler = {
-                            [defines.events.on_gui_text_changed] = handle_signal_value_changed,
-                            [defines.events.on_gui_confirmed] = handle_signal_value_confirmed
-                          },
-                          tags = {
-                            allow_decimal = true,
-                            allow_negative = true,
-                            min = constants.INT32_MIN,
-                            max = constants.INT32_MAX
-                          }
-                        },
-                        {
-                          type = "label",
-                          style_mods = { top_margin = 5 },
-                          caption = { "cybersyn-combinator-window.items" }
-                        },
-                        {
-                          type = "textfield",
-                          name = "signal_value_items",
-                          enabled = false,
-                          style_mods = { horizontal_align = "right", horizontally_stretchable = false, width = 100 },
-                          lose_focus_on_confirm = true,
-                          clear_and_focus_on_right_click = true,
-                          elem_mods = { numeric = false, text = "0" },
-                          handler = {
-                            [defines.events.on_gui_text_changed] = handle_signal_value_changed,
-                            [defines.events.on_gui_confirmed] = handle_signal_value_confirmed
-                          },
-                          tags = {
-                            allow_decimal = false,
-                            allow_negative = true,
-                            min = constants.INT32_MIN,
-                            max = constants.INT32_MAX
-                          }
-                        },
-                        {
-                          type = "sprite-button",
-                          name = "signal_value_confirm",
-                          style = "item_and_count_select_confirm",
-                          sprite = "utility/check_mark",
-                          enabled = false,
-                          mouse_button_filter = { "left" },
-                          handler = {
-                            [defines.events.on_gui_click] = handle_signal_value_confirm
-                          }
-                        }
-                      }
-                    }
+                  type = "sprite-button",
+                  name = "network_mask_add_button",
+                  sprite = "utility/check_mark",
+                  style = "flib_tool_button_light_green",
+                  enabled = false,
+                  mouse_button_filter = { "left" },
+                  handler = {
+                    [defines.events.on_gui_click] = handle_network_mask_add_click
                   }
                 }
+              }
+            }
+          }
+        },
+        {
+          type = "scroll-pane",
+          name = "network_list",
+          style = "cybersyn-combinator_network-list_scroll-pane",
+          vertical_scroll_policy = "auto"
+        }
+      }
+    }
+
+    local status_and_preview = {
+      type = "flow",
+      direction = "vertical",
+      style_mods = { horizontal_align = "left" },
+      children = {
+        {                   -- Status
+          type = "flow",
+          direction = "horizontal",
+          style_mods = { vertical_align = "center", horizontally_stretchable = true, bottom_padding = 4 },
+          children = {
+            {
+              type = "sprite",
+              name = "status_sprite",
+              sprite = entity.name == "entity-ghost" and GHOST_STATUS_SPRITE or STATUS_SPRITES[entity.status] or
+              DEFAULT_STATUS_SPRITE,
+              style = "status_image",
+              style_mods = { stretch_image_to_widget_size = true }
+            },
+            {
+              type = "label",
+              name = "status_label",
+              caption = entity.name == "entity-ghost" and GHOST_STATUS_NAME or STATUS_NAMES[entity.status] or
+              DEFAULT_STATUS_NAME
+            }
+          }
+        },
+        {                   -- Preview
+          type = "frame",
+          style = "deep_frame_in_shallow_frame",
+          style_mods = { minimal_width = 0, horizontally_stretchable = true, padding = 0 },
+          children = {
+            {
+              type = "entity-preview",
+              name = "preview",
+              style = "wide_entity_button",
+              style_mods = {
+                width = 128,
+                height = 128,
+                horizontally_stretchable = true
               }
             }
           }
         }
       }
     }
-  })
+
+    local cs_signals_pane = { -- CS signal pane
+      type = "flow",
+      direction = "vertical",
+      style_mods = { top_margin = 25, left_padding = 8, width = 300, horizontal_align = "center", vertically_stretchable = true },
+      children = {
+        {
+          type = "table",
+          name = "cs_signals_table",
+          column_count = 4,
+          style_mods = { cell_padding = 2, horizontally_stretchable = true, vertical_align = "center" }
+        }
+      }
+    }
+
+    local on_off = { -- On/off switch
+      type = "flow",
+      style_mods = {
+        horizontal_align = "left",
+        maximal_width = 110
+      },
+      direction = "vertical",
+      children = {
+        {
+          type = "label",
+          style = "semibold_label",
+          caption = { "gui-constant.output" }
+        },
+        {
+          type = "switch",
+          name = "on_off",
+          handler = {
+            [defines.events.on_gui_switch_state_changed] = handle_on_off
+          },
+          left_label_caption = { "gui-constant.off" },
+          right_label_caption = { "gui-constant.on" }
+        }
+      }
+    }
+
+    local request_totals = {                   -- Request totals
+      type = "flow",
+      style_mods = {
+        horizontal_align = "right",
+        horizontally_stretchable = true,
+        left_margin = 10
+      },
+      direction = "horizontal",
+      children = {
+        {
+          type = "flow",
+          direction = "vertical",
+          style_mods = { maximal_width = 105 },
+          children = {
+            {
+              type = "label",
+              style = "semibold_label",
+              caption = {
+                "",
+                { "cybersyn-combinator-window.item-total" },
+                " [img=info]"
+              },
+              tooltip = { "cybersyn-combinator-window.item-total-description" }
+            },
+            {
+              type = "label",
+              name = "item_total",
+              style_mods = { minimal_width = 80 },
+              caption = "0",
+              tooltip = "0"
+            }
+          }
+        },
+        {
+          type = "flow",
+          direction = "vertical",
+          style_mods = { maximal_width = 105 },
+          children = {
+            {
+              type = "label",
+              style = "semibold_label",
+              caption = {
+                "",
+                { "cybersyn-combinator-window.item-stacks" },
+                " [img=info]"
+              },
+              tooltip = { "cybersyn-combinator-window.item-stacks-description" }
+            },
+            {
+              type = "label",
+              name = "item_stacks",
+              style_mods = { minimal_width = 80 },
+              caption = "0",
+              tooltip = "0"
+            }
+          }
+        },
+        {
+          type = "flow",
+          direction = "vertical",
+          style_mods = { maximal_width = 105 },
+          children = {
+            {
+              type = "label",
+              style = "semibold_label",
+              caption = {
+                "",
+                { "cybersyn-combinator-window.fluid-total" },
+                " [img=info]"
+              },
+              tooltip = { "cybersyn-combinator-window.fluid-total-description" }
+            },
+            {
+              type = "label",
+              name = "fluid_total",
+              style_mods = { minimal_width = 80 },
+              caption = "0",
+              tooltip = "0"
+            }
+          }
+        }
+      }
+    }
+
+    local signals_container = { -- Signals container
+      type = "flow",
+      direction = "vertical",
+      style_mods = { top_margin = 4, horizontal_align = "center", horizontally_stretchable = true },
+      children = {
+        {
+          type = "frame",
+          direction = "vertical",
+          style = "slot_button_deep_frame",
+          style_mods = { horizontal_align = "center" },
+          children = {
+            {
+              type = "table",
+              style = "slot_table",
+              name = "signal_table",
+              -- style_mods = { minimal_height = 80 },
+              column_count = config.slot_cols
+            }
+          }
+        },
+        {
+          type = "flow",
+          direction = "horizontal",
+          style_mods = { horizontal_align = "right" },
+          children = {
+            {
+              type = "label",
+              style_mods = { top_margin = 5 },
+              caption = { "cybersyn-combinator-window.stacks" }
+            },
+            {
+              type = "textfield",
+              name = "signal_value_stacks",
+              enabled = false,
+              style_mods = { horizontal_align = "right", horizontally_stretchable = false, width = 100 },
+              lose_focus_on_confirm = true,
+              clear_and_focus_on_right_click = true,
+              elem_mods = { numeric = false, text = "0" },
+              handler = {
+                [defines.events.on_gui_text_changed] = handle_signal_value_changed,
+                [defines.events.on_gui_confirmed] = handle_signal_value_confirmed
+              },
+              tags = {
+                allow_decimal = true,
+                allow_negative = true,
+                min = constants.INT32_MIN,
+                max = constants.INT32_MAX
+              }
+            },
+            {
+              type = "label",
+              style_mods = { top_margin = 5 },
+              caption = { "cybersyn-combinator-window.items" }
+            },
+            {
+              type = "textfield",
+              name = "signal_value_items",
+              enabled = false,
+              style_mods = { horizontal_align = "right", horizontally_stretchable = false, width = 100 },
+              lose_focus_on_confirm = true,
+              clear_and_focus_on_right_click = true,
+              elem_mods = { numeric = false, text = "0" },
+              handler = {
+                [defines.events.on_gui_text_changed] = handle_signal_value_changed,
+                [defines.events.on_gui_confirmed] = handle_signal_value_confirmed
+              },
+              tags = {
+                allow_decimal = false,
+                allow_negative = true,
+                min = constants.INT32_MIN,
+                max = constants.INT32_MAX
+              }
+            },
+            {
+              type = "sprite-button",
+              name = "signal_value_confirm",
+              style = "item_and_count_select_confirm",
+              sprite = "utility/check_mark",
+              enabled = false,
+              mouse_button_filter = { "left" },
+              handler = {
+                [defines.events.on_gui_click] = handle_signal_value_confirm
+              }
+            }
+          }
+        }
+      }
+    }
+
+    local main_view = { -- Main view
+      type = "flow",
+      direction = "vertical",
+      style_mods = { left_margin = 8 },
+      children = {
+        {           -- status, preview, CS signals
+          type = "flow",
+          direction = "horizontal",
+          children = {
+            status_and_preview,           -- Combinator status and preview
+            cs_signals_pane
+          }
+        },
+        {
+          type = "flow",
+          direction = "horizontal",
+          style_mods = { top_margin = 8 },
+          children = {
+            on_off,
+            request_totals
+          }
+        },
+        -- Separator
+        {
+          type = "line",
+          style_mods = { top_margin = 5 }
+        },
+        {
+          type = "label",
+          style = "semibold_label",
+          style_mods = { top_margin = 0 },
+          caption = { "gui-constant.output-signals" }
+        },
+        signals_container
+      }
+    }
+
+    local has_description = entity.combinator_description and entity.combinator_description ~= ""
+
+    local description_container = {
+      type = "flow",
+      direction = "vertical",
+      style = "vertical_flow",
+      style_mods = {
+        -- horizontally_stretchable = true
+      },
+      children = {
+        {
+          type = "button",
+          name = "add_description_button",
+          caption = { "gui-edit-label.add-description" },
+          visible = not has_description,
+          handler = {
+            [defines.events.on_gui_click] = handle_description_edit_click
+          }
+        },
+        {
+          type = "flow",
+          name = "description_header",
+          direction = "horizontal",
+          style = "horizontal_flow",
+          visible = has_description,
+          children = {
+            {
+              type = "label",
+              style = "semibold_label",
+              caption = { "description.player-description" }
+            },
+            {
+              type = "sprite-button",
+              style = "mini_button_aligned_to_text_vertically",
+              sprite = "utility/rename_icon",
+              handler = {
+                [defines.events.on_gui_click] = handle_description_edit_click
+              }
+            }
+          }
+        },
+        {
+          type = "scroll-pane",
+          name = "description_scroll",
+          direction = "vertical",
+          visible = has_description,
+          style_mods = {
+            -- horizontally_stretchable = true
+            width = 640,
+            maximal_height = 200
+          },
+          children = {
+            {
+              type = "label",
+              name = "description_label",
+              caption = entity.combinator_description,
+              style_mods = {
+                horizontally_squashable = false,
+                -- horizontally_stretchable = true,
+                single_line = false
+              }
+            }
+          }
+        }
+      }
+    }
+
+    named, main_window = flib_gui.add(screen, {
+      {
+        type = "frame",
+        direction = "vertical",
+        name = WINDOW_ID,
+        tags = {
+          unit_number = entity.unit_number
+        },
+        style_mods = {
+          maximal_height = 1290
+        },
+        children = {
+          titlebar,
+          { -- Content
+            type = "frame",
+            direction = "vertical",
+            style = "inside_shallow_frame_with_padding",
+            style_mods = { padding = 8 },
+            children = {
+              {
+                type = "flow",
+                direction = "horizontal",
+                children = {
+                  network_list,
+                  main_view
+                }
+              },
+              {
+                type = "line",
+                style_mods = { top_margin = 5, bottom_margin = 5 }
+              },
+              description_container
+            }
+          }
+        }
+      }
+    })
+
+  end
 
   local signal_table = named.signal_table
   if not signal_table then
@@ -1733,13 +2000,15 @@ local function create_window(player, entity)
       }
     })
 
-    signals[i] = { button = button}
+    signals[i] = { button = button }
   end
 
   local cs_signals_table = named.cs_signals_table
   if not cs_signals_table then
     error("cs_signals_table is nil")
   end
+  ---@type UiState
+  ---@diagnostic disable-next-line: missing-fields
   local state = {}
   for signal_name, data in pairs(config.cs_signals) do
     local default = settings.global[signal_name].value or data.default
@@ -1813,6 +2082,11 @@ local function create_window(player, entity)
     textfield = named.network_mask_textfield,
     add_button = named.network_mask_add_button
   }
+
+  state.add_description_button = named.add_description_button
+  state.description_header = named.description_header
+  state.description_scroll = named.description_scroll
+  state.description_label = named.description_label
 
   return state
 end
@@ -1894,11 +2168,12 @@ function cc_gui:on_gui_closed(event)
   local player = game.get_player(player_index)
   if not player then return end
   local state = get_player_state(player_index)
-  if element.name == ENCODER_ID then
-    destroy(player, ENCODER_ID)
+  if element.name == ENCODER_ID or element.name == DESC_EDIT_ID then
+    destroy(player, element.name)
     destroy(player, DIMMER_ID)
     if state then
       state.encoder = nil
+      state.description_edit = nil
       if state.main_window then
         state.main_window.visible = true
         player.opened = state.main_window
@@ -1907,7 +2182,9 @@ function cc_gui:on_gui_closed(event)
     return
   end
   if element.name ~= WINDOW_ID then return end
-  if state and state.encoder then return end
+  if state then
+    if state.encoder or state.description_edit then return end
+  end
   self:close(player_index)
 end
 
@@ -1933,6 +2210,11 @@ function cc_gui:on_input_confirm(event)
   local encoder = screen[ENCODER_ID]
   if encoder and state.encoder then
     confirm_encoder(event.player_index, false)
+    return
+  end
+  local desc_edit = screen[DESC_EDIT_ID]
+  if desc_edit and state.description_edit then
+    confirm_description(event.player_index, false)
     return
   end
   ---@type LuaGuiElement?
@@ -1977,7 +2259,8 @@ function cc_gui:register()
     [WINDOW_ID .. "_network_mask_confirmed"] = handle_network_mask_confirmed,
     [WINDOW_ID .. "_network_mask_add_click"] = handle_network_mask_add_click,
     [WINDOW_ID .. "_network_list_item_click"] = handle_network_list_item_click,
-    [ENCODER_ID .. "_close"] = handle_encoder_close,
+    [WINDOW_ID .. "_description_edit_click"] = handle_description_edit_click,
+    [ENCODER_ID .. "_close"] = handle_dialog_close,
     [ENCODER_ID .. "_confirm"] = handle_encoder_confirm,
     [ENCODER_ID .. "_signal_changed"] = handle_encoder_signal_changed,
     [ENCODER_ID .. "_signal_click"] = handle_encoder_signal_click,
@@ -1985,6 +2268,8 @@ function cc_gui:register()
     [ENCODER_ID .. "_bit_button_click"] = handle_encoder_bit_button_click,
     [ENCODER_ID .. "_all"] = handle_encoder_all,
     [ENCODER_ID .. "_none"] = handle_encoder_none,
+    [DESC_EDIT_ID .. "_close"] = handle_dialog_close,
+    [DESC_EDIT_ID .. "_confirm"] = handle_description_edit_confirm,
     [DIMMER_ID .. "_click"] = handle_dimmer_click
   }
   flib_gui.handle_events()
