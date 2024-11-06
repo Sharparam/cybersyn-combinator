@@ -833,9 +833,10 @@ end
 local function confirm_description(player_index, close)
   local state = get_player_state(player_index)
   if not state then return end
-  state.entity.combinator_description = state.description_edit.textfield.text
-  state.description_label.caption = state.entity.combinator_description
-  local has_description = state.entity.combinator_description and state.entity.combinator_description ~= ""
+  local description = state.description_edit.textfield.text
+  state.combinator:set_description(description)
+  state.description_label.caption = description
+  local has_description = description ~= ""
   state.add_description_button.visible = not has_description
   state.description_header.visible = has_description
   state.description_scroll.visible = has_description
@@ -1373,7 +1374,7 @@ local function create_description_edit(player_index, state)
               style_mods = {
                 horizontally_stretchable = true
               },
-              text = state.combinator.entity.combinator_description or "",
+              text = state.combinator:get_description(),
               icon_selector = true
             },
             {
@@ -1893,7 +1894,19 @@ local function create_window(player, entity)
       }
     }
 
-    local has_description = entity.combinator_description and entity.combinator_description ~= ""
+    ---@type string
+    local description
+
+    if entity.name == "entity-ghost" then
+      if not entity.tags then
+        entity.tags = { description = "" }
+      end
+      description = entity.tags.description or "" --[[@as string]]
+    else
+      description = entity.combinator_description
+    end
+
+    local has_description = description ~= ""
 
     local description_container = {
       type = "flow",
@@ -1948,7 +1961,7 @@ local function create_window(player, entity)
             {
               type = "label",
               name = "description_label",
-              caption = entity.combinator_description,
+              caption = description,
               style_mods = {
                 horizontally_squashable = false,
                 -- horizontally_stretchable = true,

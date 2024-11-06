@@ -111,6 +111,9 @@ script.on_event(defines.events.on_built_entity, function(event)
   log:debug(entity.name, "[", entity.unit_number, "] built by ", pname)
   local disable = settings.get_player_settings(player)[constants.SETTINGS.DISABLE_BUILT].value
   local combinator = CybersynCombinator:new(entity, true)
+  if event.tags and event.tags.description then
+    combinator:set_description(event.tags.description --[[@as string]])
+  end
   if not disable then return end
   combinator:disable()
   log:debug(entity.name, "[", entity.unit_number, "] disabled due to per-player setting")
@@ -129,6 +132,9 @@ local function on_script_raised_built_or_revive(event)
     disable = settings.global[constants.SETTINGS.DISABLE_NONPLAYER_BUILT].value == true
   end
   local combinator = CybersynCombinator:new(entity, true)
+  if event.tags and event.tags.description then
+    combinator:set_description(event.tags.description --[[@as string]])
+  end
   if not disable then return end
   combinator:disable()
   log:debug(entity.name, "[", entity.unit_number, "] disabled due to per-player or global setting")
@@ -150,6 +156,9 @@ script.on_event(defines.events.on_robot_built_entity, function(event)
     disable = settings.global[constants.SETTINGS.DISABLE_NONPLAYER_BUILT].value == true
   end
   local combinator = CybersynCombinator:new(entity, true)
+  if event.tags and event.tags.description then
+    combinator:set_description(event.tags.description --[[@as string]])
+  end
   if not disable then return end
   combinator:disable()
   log:debug(entity.name, "[", entity.unit_number, "] disabled due to per-player or global setting")

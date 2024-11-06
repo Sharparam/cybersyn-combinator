@@ -79,6 +79,34 @@ end
 function CC:enable() self:set_enabled(true) end
 function CC:disable() self:set_enabled(false) end
 
+function CC:is_ghost()
+  return self.entity.name == "entity-ghost"
+end
+
+--- @return string
+function CC:get_description()
+  if not self:is_ghost() then return self.entity.combinator_description end
+  if not self.entity.tags then
+    self.entity.tags = { description = "" }
+  end
+  return self.entity.tags.description or "" --[[@as string]]
+end
+
+--- @param description string
+function CC:set_description(description)
+  if not self:is_ghost() then
+    self.entity.combinator_description = description
+    return
+  end
+  if self.entity.tags then
+    local tags = self.entity.tags
+    tags.description = description
+    self.entity.tags = tags
+  else
+    self.entity.tags = { description = description }
+  end
+end
+
 --- @param id integer
 --- @return LuaLogisticSection? section
 function CC:get_or_create_section(id)
