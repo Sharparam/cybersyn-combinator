@@ -2,10 +2,15 @@
 Version: 2.2.0
 Date: 2024-11-06
   Features:
-    - Can now set description of combinator.
+    - Can now set description of the combinator.
+    - Can now confirm signal value input with confirm key (default "E") in some situations.
+      (Only works when expression input is not enabled, as otherwise "E" will be interpreted as part of the expression.)
+  Bugfixes:
+    - Fix some possibly inconsistent escape key behaviour.
   Gui:
     - Can now confirm encoder dialog with confirm key binding (default "E").
     - Improved display of encoder dialog, now shows on top of main window instead of hiding it.
+    - Close button now has proper tooltip.
 ---------------------------------------------------------------------------------------------------
 Version: 2.1.4
 Date: 2024-11-02
