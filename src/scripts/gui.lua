@@ -2227,9 +2227,8 @@ function cc_gui:on_input_close(event)
   local player = game.get_player(event.player_index)
   if not player then return end
   local screen = player.gui.screen
-  local window = screen[WINDOW_ID]
-  if not window then return end
-  log:debug("input_close from ", event.player_index)
+  if screen[ENCODER_ID] or screen[DESC_EDIT_ID] then return end
+  if screen[WINDOW_ID] then self:close(event.player_index, false) end
 end
 
 --- @param event EventData.CustomInputEvent
