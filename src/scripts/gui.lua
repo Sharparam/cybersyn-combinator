@@ -339,7 +339,8 @@ end
 --- @param player_index uint
 --- @param state UiState
 --- @param value integer
-local function set_new_signal_value(player_index, state, value)
+--- @param clear_selected boolean
+local function set_new_signal_value(player_index, state, value, clear_selected)
   local new_value = util.clamp(value, constants.INT32_MIN, constants.INT32_MAX)
   local convert = settings.get_player_settings(player_index)[constants.SETTINGS.NEGATIVE_SIGNALS].value == true
   local current = state.combinator:get_item_slot(state.selected_slot)
@@ -356,7 +357,9 @@ local function set_new_signal_value(player_index, state, value)
     state.signal_value_stacks.text = tostring(stacks >= 0 and ceil(stacks) or floor(stacks))
   end
   state.signals[state.selected_slot].button.label.caption = format_signal_count(new_value)
-  state.selected_slot = nil
+  if clear_selected then
+    state.selected_slot = nil
+  end
   state.stack_size = nil
   update_totals(state)
 end
@@ -602,22 +605,39 @@ local function handle_signal_value_confirmed(event)
     state.signal_value_confirm.enabled = false
     return
   end
-  set_new_signal_value(event.player_index, state, value)
+  set_new_signal_value(event.player_index, state, value, true)
+end
+
+--- @param player_index integer
+--- @param state UiState?
+--- @param clear_selected boolean
+local function confirm_signal_value(player_index, state, clear_selected)
+  if not state or not state.selected_slot then return end
+  local slot_button = state.selected_slot_button
+  if slot_button then slot_button.style = "flib_slot_button_default" end
+  local current = state.combinator:get_item_slot(state.selected_slot)
+  local value = resolve_textfield_number(state.signal_value_items, player_index, current.count or 0)
+  if not value then
+    state.signal_value_confirm.enabled = false
+    return
+  end
+  set_new_signal_value(player_index, state, value, clear_selected)
 end
 
 --- @param event EventData.on_gui_click
 local function handle_signal_value_confirm(event)
   local state = get_player_state(event.player_index)
-  if not state or not state.selected_slot then return end
-  local slot_button = state.selected_slot_button
-  if slot_button then slot_button.style = "flib_slot_button_default" end
-  local current = state.combinator:get_item_slot(state.selected_slot)
-  local value = resolve_textfield_number(state.signal_value_items, event.player_index, current.count or 0)
-  if not value then
-    state.signal_value_confirm.enabled = false
-    return
-  end
-  set_new_signal_value(event.player_index, state, value)
+  confirm_signal_value(event.player_index, state, true)
+  -- if not state or not state.selected_slot then return end
+  -- local slot_button = state.selected_slot_button
+  -- if slot_button then slot_button.style = "flib_slot_button_default" end
+  -- local current = state.combinator:get_item_slot(state.selected_slot)
+  -- local value = resolve_textfield_number(state.signal_value_items, event.player_index, current.count or 0)
+  -- if not value then
+  --   state.signal_value_confirm.enabled = false
+  --   return
+  -- end
+  -- set_new_signal_value(event.player_index, state, value)
 end
 
 --- @param event EventData.on_gui_text_changed
@@ -2184,6 +2204,11 @@ function cc_gui:on_gui_closed(event)
   if element.name ~= WINDOW_ID then return end
   if state then
     if state.encoder or state.description_edit then return end
+    if state.selected_slot then
+      player.opened = state.main_window
+      state.selected_slot = nil
+      return
+    end
   end
   self:close(player_index)
 end
@@ -2219,8 +2244,10 @@ function cc_gui:on_input_confirm(event)
   end
   ---@type LuaGuiElement?
   local window = screen[WINDOW_ID]
-  if not window then return end
-  log:debug("input_confirm from ", event.player_index)
+  if window and state.selected_slot then
+    log:debug("input_confirm from ", event.player_index)
+    confirm_signal_value(event.player_index, state, false)
+  end
 end
 
 --- @param unit_number uint?
