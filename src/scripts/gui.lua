@@ -1465,10 +1465,14 @@ local function create_window(player, entity)
   local screen = player.gui.screen
 
   local network_list_width = 200
+  local description_width = 640
 
   if settings.get_player_settings(player)[constants.SETTINGS.NETWORK_MASK_DISPLAY_MODE].value == "BINARY" then
     network_list_width = 340
+    description_width = 780
   end
+
+  local enable_expressions = settings.get_player_settings(player)[constants.SETTINGS.ENABLE_EXPRESSIONS].value == true
 
   local named, main_window
 
@@ -1819,7 +1823,10 @@ local function create_window(player, entity)
               style_mods = { horizontal_align = "right", horizontally_stretchable = false, width = 100 },
               lose_focus_on_confirm = true,
               clear_and_focus_on_right_click = true,
-              elem_mods = { numeric = false, text = "0" },
+              elem_mods = {
+                numeric = not enable_expressions,
+                text = "0"
+              },
               handler = {
                 [defines.events.on_gui_text_changed] = handle_signal_value_changed,
                 [defines.events.on_gui_confirmed] = handle_signal_value_confirmed
@@ -1932,7 +1939,7 @@ local function create_window(player, entity)
           visible = has_description,
           style_mods = {
             -- horizontally_stretchable = true
-            width = 640,
+            width = description_width,
             maximal_height = 200
           },
           children = {
