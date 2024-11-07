@@ -456,12 +456,18 @@ function CC:validate_cs_signals()
     local name = value.name
     local cs_signal = config.cs_signals[name]
 
-    if type ~= "virtual" or not cs_signal then goto continue end
+    if type ~= "virtual" or not cs_signal then
+      section.clear_slot(i)
+      goto continue
+    end
 
     local emit_default = should_emit_default(name)
 
     if not filter.min or filter.min == 0 or (filter.min == cs_signal.default and not emit_default) then
       section.clear_slot(i)
+    elseif cs_signal.slot ~= i and not section.get_slot(cs_signal.slot).value then
+      section.clear_slot(i)
+      section.set_slot(cs_signal.slot, filter)
     end
 
     ::continue::
