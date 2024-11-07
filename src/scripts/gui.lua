@@ -1989,8 +1989,7 @@ local function create_window(player, entity)
           { -- Content
             type = "frame",
             direction = "vertical",
-            style = "inside_shallow_frame_with_padding",
-            style_mods = { padding = 8 },
+            style = "entity_frame",
             children = {
               {
                 type = "flow",
