@@ -1952,6 +1952,7 @@ local function create_window(player, entity)
           name = "description_scroll",
           direction = "vertical",
           visible = has_description,
+          style = "shallow_scroll_pane",
           style_mods = {
             -- horizontally_stretchable = true
             width = description_width,
