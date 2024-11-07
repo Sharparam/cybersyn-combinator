@@ -111,6 +111,30 @@ function CC:set_description(description)
   end
 end
 
+---@param control LuaConstantCombinatorControlBehavior?
+---@return LuaLogisticSection?
+local function try_get_cs_section(control)
+  if not control then return end
+  if control.sections_count == 0 then return end
+  for _, section in pairs(control.sections) do
+    if not section or not section.valid then goto continue end
+    local found = true
+    for _, filter in pairs(section.filters) do
+      if not filter or not filter.value then goto f_continue end
+      local value = filter.value
+      if not value or not value.name then goto f_continue end
+      local cs_signal = config.cs_signals[value.name]
+      if value.type ~= "virtual" or not cs_signal then
+        found = false
+        break
+      end
+      ::f_continue::
+    end
+    if found then return section end
+    ::continue::
+  end
+end
+
 --- @param id integer
 --- @return LuaLogisticSection? section
 function CC:get_or_create_section(id)
@@ -126,8 +150,15 @@ function CC:get_or_create_section(id)
     storage.combinator_sections[unit_number] = {}
   end
   local section = storage.combinator_sections[unit_number][id]
-  if section and section.valid then return section end
-  section = control.add_section()
+  if section and section.valid then
+    return section
+  end
+  if id == CYBERSYN_SECTION_ID then
+    section = try_get_cs_section(control)
+  end
+  if not section or not section.valid then
+    section = control.add_section()
+  end
   storage.combinator_sections[unit_number][id] = section
 
   if not section then
