@@ -12,7 +12,11 @@ local NETWORK_SECTION_ID = 3
 
 --- @class CybersynCombinator
 --- @field entity LuaEntity
-local CC = {}
+local CC = {
+  SIGNALS_SECTION_ID = SIGNALS_SECTION_ID,
+  CYBERSYN_SECTION_ID = CYBERSYN_SECTION_ID,
+  NETWORK_SECTION_ID = NETWORK_SECTION_ID
+}
 
 --- @param name string?
 --- @return boolean
