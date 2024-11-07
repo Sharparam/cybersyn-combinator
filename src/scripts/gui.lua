@@ -1953,6 +1953,25 @@ local function create_window(player, combinator)
       }
     }
 
+    local connection_header = {
+      type = "frame",
+      style = "subheader_frame",
+      style_mods = {
+        horizontally_stretchable = true,
+        horizontally_squashable = true,
+        top_margin = -8,
+        left_margin = -12,
+        right_margin = -12
+      },
+      children = {
+        {
+          type = "flow",
+          name = "connection_header_items",
+          style = "player_input_horizontal_flow"
+        }
+      }
+    }
+
     local network_list = { -- Network list
       type = "frame",
       style = "deep_frame_in_shallow_frame",
@@ -2477,6 +2496,7 @@ local function create_window(player, combinator)
             direction = "vertical",
             style = "entity_frame",
             children = {
+              connection_header,
               {
                 type = "flow",
                 direction = "horizontal",
@@ -2493,6 +2513,44 @@ local function create_window(player, combinator)
       }
     })
 
+  end
+
+  ---@type LuaGuiElement.add_param.flow
+  local connection_header_items = named.connection_header_items
+
+  local red = entity.get_circuit_network(defines.wire_connector_id.circuit_red)
+  local green = entity.get_circuit_network(defines.wire_connector_id.circuit_green)
+  local red_id = red and red.valid and red.network_id or nil
+  local green_id = green and green.valid and green.network_id or nil
+
+  if not red_id and not green_id then
+    flib_gui.add(connection_header_items, {
+      type = "label",
+      style = "subheader_label",
+      caption = { "gui.not-connected" }
+    })
+  else
+    flib_gui.add(connection_header_items, {
+      type = "label",
+      style = "subheader_label",
+      caption = { "gui-control-behavior.connected-to-network" }
+    })
+
+    if red_id then
+      flib_gui.add(connection_header_items, {
+        type = "label",
+        caption = { "", { "gui-control-behavior.red-network-id", red_id }, " [img=info]" },
+        tooltip = { "", { "gui-control-behavior.circuit-network" }, ": ", tostring(red_id) }
+      })
+    end
+
+    if green_id then
+      flib_gui.add(connection_header_items, {
+        type = "label",
+        caption = { "", { "gui-control-behavior.green-network-id", green_id }, " [img=info]" },
+        tooltip = { "", { "gui-control-behavior.circuit-network" }, ": ", tostring(green_id) }
+      })
+    end
   end
 
   local signal_table = named.signal_table
