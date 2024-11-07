@@ -165,10 +165,17 @@ script.on_event(defines.events.on_robot_built_entity, function(event)
 end, entity_event_filters)
 
 script.on_event(defines.events.on_entity_settings_pasted, function(event)
+  local src = event.source
   local dest = event.destination
   if not dest or not dest.valid or dest.type ~= "constant-combinator" then return end
   if dest.name ~= constants.ENTITY_NAME then return end
-  CybersynCombinator:new(dest, true)
+  local needs_sort = src.name ~= dest.name
+  local dest_combinator = CybersynCombinator:new(dest, needs_sort)
+  if needs_sort then return end
+  local src_combinator = CybersynCombinator:new(src, false)
+  dest_combinator:set_section_index(CybersynCombinator.SIGNALS_SECTION_ID, src_combinator:get_or_create_section(CybersynCombinator.SIGNALS_SECTION_ID).index)
+  dest_combinator:set_section_index(CybersynCombinator.CYBERSYN_SECTION_ID, src_combinator:get_or_create_section(CybersynCombinator.CYBERSYN_SECTION_ID).index)
+  dest_combinator:set_section_index(CybersynCombinator.NETWORK_SECTION_ID, src_combinator:get_or_create_section(CybersynCombinator.NETWORK_SECTION_ID).index)
 end)
 
 local function sort_combinator(command)

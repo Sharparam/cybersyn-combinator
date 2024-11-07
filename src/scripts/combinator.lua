@@ -168,6 +168,25 @@ function CC:get_or_create_section(id)
   return section
 end
 
+---@param id integer
+---@param index integer
+function CC:set_section_index(id, index)
+  if not self:is_valid_entity() then return end
+  local control = self:get_control_behavior()
+  if not control then return end
+  if not storage.combinator_sections then
+    storage.combinator_sections = {}
+  end
+  local unit_number = self.entity.unit_number
+  if not unit_number then return end
+  if not storage.combinator_sections[unit_number] then
+    storage.combinator_sections[unit_number] = {}
+  end
+  local section = control.get_section(index)
+  if not section then return end
+  storage.combinator_sections[unit_number][id] = section
+end
+
 --- @param name string
 --- @return integer?
 function CC:get_cs_value(name)
