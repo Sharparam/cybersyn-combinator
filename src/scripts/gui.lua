@@ -4,7 +4,7 @@ local log = require("scripts.logger").gui
 local cc_util = require "scripts.cc_util"
 local masking = require "scripts.masking"
 local expression = require "scripts.expression"
-local CybersynCombinator = require "combinator"
+local CybersynCombinator = require "scripts.combinator"
 local util = require "__core__.lualib.util"
 local flib_gui = require "__flib__.gui"
 
