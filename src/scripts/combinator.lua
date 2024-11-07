@@ -513,35 +513,6 @@ function CC:sort_signals()
   local control = self:get_control_behavior()
   if not control then return end
 
-  local cs_filters = {}
-  local sig_filters = {}
-  local net_filters = {}
-
-  for _, section in pairs(control.sections) do
-    if not section then goto continue end
-    for _, filter in pairs(section.filters) do
-      local value = filter.value
-      if not value or not value.name then goto filter_continue end
-      local type = value.type
-      local name = value.name
-      local cs_signal = config.cs_signals[name]
-
-      if type == "virtual" and cs_signal ~= nil then
-        cs_filters[#cs_filters + 1] = filter
-      elseif type == "virtual" then
-        net_filters[#net_filters + 1] = filter
-      elseif type == "item" or type == "fluid" then
-        sig_filters[#sig_filters + 1] = filter
-      end
-      ::filter_continue::
-    end
-    ::continue::
-  end
-
-  for _ = 1, control.sections_count do
-    control.remove_section(1)
-  end
-
   local cs_sec = self:get_or_create_section(CYBERSYN_SECTION_ID)
   local sig_sec = self:get_or_create_section(SIGNALS_SECTION_ID)
   local net_sec = self:get_or_create_section(NETWORK_SECTION_ID)
@@ -551,19 +522,40 @@ function CC:sort_signals()
     return
   end
 
-  for _, filter in pairs(cs_filters) do
-    self:set_cs_value(filter.value.name, filter.min)
-  end
+  for _, section in pairs(control.sections) do
+    if not section then goto continue end
+    if section == cs_sec or section == sig_sec or section == net_sec then goto continue end
+    for _, filter in pairs(section.filters) do
+      local value = filter.value
+      if not value or not value.name then goto filter_continue end
+      local type = value.type
+      local name = value.name
+      local cs_signal = config.cs_signals[name]
 
-  for _, filter in pairs(sig_filters) do
-    local slot = find_empty_slot(sig_sec)
-    if slot and slot <= config.slot_count then
-      sig_sec.set_slot(slot, filter)
+      if type == "virtual" and cs_signal ~= nil then
+        self:set_cs_value(name, filter.min)
+      elseif type == "virtual" then
+        net_sec.set_slot(net_sec.filters_count + 1, filter)
+      elseif type == "item" or type == "fluid" then
+        local item_slot = find_empty_slot(sig_sec)
+        if item_slot and item_slot <= config.slot_count then
+          sig_sec.set_slot(item_slot, filter)
+        end
+      end
+      ::filter_continue::
     end
+    ::continue::
   end
 
-  for _, filter in pairs(net_filters) do
-    net_sec.set_slot(net_sec.filters_count + 1, filter)
+  local remove_index = 1
+  for _ = 1, control.sections_count do
+    if control.sections_count <= 3 then break end
+    local section = control.get_section(remove_index)
+    if section == cs_sec or section == sig_sec or section == net_sec then
+      remove_index = remove_index + 1
+    else
+      control.remove_section(remove_index)
+    end
   end
 end
 
