@@ -2415,10 +2415,6 @@ local function create_window(player, combinator)
     local description_container = {
       type = "flow",
       direction = "vertical",
-      style = "vertical_flow",
-      style_mods = {
-        -- horizontally_stretchable = true
-      },
       children = {
         {
           type = "button",
@@ -2433,7 +2429,6 @@ local function create_window(player, combinator)
           type = "flow",
           name = "description_header",
           direction = "horizontal",
-          style = "horizontal_flow",
           visible = has_description,
           children = {
             {
@@ -2458,7 +2453,6 @@ local function create_window(player, combinator)
           visible = has_description,
           style = "shallow_scroll_pane",
           style_mods = {
-            -- horizontally_stretchable = true
             width = description_width,
             maximal_height = 200
           },
@@ -2469,7 +2463,6 @@ local function create_window(player, combinator)
               caption = description,
               style_mods = {
                 horizontally_squashable = false,
-                -- horizontally_stretchable = true,
                 single_line = false
               }
             }
