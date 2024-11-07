@@ -89,6 +89,16 @@ styles["cybersyn-combinator_network-list_item-active"] = {
   default_vertical_offset = styles.button.selected_vertical_offset
 }
 
+styles["cybersyn-combinator_group-list_scroll-pane"] = {
+  type = "scroll_pane_style",
+  parent = "list_box_in_shallow_frame_under_subheader_scroll_pane",
+  padding = 0,
+  vertical_flow_style = {
+    type = "vertical_flow_style",
+    vertical_spacing = 0
+  }
+}
+
 styles["cybersyn-combinator_frame_semitransparent"] = {
   type = "frame_style",
   graphical_set = {

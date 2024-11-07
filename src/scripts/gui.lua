@@ -28,6 +28,13 @@ local WINDOW_ID = "cybersyn-constant-combinator-window"
 local DIMMER_ID = "cybersyn-constant-combinator-dimmer"
 local ENCODER_ID = "cybersyn-constant-combinator-encoder"
 local DESC_EDIT_ID = "cybersyn-constant-combinator-description-edit"
+local LOGI_GROUP_EDIT_ID = "cybersyn-constant-combinator-logistic-group-edit"
+
+local DIALOG_IDS = {
+  [ENCODER_ID] = true,
+  [DESC_EDIT_ID] = true,
+  [LOGI_GROUP_EDIT_ID] = true
+}
 
 local RED = "utility/status_not_working"
 local GREEN = "utility/status_working"
@@ -98,11 +105,22 @@ local cc_gui = {
 --- @field dialog LuaGuiElement?
 --- @field textfield LuaGuiElement
 
+--- @class LogisticGroupEditState
+--- @field dialog LuaGuiElement?
+--- @field section LuaLogisticSection
+--- @field search_textfield LuaGuiElement.add_param.textfield
+--- @field search_button LuaGuiElement.add_param.button
+--- @field group_name_textfield LuaGuiElement.add_param.textfield
+--- @field group_multiplier_textfield LuaGuiElement.add_param.textfield
+--- @field group_confirm_button LuaGuiElement.add_param.button
+--- @field group_list LuaGuiElement.add_param.scroll_pane
+
 --- @class UiState
 --- @field main_window LuaGuiElement
 --- @field status_sprite LuaGuiElement
 --- @field status_label LuaGuiElement
 --- @field entity_preview LuaGuiElement
+--- @field cs_signals_group_checkbox LuaGuiElement.add_param.checkbox
 --- @field on_off LuaGuiElement
 --- @field item_total_label LuaGuiElement
 --- @field item_stacks_label LuaGuiElement
@@ -124,6 +142,7 @@ local cc_gui = {
 --- @field dimmer LuaGuiElement?
 --- @field encoder EncoderState?
 --- @field description_edit DescriptionEditState?
+--- @field logistic_group_edit LogisticGroupEditState?
 
 --- @param player_index PlayerIdentification?
 --- @return UiState?
@@ -143,6 +162,40 @@ local function set_player_state(player_index, state)
     return -- TODO: Throw error?
   end
   data.state = state
+end
+
+--- @param player_index integer
+--- @return { name: string, count: number? }[]
+local function get_logistic_groups(player_index)
+  local no_group = "[No group assigned]"
+  local player_data = cc_util.get_player_data(player_index)
+  if player_data and player_data.translations then
+    no_group = player_data.translations["gui-train.empty-train-group"] or no_group
+  end
+  return {
+    { name = no_group }
+  }
+end
+
+---@param section LuaLogisticSection
+---@return string|LocalisedString
+local function create_logistic_section_caption(section)
+  local group_active = section.active
+  ---@type string|LocalisedString?
+  local group = section.group
+  local multiplier = section.multiplier
+
+  if not group or group == "" then
+    group = { "gui-train.empty-train-group" }
+  end
+
+  local caption = group
+
+  if multiplier ~= 1 then
+    caption = { "description.creates-number-entities-value", group, multiplier }
+  end
+
+  return caption
 end
 
 --- @param player LuaPlayer
@@ -270,6 +323,13 @@ end
 
 --- @param state UiState
 local function update_cs_signals(state)
+  local section = state.combinator:get_or_create_section(CybersynCombinator.CYBERSYN_SECTION_ID)
+  if section then
+    state.cs_signals_group_checkbox.state = section.active
+    local caption = create_logistic_section_caption(section)
+    state.cs_signals_group_checkbox.caption = caption
+    state.cs_signals_group_checkbox.tooltip = caption
+  end
   for name, data in pairs(config.cs_signals) do
     local value = state.combinator:get_cs_value(name)
     local default = settings.global[name].value or data.default
@@ -643,6 +703,16 @@ local function handle_signal_value_confirm(event)
   -- set_new_signal_value(event.player_index, state, value)
 end
 
+---@param event EventData.on_gui_checked_state_changed
+local function handle_cs_group_checked_state_changed(event)
+  local enabled = event.element.state
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  local section = state.combinator:get_or_create_section(CybersynCombinator.CYBERSYN_SECTION_ID)
+  section.active = enabled
+  update_cs_signals(state)
+end
+
 --- @param event EventData.on_gui_text_changed
 local function handle_cs_signal_value_changed(event)
   local element = event.element
@@ -961,6 +1031,94 @@ local function handle_dimmer_click(event)
   if state.main_window then
     player.opened = state.main_window
   end
+end
+
+local function set_logistic_group_search(state, enable)
+  if not state.logistic_group_edit then return end
+  local textfield = state.logistic_group_edit.search_textfield
+  local current = textfield.visible
+  if enable then
+    textfield.visible = true
+    textfield.focus()
+    state.logistic_group_edit.search_button.toggled = true
+    if current then
+      textfield.select_all()
+    end
+  else
+    textfield.visible = false
+    textfield.text = ""
+    state.logistic_group_edit.search_button.toggled = false
+  end
+end
+
+--- @param state UiState
+local function toggle_logistic_group_search(state)
+  if not state.logistic_group_edit then return end
+  local textfield = state.logistic_group_edit.search_textfield
+  set_logistic_group_search(state, not textfield.visible)
+end
+
+--- @param event EventData.on_gui_click
+local function handle_logistic_group_search_click(event)
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  toggle_logistic_group_search(state)
+end
+
+--- @param player_index integer
+--- @param close boolean
+local function confirm_logistic_group(player_index, close)
+  local player = game.get_player(player_index)
+  if not player then return end
+  local state = get_player_state(player_index)
+  if not state then return end
+
+  local group = state.logistic_group_edit.group_name_textfield.text
+  local multiplier_text = state.logistic_group_edit.group_multiplier_textfield.text
+  local multiplier = tonumber(multiplier_text) or 1
+
+  local special_no_group = "[No group assigned]"
+  local player_data = cc_util.get_player_data(player_index)
+  if player_data and player_data.translations and player_data.translations["gui-train.empty-train-group"] then
+    log:debug("Updating 'no group' string from cached translation")
+    special_no_group = player_data.translations["gui-train.empty-train-group"]
+  end
+
+  if group == special_no_group then
+    group = ""
+  end
+
+  log:debug("confirm logistic group '", group, "' with multiplier ", multiplier)
+
+  state.logistic_group_edit.section.group = group or ""
+  state.logistic_group_edit.section.multiplier = multiplier
+
+  update_cs_signals(state)
+
+  if not close then return end
+
+  player.opened = state.main_window
+end
+
+--- @param event EventData.on_gui_confirmed
+local function handle_logistic_group_confirmed(event)
+  confirm_logistic_group(event.player_index, true)
+end
+
+--- @param event EventData.on_gui_click
+local function handle_logistic_group_confirm(event)
+  confirm_logistic_group(event.player_index, true)
+end
+
+--- @param event EventData.on_gui_click
+local function handle_logistic_group_item_click(event)
+  local element = event.element
+  local group = element.tags.group --[[@as string?]]
+  if not group then return end
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  if not state.logistic_group_edit then return end
+  state.logistic_group_edit.group_name_textfield.text = group
 end
 
 --- @param player_index integer
@@ -1422,6 +1580,282 @@ local function create_description_edit(player_index, state)
   player.opened = dialog
 end
 
+--- @param name string?
+--- @param count number?
+local function make_logistic_group_item(name, count)
+  count = count or 0
+  local group = name or ""
+  ---@type string|LocalisedString
+  local caption = name
+  if group == "" then
+    caption = { "gui-train.empty-train-group" }
+  end
+  local item = {
+    type = "flow",
+    direction = "horizontal",
+    style = "packed_horizontal_flow",
+    children = {
+      {
+        type = "button",
+        style = "list_box_item",
+        style_mods = {
+          horizontally_stretchable = true,
+          horizontal_align = "right"
+        },
+        caption = group == "" and "" or tostring(count),
+        tooltip = caption,
+        tags = {
+          group = group
+        },
+        handler = {
+          [defines.events.on_gui_click] = handle_logistic_group_item_click
+        },
+        children = {
+          {
+            type = "label",
+            caption = caption,
+            style_mods = {
+              -- horizontally_stretchable = true
+              width = group == "" and 300 or 300 - 28 - 40
+            }
+          }
+        }
+      },
+      {
+        type = "sprite-button",
+        style = "tool_button_red",
+        sprite = "utility/trash",
+        visible = group ~= ""
+      }
+    }
+  }
+
+  return item
+end
+
+--- @param player_index integer
+--- @param state UiState
+--- @param section_id integer?
+--- @param section_index integer?
+local function create_logistic_group_edit(player_index, state, section_id, section_index)
+  if not section_id and not section_index then
+    error("create_logistic_group_edit: Either section_id or section_index must be provided")
+  end
+
+  local player = game.players[player_index]
+  local screen = player.gui.screen
+  create_dimmer(player_index)
+  local named, dialog
+
+  do
+    local titlebar = {
+      type = "flow",
+      direction = "horizontal",
+      drag_target = LOGI_GROUP_EDIT_ID,
+      style = "frame_header_flow",
+      style_mods = {
+        vertically_stretchable = false
+      },
+      children = {
+        {
+          type = "label",
+          style = "frame_title",
+          caption = { "gui-rename.rename-group" },
+          drag_target = LOGI_GROUP_EDIT_ID,
+          style_mods = {
+            vertically_stretchable = true,
+            horizontally_squashable = true,
+            top_margin = -3,
+            bottom_padding = 3
+          }
+        },
+        {
+          type = "empty-widget",
+          style = "draggable_space_header",
+          drag_target = LOGI_GROUP_EDIT_ID,
+          style_mods = {
+            height = 24,
+            natural_height = 24,
+            horizontally_stretchable = true,
+            vertically_stretchable = true
+          }
+        },
+        {
+          type = "sprite-button",
+          style = "frame_action_button",
+          name = "search_button",
+          sprite = "utility/search",
+          handler = {
+            [defines.events.on_gui_click] = handle_logistic_group_search_click
+          }
+        },
+        {
+          type = "sprite-button",
+          style = "close_button",
+          name = DESC_EDIT_ID .. "_close",
+          sprite = "utility/close",
+          handler = {
+            [defines.events.on_gui_click] = handle_dialog_close
+          }
+        }
+      }
+    }
+
+    local entry_header = {
+      type = "frame",
+      style = "subheader_frame",
+      style_mods = {
+        width = 300
+      },
+      children = {
+        {
+          type = "flow",
+          direction = "horizontal",
+          style_mods = {
+            vertical_align = "center"
+          },
+          children = {
+            {
+              type = "textfield",
+              name = "group_name_textfield",
+              style = "textbox",
+              style_mods = {
+                maximal_width = 0,
+                horizontally_stretchable = true
+              },
+              icon_selector = true,
+              handler = {
+                [defines.events.on_gui_confirmed] = handle_logistic_group_confirmed
+              }
+            },
+            {
+              type = "label",
+              caption = "×"
+            },
+            {
+              type = "textfield",
+              name = "group_multiplier_textfield",
+              style = "very_short_number_textfield",
+              style_mods = {
+                width = 40,
+                natural_width = 40
+              },
+              text = "1",
+              numeric = true,
+              allow_decimal = true,
+              allow_negative = false,
+              handler = {
+                [defines.events.on_gui_confirmed] = handle_logistic_group_confirmed
+              }
+            },
+            {
+              type = "sprite-button",
+              name = "confirm_button",
+              style = "item_and_count_select_confirm",
+              sprite = "utility/enter",
+              handler = {
+                [defines.events.on_gui_click] = handle_logistic_group_confirm
+              }
+            }
+          }
+        }
+      }
+    }
+
+    local entry_list = {
+      type = "scroll-pane",
+      name = "group_list",
+      direction = "vertical",
+      style = "cybersyn-combinator_group-list_scroll-pane",
+      style_mods = {
+        width = 300,
+        minimal_height = 130,
+        maximal_height = 400
+      },
+      horizontal_scroll_policy = "never",
+      children = {
+        make_logistic_group_item()
+      }
+    }
+
+    local content = {
+      type = "flow",
+      direction = "vertical",
+      style = "inset_frame_container_vertical_flow",
+      style_mods = {
+        top_margin = -12
+      },
+      children = {
+        {
+          type = "frame",
+          direction = "vertical",
+          style = "inside_deep_frame",
+          children = {
+            entry_header,
+            entry_list
+          }
+        }
+      }
+    }
+
+    named, dialog = flib_gui.add(screen, {
+      name = LOGI_GROUP_EDIT_ID,
+      type = "frame",
+      style = "inset_frame_container_frame",
+      direction = "vertical",
+      style_mods = {
+        -- width = 324,
+        maximal_height = 1290
+      },
+      tags = {
+        section_id = section_id,
+        section_index = section_index
+      },
+      children = {
+        titlebar,
+        {
+          type = "textfield",
+          style = "search_popup_textfield",
+          name = "search_textfield",
+          visible = false,
+          style_mods = {
+            top_margin = -46,
+            bottom_margin = 6,
+            left_margin = 132
+          }
+        },
+        content
+      }
+    })
+  end
+
+  local section
+
+  if section_id then
+    section = state.combinator:get_or_create_section(section_id)
+  elseif section_index then
+    section = state.combinator.entity.get_control_behavior().get_section(section_index)
+  end
+
+  state.logistic_group_edit = {
+    dialog = dialog,
+    section = section --[[@as LuaLogisticSection]],
+    search_textfield = named.search_textfield,
+    search_button = named.search_button,
+    group_name_textfield = named.group_name_textfield,
+    group_multiplier_textfield = named.group_multiplier_textfield,
+    group_confirm_button = named.confirm_button,
+    group_list = named.group_list
+  }
+
+  dialog.force_auto_center()
+  named.group_name_textfield.select_all()
+  named.group_name_textfield.focus()
+  player.opened = dialog
+end
+
+-- create_logistic_group_edit()
+
 --- @param event EventData.on_gui_click
 handle_network_list_item_click = function(event)
   local state = get_player_state(event.player_index)
@@ -1462,10 +1896,19 @@ local function handle_description_edit_click(event)
   create_description_edit(event.player_index, state)
 end
 
+--- @param event EventData.on_gui_click
+local function handle_logistic_group_edit_click(event)
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  log:debug("Showing logistic group editor")
+  create_logistic_group_edit(event.player_index, state, event.element.tags.section_id, event.element.tags.section_index)
+end
+
 --- @param player LuaPlayer
---- @param entity LuaEntity
+--- @param combinator CybersynCombinator
 --- @return UiState
-local function create_window(player, entity)
+local function create_window(player, combinator)
+  local entity = combinator.entity
   local screen = player.gui.screen
 
   local network_list_width = 200
@@ -1642,11 +2085,50 @@ local function create_window(player, entity)
       }
     }
 
+    local cs_section = combinator:get_or_create_section(CybersynCombinator.CYBERSYN_SECTION_ID) --[[@as LuaLogisticSection]]
+    local cs_caption = create_logistic_section_caption(cs_section)
+
     local cs_signals_pane = { -- CS signal pane
       type = "flow",
       direction = "vertical",
       style_mods = { top_margin = 25, left_padding = 8, width = 300, horizontal_align = "center", vertically_stretchable = true },
       children = {
+        {
+          type = "flow",
+          direction = "horizontal",
+          style_mods = {
+            horizontally_stretchable = true,
+            horizontal_align = "left",
+            left_padding = 5
+          },
+          children = {
+            {
+              type = "checkbox",
+              name = "cs_signals_group_checkbox",
+              caption = cs_caption,
+              tooltip = cs_caption,
+              style = "caption_checkbox",
+              style_mods = {
+                horizontally_squashable = true
+              },
+              state = cs_section.active,
+              handler = {
+                [defines.events.on_gui_checked_state_changed] = handle_cs_group_checked_state_changed
+              }
+            },
+            {
+              type = "sprite-button",
+              style = "mini_button_aligned_to_text_vertically",
+              sprite = "utility/rename_icon",
+              tags = {
+                section_id = CybersynCombinator.CYBERSYN_SECTION_ID
+              },
+              handler = {
+                [defines.events.on_gui_click] = handle_logistic_group_edit_click
+              }
+            }
+          }
+        },
         {
           type = "table",
           name = "cs_signals_table",
@@ -2109,6 +2591,7 @@ local function create_window(player, entity)
   state.status_sprite = named.status_sprite
   state.status_label = named.status_label
   state.entity_preview = preview
+  state.cs_signals_group_checkbox = named.cs_signals_group_checkbox
   state.on_off = named.on_off
   state.item_total_label = named.item_total
   state.item_stacks_label = named.item_stacks
@@ -2150,9 +2633,9 @@ function cc_gui:open(player_index, entity)
     self:close(player_index)
   end
   log:debug("GUI open for entity ", entity.unit_number, ", player index ", player_index)
-  local state = create_window(player, entity)
 
   local combinator = CybersynCombinator:new(entity)
+  local state = create_window(player, combinator)
   state.combinator = combinator
 
   if not combinator then
@@ -2194,8 +2677,14 @@ function cc_gui:on_gui_opened(event)
   local entity = event.entity
   if not entity or not entity.valid then return end
   local player_index = event.player_index
+  local player = game.get_player(player_index)
+  if not player then return end
+  local screen = player.gui.screen
   local name = entity.name == "entity-ghost" and entity.ghost_name or entity.name
   if name ~= constants.ENTITY_NAME then
+    if screen[WINDOW_ID] then
+      self:close(player_index)
+    end
     return
   end
   log:debug("on_gui_opened: opening")
@@ -2210,12 +2699,21 @@ function cc_gui:on_gui_closed(event)
   local player = game.get_player(player_index)
   if not player then return end
   local state = get_player_state(player_index)
-  if element.name == ENCODER_ID or element.name == DESC_EDIT_ID then
+  local screen = player.gui.screen
+  if DIALOG_IDS[element.name] then
+    if screen[LOGI_GROUP_EDIT_ID] and state and state.logistic_group_edit then
+      if state.logistic_group_edit.search_textfield.visible then
+        toggle_logistic_group_search(state)
+        player.opened = state.logistic_group_edit.dialog
+        return
+      end
+    end
     destroy(player, element.name)
     destroy(player, DIMMER_ID)
     if state then
       state.encoder = nil
       state.description_edit = nil
+      state.logistic_group_edit = nil
       if state.main_window then
         state.main_window.visible = true
         player.opened = state.main_window
@@ -2225,7 +2723,7 @@ function cc_gui:on_gui_closed(event)
   end
   if element.name ~= WINDOW_ID then return end
   if state then
-    if state.encoder or state.description_edit then return end
+    if state.encoder or state.description_edit or state.logistic_group_edit then return end
     if state.selected_slot then
       player.opened = state.main_window
       state.selected_slot = nil
@@ -2242,7 +2740,7 @@ function cc_gui:on_input_close(event)
   local player = game.get_player(event.player_index)
   if not player then return end
   local screen = player.gui.screen
-  if screen[ENCODER_ID] or screen[DESC_EDIT_ID] then return end
+  if screen[ENCODER_ID] or screen[DESC_EDIT_ID] or screen[LOGI_GROUP_EDIT_ID] then return end
   if screen[WINDOW_ID] then self:close(event.player_index, false) end
 end
 
@@ -2263,12 +2761,29 @@ function cc_gui:on_input_confirm(event)
     confirm_description(event.player_index, false)
     return
   end
+  local lg_edit = screen[LOGI_GROUP_EDIT_ID]
+  if lg_edit and state.logistic_group_edit then
+    confirm_logistic_group(event.player_index, false)
+    return
+  end
   ---@type LuaGuiElement?
   local window = screen[WINDOW_ID]
   if window and state.selected_slot then
     log:debug("input_confirm from ", event.player_index)
     confirm_signal_value(event.player_index, state, false)
   end
+end
+
+--- @param event EventData.CustomInputEvent
+function cc_gui:on_focus_search(event)
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  local player = game.get_player(event.player_index)
+  if not player then return end
+  local screen = player.gui.screen
+  if not screen[LOGI_GROUP_EDIT_ID] then return end
+  if not state.logistic_group_edit then return end
+  set_logistic_group_search(state, true)
 end
 
 --- @param unit_number uint?
@@ -2298,6 +2813,7 @@ function cc_gui:register()
     [WINDOW_ID .. "_signal_value_changed"] = handle_signal_value_changed,
     [WINDOW_ID .. "_signal_value_confirmed"] = handle_signal_value_confirmed,
     [WINDOW_ID .. "_signal_value_confirm"] = handle_signal_value_confirm,
+    [WINDOW_ID .. "_cs_group_checked_state_changed"] = handle_cs_group_checked_state_changed,
     [WINDOW_ID .. "_cs_signal_value_changed"] = handle_cs_signal_value_changed,
     [WINDOW_ID .. "_cs_signal_value_confirmed"] = handle_cs_signal_value_confirmed,
     [WINDOW_ID .. "_cs_signal_reset"] = handle_cs_signal_reset,
@@ -2308,6 +2824,7 @@ function cc_gui:register()
     [WINDOW_ID .. "_network_mask_add_click"] = handle_network_mask_add_click,
     [WINDOW_ID .. "_network_list_item_click"] = handle_network_list_item_click,
     [WINDOW_ID .. "_description_edit_click"] = handle_description_edit_click,
+    [WINDOW_ID .. "_logistic_group_edit_click"] = handle_logistic_group_edit_click,
     [ENCODER_ID .. "_close"] = handle_dialog_close,
     [ENCODER_ID .. "_confirm"] = handle_encoder_confirm,
     [ENCODER_ID .. "_signal_changed"] = handle_encoder_signal_changed,
@@ -2318,6 +2835,11 @@ function cc_gui:register()
     [ENCODER_ID .. "_none"] = handle_encoder_none,
     [DESC_EDIT_ID .. "_close"] = handle_dialog_close,
     [DESC_EDIT_ID .. "_confirm"] = handle_description_edit_confirm,
+    [LOGI_GROUP_EDIT_ID .. "_close"] = handle_dialog_close,
+    [LOGI_GROUP_EDIT_ID .. "_confirm"] = handle_logistic_group_confirm,
+    [LOGI_GROUP_EDIT_ID .. "_confirmed"] = handle_logistic_group_confirmed,
+    [LOGI_GROUP_EDIT_ID .. "_search_click"] = handle_logistic_group_search_click,
+    [LOGI_GROUP_EDIT_ID .. "_group_item_click"] = handle_logistic_group_item_click,
     [DIMMER_ID .. "_click"] = handle_dimmer_click
   }
   flib_gui.handle_events()
@@ -2325,6 +2847,7 @@ function cc_gui:register()
   script.on_event(defines.events.on_gui_closed, function(event) self:on_gui_closed(event) end)
   script.on_event(constants.MOD_NAME .. "-toggle-menu", function(event) self:on_input_close(event --[[@as EventData.CustomInputEvent]]) end)
   script.on_event(constants.MOD_NAME .. "-confirm-gui", function(event) self:on_input_confirm(event --[[@as EventData.CustomInputEvent]]) end)
+  script.on_event(constants.MOD_NAME .. "-focus-search", function(event) self:on_focus_search(event --[[@as EventData.CustomInputEvent]]) end)
 end
 
 return cc_gui

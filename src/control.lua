@@ -1,6 +1,7 @@
 local constants = require "scripts.constants"
 local config = require "scripts.config"
 local log = require("scripts.logger").control
+local cc_util = require "scripts.cc_util"
 local cc_gui = require "scripts.gui"
 local cc_remote = require "scripts.remote"
 local CybersynCombinator = require "scripts.combinator"
@@ -50,6 +51,7 @@ script.on_configuration_changed(function(data)
   -- end
   if not cc_changes then return end
   for player_index, player in pairs(game.players) do
+    player.request_translation({ "gui-train.empty-train-group" })
     if player.gui.screen[cc_gui.WINDOW_ID] then
       cc_gui:close(player_index, true)
     end
@@ -233,6 +235,33 @@ script.on_event(defines.events.on_entity_settings_pasted, function(event)
   elseif src_type == "assembling-machine" then
     on_am_pasted(event.player_index, src, dest)
   end
+end)
+
+script.on_event(defines.events.on_string_translated, function(event)
+  log:debug("on_string_translated: ", serpent.line(event))
+  if not event.translated then return end
+  if not type(event.localised_string) == "table" then return end
+  local key = event.localised_string[1]
+  if key ~= "gui-train.empty-train-group" then return end
+  local player_data = cc_util.get_player_data(event.player_index)
+  if not player_data then return end
+  if not player_data.translations then player_data.translations = {} end
+  player_data.translations[key] = event.result
+  log:debug("on_string_translated: ", key, " = ", event.result)
+end)
+
+script.on_event(defines.events.on_player_joined_game, function(event)
+  local player = game.get_player(event.player_index)
+  if not player then return end
+  log:debug("Player ", event.player_index, " joined, requesting translation")
+  player.request_translation({ "gui-train.empty-train-group" })
+end)
+
+script.on_event(defines.events.on_player_locale_changed, function(event)
+  local player = game.get_player(event.player_index)
+  if not player then return end
+  log:debug("Locale changed for player ", event.player_index, ", requesting translation")
+  player.request_translation({ "gui-train.empty-train-group" })
 end)
 
 local function sort_combinator(command)
