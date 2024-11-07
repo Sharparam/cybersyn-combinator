@@ -12,5 +12,11 @@ data:extend {
     name = constants.MOD_NAME .. "-confirm-gui",
     key_sequence = "",
     linked_game_control = "confirm-gui"
+  },
+  {
+    type = "custom-input",
+    name = constants.MOD_NAME .. "-focus-search",
+    key_sequence = "",
+    linked_game_control = "focus-search"
   }
 }
