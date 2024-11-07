@@ -188,7 +188,6 @@ local function sort_combinator(command)
   combinator:sort_signals()
 end
 
-
 commands.add_command("cc_sort", { "cybersyn-combinator-commands.sort" }, sort_combinator)
 commands.add_command("cc_sort_all", { "cybersyn-combinator-commands.sort-all" }, sort_all_combinators)
 
