@@ -1999,10 +1999,7 @@ local function create_window(player, entity)
                   main_view
                 }
               },
-              {
-                type = "line",
-                style_mods = { top_margin = 5, bottom_margin = 5 }
-              },
+              { type = "line" },
               description_container
             }
           }
