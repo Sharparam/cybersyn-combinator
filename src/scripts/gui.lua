@@ -114,6 +114,7 @@ local cc_gui = {
 --- @field group_multiplier_textfield LuaGuiElement.add_param.textfield
 --- @field group_confirm_button LuaGuiElement.add_param.button
 --- @field group_list LuaGuiElement.add_param.scroll_pane
+--- @field confirmed boolean
 
 --- @class UiState
 --- @field main_window LuaGuiElement
@@ -1033,6 +1034,14 @@ local function handle_dimmer_click(event)
   end
 end
 
+--- @param state UiState
+local function show_all_logistic_groups(state)
+  if not state.logistic_group_edit then return end
+  for _, elem in pairs(state.logistic_group_edit.group_list.children) do
+    elem.visible = true
+  end
+end
+
 local function set_logistic_group_search(state, enable)
   if not state.logistic_group_edit then return end
   local textfield = state.logistic_group_edit.search_textfield
@@ -1048,6 +1057,7 @@ local function set_logistic_group_search(state, enable)
     textfield.visible = false
     textfield.text = ""
     state.logistic_group_edit.search_button.toggled = false
+    show_all_logistic_groups(state)
   end
 end
 
@@ -1063,6 +1073,19 @@ local function handle_logistic_group_search_click(event)
   local state = get_player_state(event.player_index)
   if not state then return end
   toggle_logistic_group_search(state)
+end
+
+--- @param event EventData.on_gui_text_changed
+local function handle_logistic_group_search_text_changed(event)
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  local filter = event.element.text:upper()
+  for _, elem in pairs(state.logistic_group_edit.group_list.children) do
+    ---@type string
+    local group = elem.tags.group:upper()
+    local matches = group:find(filter, nil, true) ~= nil
+    elem.visible = matches
+  end
 end
 
 --- @param player_index integer
@@ -1094,6 +1117,8 @@ local function confirm_logistic_group(player_index, close)
   state.logistic_group_edit.section.multiplier = multiplier
 
   update_cs_signals(state)
+
+  state.logistic_group_edit.confirmed = true
 
   if not close then return end
 
@@ -1582,7 +1607,8 @@ end
 
 --- @param name string?
 --- @param count number?
-local function make_logistic_group_item(name, count)
+--- @param is_empty boolean
+local function make_logistic_group_item(name, count, is_empty)
   count = count or 0
   local group = name or ""
   ---@type string|LocalisedString
@@ -1594,6 +1620,9 @@ local function make_logistic_group_item(name, count)
     type = "flow",
     direction = "horizontal",
     style = "packed_horizontal_flow",
+    tags = {
+      group = group
+    },
     children = {
       {
         type = "button",
@@ -1602,7 +1631,7 @@ local function make_logistic_group_item(name, count)
           horizontally_stretchable = true,
           horizontal_align = "right"
         },
-        caption = group == "" and "" or tostring(count),
+        caption = (group == "" or is_empty) and "" or tostring(count),
         tooltip = caption,
         tags = {
           group = group
@@ -1625,7 +1654,7 @@ local function make_logistic_group_item(name, count)
         type = "sprite-button",
         style = "tool_button_red",
         sprite = "utility/trash",
-        visible = group ~= ""
+        visible = group ~= "" and not is_empty
       }
     }
   }
@@ -1772,10 +1801,7 @@ local function create_logistic_group_edit(player_index, state, section_id, secti
         minimal_height = 130,
         maximal_height = 400
       },
-      horizontal_scroll_policy = "never",
-      children = {
-        make_logistic_group_item()
-      }
+      horizontal_scroll_policy = "never"
     }
 
     local content = {
@@ -1822,11 +1848,20 @@ local function create_logistic_group_edit(player_index, state, section_id, secti
             top_margin = -46,
             bottom_margin = 6,
             left_margin = 132
+          },
+          handler = {
+            [defines.events.on_gui_text_changed] = handle_logistic_group_search_text_changed
           }
         },
         content
       }
     })
+  end
+
+  local group_list = named.group_list
+  local logistic_groups = get_logistic_groups(player_index)
+  for _, group in pairs(logistic_groups) do
+    flib_gui.add(group_list, make_logistic_group_item(group.name, group.count, group.count == nil))
   end
 
   local section
@@ -1845,7 +1880,8 @@ local function create_logistic_group_edit(player_index, state, section_id, secti
     group_name_textfield = named.group_name_textfield,
     group_multiplier_textfield = named.group_multiplier_textfield,
     group_confirm_button = named.confirm_button,
-    group_list = named.group_list
+    group_list = group_list,
+    confirmed = false
   }
 
   dialog.force_auto_center()
@@ -2752,8 +2788,10 @@ function cc_gui:on_gui_closed(event)
   local state = get_player_state(player_index)
   local screen = player.gui.screen
   if DIALOG_IDS[element.name] then
-    if screen[LOGI_GROUP_EDIT_ID] and state and state.logistic_group_edit then
-      if state.logistic_group_edit.search_textfield.visible then
+    if screen[LOGI_GROUP_EDIT_ID] and screen[DIMMER_ID] and state and state.logistic_group_edit then
+      local is_searching = state.logistic_group_edit.search_textfield.visible
+      local confirmed = state.logistic_group_edit.confirmed
+      if is_searching and not confirmed then
         toggle_logistic_group_search(state)
         player.opened = state.logistic_group_edit.dialog
         return
@@ -2814,6 +2852,7 @@ function cc_gui:on_input_confirm(event)
   end
   local lg_edit = screen[LOGI_GROUP_EDIT_ID]
   if lg_edit and state.logistic_group_edit then
+    local is_searching = state.logistic_group_edit.search_textfield.visible
     confirm_logistic_group(event.player_index, false)
     return
   end
@@ -2890,6 +2929,7 @@ function cc_gui:register()
     [LOGI_GROUP_EDIT_ID .. "_confirm"] = handle_logistic_group_confirm,
     [LOGI_GROUP_EDIT_ID .. "_confirmed"] = handle_logistic_group_confirmed,
     [LOGI_GROUP_EDIT_ID .. "_search_click"] = handle_logistic_group_search_click,
+    [LOGI_GROUP_EDIT_ID .. "_search_text_changed"] = handle_logistic_group_search_text_changed,
     [LOGI_GROUP_EDIT_ID .. "_group_item_click"] = handle_logistic_group_item_click,
     [DIMMER_ID .. "_click"] = handle_dimmer_click
   }
