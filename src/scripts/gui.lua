@@ -493,6 +493,7 @@ local function handle_signal_changed(event)
     element.style = "flib_slot_button_default"
     local player = game.get_player(event.player_index)
     if not player then return end
+    player.play_sound { path = constants.CANNOT_BUILD_SOUND }
     player.print({ "cybersyn-combinator-window.invalid-signal" })
     return
   end
@@ -502,6 +503,8 @@ local function handle_signal_changed(event)
     element.style = "flib_slot_button_default"
     local player = game.get_player(event.player_index)
     if not player then return end
+    player.play_sound { path = constants.CANNOT_BUILD_SOUND }
+    player.create_local_flying_text({ text = { "gui-logistic-section.conflict-error", orig_slot }, create_at_cursor = true })
     player.print({ "gui-logistic-section.conflict-error", orig_slot })
     return
   end

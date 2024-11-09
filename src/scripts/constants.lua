@@ -29,7 +29,8 @@ local constants = {
     CS_LOCKED_SLOTS = "cybersyn-locked-slots",
     CS_NETWORK_FLAG = "cybersyn-network-flag"
   },
-  ENTITY_NAME = "cybersyn-constant-combinator"
+  ENTITY_NAME = "cybersyn-constant-combinator",
+  CANNOT_BUILD_SOUND = "utility/cannot_build"
 }
 
 --- @type string
