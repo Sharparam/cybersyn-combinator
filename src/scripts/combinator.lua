@@ -507,6 +507,27 @@ local function find_empty_slot(section)
   return section.filters_count + 1
 end
 
+--- @param section LuaLogisticSection?
+--- @param value SignalFilter
+--- @return integer?
+local function find_empty_or_existing_slot(section, value)
+  if not section then return nil end
+  if type(value) == "string" then value = { name = value, type = "virtual", quality = "normal" } end
+  local first_empty_slot
+  for i = 1, section.filters_count do
+    local filter = section.get_slot(i)
+    if not filter and not first_empty_slot then
+      first_empty_slot = i
+    elseif filter and filter.value.type == value.type and filter.value.name == value.name and filter.value.quality == value.quality then
+      return i
+    end
+  end
+
+  if first_empty_slot then return first_empty_slot end
+
+  return section.filters_count + 1
+end
+
 function CC:sort_signals()
   log:debug("performing sort")
   if not self:is_valid_entity() then return end
@@ -537,7 +558,7 @@ function CC:sort_signals()
       elseif type == "virtual" then
         net_sec.set_slot(net_sec.filters_count + 1, filter)
       elseif type == "item" or type == "fluid" then
-        local item_slot = find_empty_slot(sig_sec)
+        local item_slot = find_empty_or_existing_slot(sig_sec, value)
         if item_slot and item_slot <= config.slot_count then
           sig_sec.set_slot(item_slot, filter)
         end
