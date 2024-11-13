@@ -1,4 +1,17 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.2.3
+Date: 2024-11-13
+  Optimizations:
+    - Improve sorting and detection logic for existing signals when upgrading from regular constant combinators.
+  Bugfixes:
+    - Fix pasting settings between combinators not always behaving as expected.
+    - Fix issue where duplicate CS signals would sometimes get stored and be impossible to manipulate.
+    - Fix issue with duplicate signals sometimes appearing in blueprints.
+  Gui:
+    - Improve display of description scroll pane (for long descriptions).
+    - Improve error feedback when selecting invalid or duplicate signals.
+    - Improve styling of main combinator window.
+---------------------------------------------------------------------------------------------------
 Version: 2.2.2
 Date: 2024-11-06
   Bugfixes:
