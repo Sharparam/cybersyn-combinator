@@ -1674,6 +1674,15 @@ local function create_logistic_group_edit(player_index, state, section_id, secti
   local player = game.players[player_index]
   local screen = player.gui.screen
   create_dimmer(player_index)
+
+  local section
+
+  if section_id then
+    section = state.combinator:get_or_create_section(section_id)
+  elseif section_index then
+    section = state.combinator.entity.get_control_behavior().get_section(section_index)
+  end
+
   local named, dialog
 
   do
@@ -1752,6 +1761,7 @@ local function create_logistic_group_edit(player_index, state, section_id, secti
                 maximal_width = 0,
                 horizontally_stretchable = true
               },
+              text = section and section.group or "",
               icon_selector = true,
               handler = {
                 [defines.events.on_gui_confirmed] = handle_logistic_group_confirmed
@@ -1769,7 +1779,7 @@ local function create_logistic_group_edit(player_index, state, section_id, secti
                 width = 40,
                 natural_width = 40
               },
-              text = "1",
+              text = section and section.multiplier or 1,
               numeric = true,
               allow_decimal = true,
               allow_negative = false,
@@ -1862,14 +1872,6 @@ local function create_logistic_group_edit(player_index, state, section_id, secti
   local logistic_groups = get_logistic_groups(player_index)
   for _, group in pairs(logistic_groups) do
     flib_gui.add(group_list, make_logistic_group_item(group.name, group.count, group.count == nil))
-  end
-
-  local section
-
-  if section_id then
-    section = state.combinator:get_or_create_section(section_id)
-  elseif section_index then
-    section = state.combinator.entity.get_control_behavior().get_section(section_index)
   end
 
   state.logistic_group_edit = {
