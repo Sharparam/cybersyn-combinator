@@ -164,18 +164,55 @@ script.on_event(defines.events.on_robot_built_entity, function(event)
   log:debug(entity.name, "[", entity.unit_number, "] disabled due to per-player or global setting")
 end, entity_event_filters)
 
-script.on_event(defines.events.on_entity_settings_pasted, function(event)
-  local src = event.source
-  local dest = event.destination
-  if not dest or not dest.valid or dest.type ~= "constant-combinator" then return end
-  if dest.name ~= constants.ENTITY_NAME then return end
-  local needs_sort = src.name ~= dest.name
+---@param source LuaEntity
+---@param dest LuaEntity
+local function on_cc_pasted(source, dest)
+  local needs_sort = source.name ~= dest.name
   local dest_combinator = CybersynCombinator:new(dest, needs_sort)
   if needs_sort then return end
-  local src_combinator = CybersynCombinator:new(src, false)
+  local src_combinator = CybersynCombinator:new(source, false)
   dest_combinator:set_section_index(CybersynCombinator.SIGNALS_SECTION_ID, src_combinator:get_or_create_section(CybersynCombinator.SIGNALS_SECTION_ID).index)
   dest_combinator:set_section_index(CybersynCombinator.CYBERSYN_SECTION_ID, src_combinator:get_or_create_section(CybersynCombinator.CYBERSYN_SECTION_ID).index)
   dest_combinator:set_section_index(CybersynCombinator.NETWORK_SECTION_ID, src_combinator:get_or_create_section(CybersynCombinator.NETWORK_SECTION_ID).index)
+end
+
+---@param player_index integer
+---@param source LuaEntity
+---@param dest LuaEntity
+local function on_am_pasted(player_index, source, dest)
+  local speed = source.crafting_speed
+  local recipe, quality = source.get_recipe()
+  local combinator = CybersynCombinator:new(dest, false)
+  combinator:clear_item_slots()
+  if not recipe then return end
+  local negative = settings.get_player_settings(player_index)[constants.SETTINGS.NEGATIVE_SIGNALS].value == true
+  local quality_name = quality and quality.name or "normal"
+  local crafting_time = recipe.energy
+  local craft_count = 30 / (crafting_time / speed)
+  for i, ingredient in pairs(recipe.ingredients) do
+    local count = math.ceil(ingredient.amount * craft_count)
+    local ingredient_quality = ingredient.type == "fluid" and "normal" or quality_name
+    if negative then count = count * -1 end
+    if i <= config.slot_count then
+      ---@type Signal
+      local signal = { count = count, signal = { type = ingredient.type, name = ingredient.name, quality = ingredient_quality } }
+      combinator:set_item_slot(i, signal)
+    end
+  end
+end
+
+script.on_event(defines.events.on_entity_settings_pasted, function(event)
+  local dest = event.destination
+  if not dest or not dest.valid or dest.type ~= "constant-combinator" then return end
+  local is_cc_dest = dest.name == constants.ENTITY_NAME or (dest.name == "entity-ghost" and dest.ghost_name == constants.ENTITY_NAME)
+  if not is_cc_dest then return end
+  local src = event.source
+  if not src or not src.valid then return end
+  if src.type == "constant-combinator" then
+    on_cc_pasted(src, dest)
+  elseif src.type == "assembling-machine" then
+    on_am_pasted(event.player_index, src, dest)
+  end
 end)
 
 local function sort_combinator(command)

@@ -276,6 +276,10 @@ function CC:remove_item_slot(slot)
   self:remove_slot(slot, SIGNALS_SECTION_ID)
 end
 
+function CC:clear_item_slots()
+  self:clear_section(SIGNALS_SECTION_ID)
+end
+
 --- @param signal SignalID|table|string
 --- @param exclude_slot uint?
 --- @return boolean, integer?
@@ -396,6 +400,16 @@ function CC:remove_slot(slot, section_id)
   local section = self:get_or_create_section(section_id)
   if not section then return end
   section.clear_slot(slot)
+end
+
+--- @param section_id integer
+function CC:clear_section(section_id)
+  if not self:is_valid_entity() then return end
+  local section = self:get_or_create_section(section_id)
+  if not section then return end
+  for i = section.filters_count, 1, -1 do
+    section.clear_slot(i)
+  end
 end
 
 --- @param signal SignalID|table|string

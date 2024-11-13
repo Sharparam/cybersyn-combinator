@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.3.0
+Date: 2024-11-13
+  Features:
+    - Can now paste recipes from assembling machines into combinators
+      (uses same logic as requester chests except also supports fluids).
+---------------------------------------------------------------------------------------------------
 Version: 2.2.3
 Date: 2024-11-13
   Optimizations:
