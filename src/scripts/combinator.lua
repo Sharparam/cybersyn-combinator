@@ -168,6 +168,15 @@ function CC:get_or_create_section(id)
   return section
 end
 
+---@param index integer
+---@return LuaLogisticSection?
+function CC:get_section_by_index(index)
+  if not self:is_valid_entity() then return nil end
+  local control = self:get_control_behavior()
+  if not control then return nil end
+  return control.get_section(index)
+end
+
 ---@param id integer
 ---@param index integer
 function CC:set_section_index(id, index)
@@ -592,7 +601,7 @@ function CC:sort_signals()
         end
       elseif type == "item" or type == "fluid" then
         local item_slot = find_empty_or_existing_slot(sig_sec, value)
-        if item_slot and item_slot <= config.slot_count then
+        if item_slot then
           sig_sec.set_slot(item_slot, filter)
         end
       end

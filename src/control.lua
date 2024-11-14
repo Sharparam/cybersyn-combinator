@@ -208,11 +208,9 @@ local function on_am_pasted(player_index, source, dest)
     local count = math.ceil(ingredient.amount * craft_count)
     local ingredient_quality = ingredient.type == "fluid" and "normal" or quality_name
     if negative then count = count * -1 end
-    if i <= config.slot_count then
-      ---@type Signal
-      local signal = { count = count, signal = { type = ingredient.type, name = ingredient.name, quality = ingredient_quality } }
-      combinator:set_item_slot(i, signal)
-    end
+    ---@type Signal
+    local signal = { count = count, signal = { type = ingredient.type, name = ingredient.name, quality = ingredient_quality } }
+    combinator:set_item_slot(i, signal)
   end
 end
 

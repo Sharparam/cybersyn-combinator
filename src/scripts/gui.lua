@@ -72,6 +72,23 @@ local function bit_button_style(pressed)
   return pressed and BIT_BUTTON_PRESSED_STYLE or BIT_BUTTON_STYLE
 end
 
+local SLOT_COL_COUNT = 10
+local MAX_SLOT_COUNT = 1000
+
+---@param filter_count integer
+---@return integer
+local function calc_slot_rows(filter_count)
+  return math.floor(filter_count / SLOT_COL_COUNT) + 1
+end
+
+---@param section LuaLogisticSection
+local function calc_slot_count(section)
+  local filter_count = section.filters_count
+  local slot_rows = calc_slot_rows(filter_count)
+  if slot_rows > MAX_SLOT_COUNT then return MAX_SLOT_COUNT end
+  return slot_rows
+end
+
 local cc_gui = {
   WINDOW_ID = WINDOW_ID,
   ENCODER_ID = ENCODER_ID
@@ -129,7 +146,6 @@ local cc_gui = {
 --- @field signal_value_stacks LuaGuiElement
 --- @field signal_value_items LuaGuiElement
 --- @field signal_value_confirm LuaGuiElement
---- @field signals SignalEntry[]
 --- @field entity LuaEntity
 --- @field combinator CybersynCombinator
 --- @field selected_slot uint?
@@ -144,6 +160,7 @@ local cc_gui = {
 --- @field encoder EncoderState?
 --- @field description_edit DescriptionEditState?
 --- @field logistic_group_edit LogisticGroupEditState?
+--- @field signal_table LuaGuiElement.add_param.table
 
 --- @param player_index PlayerIdentification?
 --- @return UiState?
@@ -253,43 +270,6 @@ local function resolve_textfield_number(element, player, fallback)
 end
 
 --- @param state UiState
-local function update_signal_table(state)
-  if not state then return end
-
-  local item_request_total = 0
-  local item_request_stacks = 0
-  local fluid_request_total = 0
-
-  for slot = 1, config.slot_count do
-    local signal = state.combinator:get_item_slot(slot --[[@as uint]])
-    if signal and signal.signal then
-      local button = state.signals[slot].button
-      button.elem_value = signal.signal
-      button.label.caption = format_signal_count(signal.count)
-      button.locked = true
-      if signal.signal.type == "item" and signal.count < 0 then
-        local stack_size = prototypes.item[signal.signal.name].stack_size
-        local stacks = math.ceil(signal.count / stack_size)
-        item_request_total = item_request_total + signal.count
-        item_request_stacks = item_request_stacks + stacks
-      elseif signal.signal.type == "fluid" and signal.count < 0 then
-        fluid_request_total = fluid_request_total + signal.count
-      end
-    end
-  end
-
-  item_request_total = math.abs(item_request_total)
-  item_request_stacks = math.abs(item_request_stacks)
-  fluid_request_total = math.abs(fluid_request_total)
-  state.item_total_label.caption = format_signal_count(item_request_total)
-  state.item_total_label.tooltip = util.format_number(item_request_total, false)
-  state.item_stacks_label.caption = format_signal_count(item_request_stacks)
-  state.item_stacks_label.tooltip = util.format_number(item_request_stacks, false)
-  state.fluid_total_label.caption = format_signal_count(fluid_request_total)
-  state.fluid_total_label.tooltip = util.format_number(fluid_request_total, false)
-end
-
---- @param state UiState
 local function update_totals(state)
   if not state then return end
 
@@ -297,7 +277,11 @@ local function update_totals(state)
   local item_request_stacks = 0
   local fluid_request_total = 0
 
-  for slot = 1, config.slot_count do
+  local section = state.combinator:get_or_create_section(CybersynCombinator.SIGNALS_SECTION_ID)
+  if not section then return end
+  local slot_count = section.filters_count
+
+  for slot = 1, slot_count do
     local signal = state.combinator:get_item_slot(slot --[[@as uint]])
     if signal and signal.signal then
       if signal.signal.type == "item" and signal.count < 0 then
@@ -397,33 +381,6 @@ local function change_signal_count(state, event)
   end
 end
 
---- @param player_index uint
---- @param state UiState
---- @param value integer
---- @param clear_selected boolean
-local function set_new_signal_value(player_index, state, value, clear_selected)
-  local new_value = util.clamp(value, constants.INT32_MIN, constants.INT32_MAX)
-  local convert = settings.get_player_settings(player_index)[constants.SETTINGS.NEGATIVE_SIGNALS].value == true
-  local current = state.combinator:get_item_slot(state.selected_slot)
-  if convert and current.signal.type ~= "virtual" and new_value > 0 then
-    new_value = -new_value
-  end
-  state.combinator:set_item_slot_value(state.selected_slot, new_value)
-  state.signal_value_items.enabled = false
-  state.signal_value_stacks.enabled = false
-  state.signal_value_confirm.enabled = false
-  state.signal_value_items.text = tostring(new_value)
-  if state.stack_size then
-    local stacks = value / state.stack_size
-    state.signal_value_stacks.text = tostring(stacks >= 0 and ceil(stacks) or floor(stacks))
-  end
-  state.signals[state.selected_slot].button.label.caption = format_signal_count(new_value)
-  if clear_selected then
-    state.selected_slot = nil
-  end
-  state.stack_size = nil
-  update_totals(state)
-end
 
 --- @param element LuaGuiElement
 --- @param player PlayerIdentification?
@@ -541,6 +498,9 @@ local function handle_on_off(event)
   state.status_label.caption = is_ghost and GHOST_STATUS_NAME or STATUS_NAMES[status] or DEFAULT_STATUS_NAME
 end
 
+---@type fun(state: UiState)
+local update_signal_table
+
 --- @param event EventData.on_gui_elem_changed
 local function handle_signal_changed(event)
   local element = event.element
@@ -570,7 +530,7 @@ local function handle_signal_changed(event)
     return
   end
   log:debug("elem changed, slot ", slot, ": ", serpent.line(element.elem_value))
-  if state.selected_slot_button then
+  if state.selected_slot_button and state.selected_slot_button.valid then
     state.selected_slot_button.style = "flib_slot_button_default"
   end
   state.selected_slot = slot
@@ -590,7 +550,10 @@ local function handle_signal_click(event)
   local element = event.element
   local state = get_player_state(event.player_index)
   if not state then return end
+  local combinator = state.combinator
   local slot = element.tags.slot --[[@as uint]]
+  local section = combinator:get_section_by_index(element.tags.section_index --[[@as integer]])
+  local total_count = section.filters_count
   log:debug("signal click on slot ", slot, ": ", element.elem_value)
 
   if event.button == defines.mouse_button_type.right then
@@ -603,6 +566,11 @@ local function handle_signal_click(event)
       state.signal_value_stacks.enabled = false
       state.signal_value_items.enabled = false
       state.signal_value_confirm.enabled = false
+    end
+    if slot == total_count then
+      update_signal_table(state)
+    else
+      update_totals(state)
     end
   elseif event.button == defines.mouse_button_type.left and element.elem_value then
     if state.selected_slot_button then
@@ -650,6 +618,43 @@ local function handle_signal_value_changed(event)
   end
 end
 
+--- @param player_index uint
+--- @param state UiState
+--- @param value integer
+--- @param clear_selected boolean
+local function set_new_signal_value(player_index, state, value, clear_selected)
+  local new_value = util.clamp(value, constants.INT32_MIN, constants.INT32_MAX)
+  local convert = settings.get_player_settings(player_index)[constants.SETTINGS.NEGATIVE_SIGNALS].value == true
+  local current = state.combinator:get_item_slot(state.selected_slot)
+  if convert and current.signal.type ~= "virtual" and new_value > 0 then
+    new_value = -new_value
+  end
+  state.combinator:set_item_slot_value(state.selected_slot, new_value)
+  state.signal_value_items.enabled = false
+  state.signal_value_stacks.enabled = false
+  state.signal_value_confirm.enabled = false
+  state.signal_value_items.text = tostring(new_value)
+  if state.stack_size then
+    local stacks = value / state.stack_size
+    state.signal_value_stacks.text = tostring(stacks >= 0 and ceil(stacks) or floor(stacks))
+  end
+  state.selected_slot_button.label.caption = format_signal_count(new_value)
+  local section_index = state.selected_slot_button.tags.section_index --[[@as integer]]
+  local section = state.combinator:get_section_by_index(section_index)
+  local slot = state.selected_slot
+  local total_slots = section and section.filters_count or nil
+  if clear_selected then
+    state.selected_slot = nil
+    state.selected_slot_button = nil
+  end
+  state.stack_size = nil
+  if slot == total_slots then
+    update_signal_table(state)
+  else
+    update_totals(state)
+  end
+end
+
 --- @param event EventData.on_gui_confirmed
 local function handle_signal_value_confirmed(event)
   local state = get_player_state(event.player_index)
@@ -678,7 +683,7 @@ end
 local function confirm_signal_value(player_index, state, clear_selected)
   if not state or not state.selected_slot then return end
   local slot_button = state.selected_slot_button
-  if slot_button then slot_button.style = "flib_slot_button_default" end
+  if slot_button and slot_button.valid then slot_button.style = "flib_slot_button_default" end
   local current = state.combinator:get_item_slot(state.selected_slot)
   local value = resolve_textfield_number(state.signal_value_items, player_index, current.count or 0)
   if not value then
@@ -702,6 +707,58 @@ local function handle_signal_value_confirm(event)
   --   return
   -- end
   -- set_new_signal_value(event.player_index, state, value)
+end
+
+---@param state UiState
+update_signal_table = function(state)
+  if not state then return end
+
+  local signal_table = state.signal_table
+
+  local combinator = state.combinator
+  local section = combinator:get_or_create_section(CybersynCombinator.SIGNALS_SECTION_ID)
+
+  if not section then
+    error("Failed to get signals section")
+  end
+
+  ---@diagnostic disable-next-line: undefined-field
+  signal_table.clear()
+
+  local slot_count = calc_slot_count(section)
+
+  for slot = 1, slot_count do
+    local signal = state.combinator:get_item_slot(slot --[[@as uint]])
+    local _, button = flib_gui.add(signal_table, {
+      type = "choose-elem-button",
+      style = "slot_button",
+      elem_type = "signal",
+      handler = {
+        [defines.events.on_gui_elem_changed] = handle_signal_changed,
+        [defines.events.on_gui_click] = handle_signal_click
+      },
+      tags = {
+        section_index = section.index,
+        slot = slot
+      },
+      children = {
+        {
+          type = "label",
+          name = "label",
+          style = "cybersyn-combinator_signal-count",
+          ignored_by_interaction = true,
+          caption = ""
+        }
+      }
+    })
+    if signal and signal.signal then
+      button.elem_value = signal.signal
+      button.label.caption = format_signal_count(signal.count)
+      button.locked = true
+    end
+  end
+
+  update_totals(state)
 end
 
 ---@param event EventData.on_gui_checked_state_changed
@@ -1892,8 +1949,6 @@ local function create_logistic_group_edit(player_index, state, section_id, secti
   player.opened = dialog
 end
 
--- create_logistic_group_edit()
-
 --- @param event EventData.on_gui_click
 handle_network_list_item_click = function(event)
   local state = get_player_state(event.player_index)
@@ -2307,20 +2362,19 @@ local function create_window(player, combinator)
     local signals_container = { -- Signals container
       type = "flow",
       direction = "vertical",
+      style = "two_module_spacing_vertical_flow",
       style_mods = { top_margin = 4, horizontal_align = "center", horizontally_stretchable = true },
       children = {
         {
-          type = "frame",
+          type = "scroll-pane",
           direction = "vertical",
-          style = "slot_button_deep_frame",
-          style_mods = { horizontal_align = "center" },
+          style = "deep_slots_scroll_pane",
           children = {
             {
               type = "table",
               style = "slot_table",
               name = "signal_table",
-              -- style_mods = { minimal_height = 80 },
-              column_count = config.slot_cols
+              column_count = SLOT_COL_COUNT
             }
           }
         },
@@ -2492,6 +2546,7 @@ local function create_window(player, combinator)
           style = "shallow_scroll_pane",
           style_mods = {
             width = description_width,
+            minimal_height = 100,
             maximal_height = 200
           },
           children = {
@@ -2588,33 +2643,6 @@ local function create_window(player, combinator)
   if not signal_table then
     error("signal_table is nil")
   end
-  local signals = {}
-  for i = 1, config.slot_count do
-    local _, button = flib_gui.add(signal_table, {
-      type = "choose-elem-button",
-      name = "cybersyn-combinator_signal-button__" .. i,
-      style = "slot_button",
-      elem_type = "signal",
-      handler = {
-        [defines.events.on_gui_elem_changed] = handle_signal_changed,
-        [defines.events.on_gui_click] = handle_signal_click
-      },
-      tags = {
-        slot = i
-      },
-      children = {
-        {
-          type = "label",
-          name = "label",
-          style = "cybersyn-combinator_signal-count",
-          ignored_by_interaction = true,
-          caption = ""
-        }
-      }
-    })
-
-    signals[i] = { button = button }
-  end
 
   local cs_signals_table = named.cs_signals_table
   if not cs_signals_table then
@@ -2685,10 +2713,10 @@ local function create_window(player, combinator)
   state.item_total_label = named.item_total
   state.item_stacks_label = named.item_stacks
   state.fluid_total_label = named.fluid_total
+  state.signal_table = signal_table
   state.signal_value_stacks = named.signal_value_stacks
   state.signal_value_items = named.signal_value_items
   state.signal_value_confirm = named.signal_value_confirm
-  state.signals = signals
   state.entity = entity
   state.network_mask = {
     list = named.network_list,
@@ -2815,9 +2843,10 @@ function cc_gui:on_gui_closed(event)
   if element.name ~= WINDOW_ID then return end
   if state then
     if state.encoder or state.description_edit or state.logistic_group_edit then return end
-    if state.selected_slot then
+    if state.selected_slot or state.selected_slot_button then
       player.opened = state.main_window
       state.selected_slot = nil
+      state.selected_slot_button = nil
       return
     end
   end
