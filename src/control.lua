@@ -77,7 +77,9 @@ end)
 
 local entity_event_filters = {
   { filter = "type", type = "constant-combinator" },
-  { filter = "name", name = constants.ENTITY_NAME, mode = "and" }
+  { filter = "name", name = constants.ENTITY_NAME, mode = "and" },
+  { filter = "ghost_type", type = "constant-combinator", mode = "or" },
+  { filter = "ghost_name", name = constants.ENTITY_NAME, mode = "and" }
 }
 
 script.on_event(defines.events.on_player_mined_entity, function(event)
