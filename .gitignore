@@ -7,10 +7,16 @@
 # Ignore local setup script
 /setup.sh
 
+# Ignore Krita autosave files
+*-autosave.kra
+
 # Ignore Factorio source graphics
 /graphics/combinator-entity/constant-combinator.png
 /graphics/combinator-entity/hr-constant-combinator.png
 /graphics/combinator-icon/constant-combinator.png
+
+# Ignore flib source graphics
+/graphics/disabled-slot-button-tileset/slots.png
 
 # Ignore graphic exports
 /graphics/semitransparent-pixel/semitransparent-pixel.png
