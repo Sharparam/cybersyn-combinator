@@ -127,6 +127,9 @@ script.on_event(defines.events.on_built_entity, function(event)
   if event.tags and event.tags.description then
     combinator:set_description(event.tags.description --[[@as string]])
   end
+  if combinator:get_item_section_count() == 0 then
+    combinator:add_item_section()
+  end
   if not disable then return end
   combinator:disable()
   log:debug(entity.name, "[", entity.unit_number, "] disabled due to per-player setting")
@@ -147,6 +150,9 @@ local function on_script_raised_built_or_revive(event)
   local combinator = CybersynCombinator:new(entity, true)
   if event.tags and event.tags.description then
     combinator:set_description(event.tags.description --[[@as string]])
+  end
+  if combinator:get_item_section_count() == 0 then
+    combinator:add_item_section()
   end
   if not disable then return end
   combinator:disable()
@@ -172,6 +178,9 @@ script.on_event(defines.events.on_robot_built_entity, function(event)
   if event.tags and event.tags.description then
     combinator:set_description(event.tags.description --[[@as string]])
   end
+  if combinator:get_item_section_count() == 0 then
+    combinator:add_item_section()
+  end
   if not disable then return end
   combinator:disable()
   log:debug(entity.name, "[", entity.unit_number, "] disabled due to per-player or global setting")
@@ -186,7 +195,6 @@ local function on_cc_pasted(source, dest)
   local dest_combinator = CybersynCombinator:new(dest, needs_sort)
   if needs_sort then return end
   local src_combinator = CybersynCombinator:new(source, false)
-  dest_combinator:set_section_index(CybersynCombinator.SIGNALS_SECTION_ID, src_combinator:get_or_create_section(CybersynCombinator.SIGNALS_SECTION_ID).index)
   dest_combinator:set_section_index(CybersynCombinator.CYBERSYN_SECTION_ID, src_combinator:get_or_create_section(CybersynCombinator.CYBERSYN_SECTION_ID).index)
   dest_combinator:set_section_index(CybersynCombinator.NETWORK_SECTION_ID, src_combinator:get_or_create_section(CybersynCombinator.NETWORK_SECTION_ID).index)
 end
@@ -198,19 +206,21 @@ local function on_am_pasted(player_index, source, dest)
   local speed = source.crafting_speed
   local recipe, quality = source.get_recipe()
   local combinator = CybersynCombinator:new(dest, false)
-  combinator:clear_item_slots()
+  combinator:remove_item_sections()
   if not recipe then return end
   local negative = settings.get_player_settings(player_index)[constants.SETTINGS.NEGATIVE_SIGNALS].value == true
   local quality_name = quality and quality.name or "normal"
   local crafting_time = recipe.energy
   local craft_count = 30 / (crafting_time / speed)
+  local section = combinator:add_item_section()
+  if not section then return end
   for i, ingredient in pairs(recipe.ingredients) do
     local count = math.ceil(ingredient.amount * craft_count)
     local ingredient_quality = ingredient.type == "fluid" and "normal" or quality_name
     if negative then count = count * -1 end
     ---@type Signal
     local signal = { count = count, signal = { type = ingredient.type, name = ingredient.name, quality = ingredient_quality } }
-    combinator:set_item_slot(i, signal)
+    combinator:set_item_slot(section.index, i, signal)
   end
 end
 

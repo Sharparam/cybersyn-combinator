@@ -27,6 +27,50 @@ styles["cybersyn-combinator_cs-signal-reset"] = {
   horizontally_stretchable = "off"
 }
 
+styles["cybersyn-combinator_signal-button"] = {
+  type = "button_style",
+  parent = "flib_slot_button_default"
+}
+
+styles["cybersyn-combinator_signal-button_pressed"] = {
+  type = "button_style",
+  parent = "flib_selected_slot_button_default"
+}
+
+-- styles["cybersyn-combinator_signal-button_disabled"] = {
+--   type = "button_style",
+--   parent = "flib_slot_button_default",
+--   draw_grayscale_picture = true,
+--   default_graphical_set = {
+--     base = {
+--       border = 4, position = { 0, 0 }, size = 80,
+--       filename = "__cybersyn-combinator__/graphics/gui/disabled-slot-button-tileset.png"
+--     },
+--     shadow = offset_by_2_rounded_corners_glow(default_dirt_color)
+--   },
+--   hovered_graphical_set = {
+--     base = {
+--       border = 4, position = { 80, 0 }, size = 80,
+--       filename = "__cybersyn-combinator__/graphics/gui/disabled-slot-button-tileset.png"
+--     },
+--     shadow = offset_by_2_rounded_corners_glow(default_dirt_color),
+--     glow = offset_by_2_rounded_corners_glow(default_glow_color)
+--   },
+--   clicked_graphical_set = {
+--     base = {
+--       border = 4, position = { 160, 0 }, size = 80,
+--       filename = "__cybersyn-combinator__/graphics/gui/disabled-slot-button-tileset.png"
+--     },
+--     shadow = offset_by_2_rounded_corners_glow(default_dirt_color)
+--   }
+-- }
+
+-- styles["cybersyn-combinator_signal-button_disabled_pressed"] = {
+--   type = "button_style",
+--   parent = "cybersyn-combinator_signal-button_disabled",
+--   default_graphical_set = styles["cybersyn-combinator_signal-button_disabled"].clicked_graphical_set
+-- }
+
 styles["cybersyn-combinator_signal-count"] = {
   type = "label_style",
   parent = "count_label",
@@ -96,6 +140,18 @@ styles["cybersyn-combinator_group-list_scroll-pane"] = {
   vertical_flow_style = {
     type = "vertical_flow_style",
     vertical_spacing = 0
+  }
+}
+
+styles["cybersyn-combinator_frame_transparent"] = {
+  type = "frame_style",
+  graphical_set = {
+    base = {
+      type = "composition",
+      filename = "__cybersyn-combinator__/graphics/frame/transparent-pixel.png",
+      corner_size = 1,
+      position = {0, 0}
+    }
   }
 }
 

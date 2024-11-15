@@ -64,6 +64,13 @@ local STATUS_NAMES = {
 local DEFAULT_STATUS_NAME = { "entity-status.disabled" }
 local GHOST_STATUS_NAME = { "entity-status.ghost" }
 
+local SLOT_BUTTON_STYLE = "cybersyn-combinator_signal-button"
+local SLOT_BUTTON_PRESSED_STYLE = "cybersyn-combinator_signal-button_pressed"
+-- local SLOT_BUTTON_DISABLED_STYLE = "cybersyn-combinator_signal-button_disabled"
+-- local SLOT_BUTTON_DISABLED_PRESSED_STYLE = "cybersyn-combinator_signal-button_disabled_pressed"
+local SLOT_BUTTON_DISABLED_STYLE = SLOT_BUTTON_STYLE
+local SLOT_BUTTON_DISABLED_PRESSED_STYLE = SLOT_BUTTON_PRESSED_STYLE
+
 local BIT_BUTTON_STYLE = "cybersyn-combinator_encoder_bit-button"
 local BIT_BUTTON_PRESSED_STYLE = "cybersyn-combinator_encoder_bit-button_pressed"
 
@@ -86,7 +93,7 @@ local function calc_slot_count(section)
   local filter_count = section.filters_count
   local slot_rows = calc_slot_rows(filter_count)
   if slot_rows > MAX_SLOT_COUNT then return MAX_SLOT_COUNT end
-  return slot_rows
+  return slot_rows * SLOT_COL_COUNT
 end
 
 local cc_gui = {
@@ -130,7 +137,7 @@ local cc_gui = {
 --- @field group_name_textfield LuaGuiElement.add_param.textfield
 --- @field group_multiplier_textfield LuaGuiElement.add_param.textfield
 --- @field group_confirm_button LuaGuiElement.add_param.button
---- @field group_list LuaGuiElement.add_param.scroll_pane
+--- @field group_list LuaGuiElement
 --- @field confirmed boolean
 
 --- @class UiState
@@ -148,6 +155,8 @@ local cc_gui = {
 --- @field signal_value_confirm LuaGuiElement
 --- @field entity LuaEntity
 --- @field combinator CybersynCombinator
+--- @field section_container LuaGuiElement
+--- @field selected_section_index integer?
 --- @field selected_slot uint?
 --- @field selected_slot_button LuaGuiElement?
 --- @field stack_size integer?
@@ -160,7 +169,6 @@ local cc_gui = {
 --- @field encoder EncoderState?
 --- @field description_edit DescriptionEditState?
 --- @field logistic_group_edit LogisticGroupEditState?
---- @field signal_table LuaGuiElement.add_param.table
 
 --- @param player_index PlayerIdentification?
 --- @return UiState?
@@ -277,20 +285,20 @@ local function update_totals(state)
   local item_request_stacks = 0
   local fluid_request_total = 0
 
-  local section = state.combinator:get_or_create_section(CybersynCombinator.SIGNALS_SECTION_ID)
-  if not section then return end
-  local slot_count = section.filters_count
+  for section_index, section in state.combinator:iter_item_sections() do
+    local slot_count = section.filters_count
 
-  for slot = 1, slot_count do
-    local signal = state.combinator:get_item_slot(slot --[[@as uint]])
-    if signal and signal.signal then
-      if signal.signal.type == "item" and signal.count < 0 then
-        local stack_size = prototypes.item[signal.signal.name].stack_size
-        local stacks = math.ceil(signal.count / stack_size)
-        item_request_total = item_request_total + signal.count
-        item_request_stacks = item_request_stacks + stacks
-      elseif signal.signal.type == "fluid" and signal.count < 0 then
-        fluid_request_total = fluid_request_total + signal.count
+    for slot = 1, slot_count do
+      local signal = state.combinator:get_item_slot(section_index, slot --[[@as uint]])
+      if signal and signal.signal then
+        if signal.signal.type == "item" and signal.count < 0 then
+          local stack_size = prototypes.item[signal.signal.name].stack_size
+          local stacks = math.floor(signal.count / stack_size)
+          item_request_total = item_request_total + signal.count
+          item_request_stacks = item_request_stacks + stacks
+        elseif signal.signal.type == "fluid" and signal.count < 0 then
+          fluid_request_total = fluid_request_total + signal.count
+        end
       end
     end
   end
@@ -329,13 +337,15 @@ local function update_cs_signals(state)
   end
 end
 
+-- - @param event EventData.on_gui_click|EventData.on_gui_elem_changed
 --- @param state UiState
---- @param event EventData.on_gui_click|EventData.on_gui_elem_changed
-local function change_signal_count(state, event)
+--- @param player_index string|integer
+local function change_signal_count(state, player_index)
+  local section_index = state.selected_section_index
   local slot = state.selected_slot
-  local signal = state.combinator:get_item_slot(slot)
+  local signal = state.combinator:get_item_slot(section_index, slot)
   if not signal or not signal.signal then
-    cc_gui:close(event.player_index)
+    cc_gui:close(player_index)
     return
   end
 
@@ -357,7 +367,7 @@ local function change_signal_count(state, event)
     if signal_type == "item" then
       stack_size = prototypes.item[signal_name].stack_size
       state.signal_value_stacks.enabled = true
-      if settings.get_player_settings(event.player_index)[constants.SETTINGS.USE_STACKS].value then
+      if settings.get_player_settings(player_index)[constants.SETTINGS.USE_STACKS].value then
         focus_stacks = true
       end
     elseif signal_type == "fluid" then
@@ -426,6 +436,7 @@ local function refresh_network_list(player, state)
     local mask = signal.count
     local formatted_mask = masking.format(mask, player, true)
     local rich_type = signal.signal.type == "virtual" and "virtual-signal" or signal.signal.type
+    ---@diagnostic disable-next-line: undefined-field
     local quality = signal.signal.quality or "normal"
     local rich = "[" .. rich_type .. "=" .. signal.signal.name .. ",quality=" .. quality .. "] " .. formatted_mask
     local dec = masking.format_explicit(mask, masking.Mode.DECIMAL, false, true)
@@ -483,6 +494,17 @@ local function handle_close(event)
   cc_gui:close(event.player_index)
 end
 
+--- @param event EventData.on_gui_click
+local function handle_dialog_close(event)
+  log:debug("dialog close button clicked")
+  local player = game.get_player(event.player_index)
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  if state.main_window then
+    player.opened = state.main_window
+  end
+end
+
 --- @param event EventData.on_gui_switch_state_changed
 local function handle_on_off(event)
   local element = event.element
@@ -498,7 +520,10 @@ local function handle_on_off(event)
   state.status_label.caption = is_ghost and GHOST_STATUS_NAME or STATUS_NAMES[status] or DEFAULT_STATUS_NAME
 end
 
----@type fun(state: UiState)
+---@type fun(state: UiState, reset: boolean)
+local update_signal_sections
+
+---@type fun(state: UiState, signal_table: LuaGuiElement, reset: boolean?)
 local update_signal_table
 
 --- @param event EventData.on_gui_elem_changed
@@ -506,6 +531,10 @@ local function handle_signal_changed(event)
   local element = event.element
   local state = get_player_state(event.player_index)
   if not state then return end
+  local section_index = element.tags.section_index --[[@as integer]]
+  local section = state.combinator:get_item_section(section_index)
+  if not section then return end
+  local active = section.active
   local slot = element.tags.slot --[[@as uint]]
   local signal = { signal = element.elem_value, count = 0 }
   if not signal.signal then return end
@@ -518,7 +547,7 @@ local function handle_signal_changed(event)
     player.print({ "cybersyn-combinator-window.invalid-signal" })
     return
   end
-  local is_dupe, orig_slot = state.combinator:has_item_signal(signal.signal, slot)
+  local is_dupe, orig_slot = state.combinator:has_item_signal(signal.signal, section_index, slot)
   if is_dupe then
     element.elem_value = nil
     element.style = "flib_slot_button_default"
@@ -529,20 +558,17 @@ local function handle_signal_changed(event)
     player.print({ "gui-logistic-section.conflict-error", orig_slot })
     return
   end
-  log:debug("elem changed, slot ", slot, ": ", serpent.line(element.elem_value))
+  log:debug("elem changed in section", section_index, ", slot ", slot, ": ", serpent.line(element.elem_value))
   if state.selected_slot_button and state.selected_slot_button.valid then
     state.selected_slot_button.style = "flib_slot_button_default"
   end
+  state.selected_section_index = section_index
   state.selected_slot = slot
   state.selected_slot_button = element
-  state.combinator:set_item_slot(slot, signal)
+  state.combinator:set_item_slot(section_index, slot, signal)
   element.locked = true
-  element.style = "flib_selected_slot_button_default"
-  change_signal_count(state, {
-    button = defines.mouse_button_type.left,
-    element = { number = 0 },
-    player_index = event.player_index
-  })
+  element.style = active and SLOT_BUTTON_PRESSED_STYLE or SLOT_BUTTON_DISABLED_PRESSED_STYLE -- "flib_selected_slot_button_default"
+  change_signal_count(state, event.player_index)
 end
 
 --- @param event EventData.on_gui_click
@@ -551,24 +577,32 @@ local function handle_signal_click(event)
   local state = get_player_state(event.player_index)
   if not state then return end
   local combinator = state.combinator
+  local section_index = element.tags.section_index --[[@as integer]]
   local slot = element.tags.slot --[[@as uint]]
-  local section = combinator:get_section_by_index(element.tags.section_index --[[@as integer]])
+  local section = combinator:get_item_section(section_index)
+  if not section then return end
   local total_count = section.filters_count
-  log:debug("signal click on slot ", slot, ": ", element.elem_value)
+  local active = section.active
+  log:debug("signal click on slot ", slot, " in section ", section_index, ": ", element.elem_value)
 
   if event.button == defines.mouse_button_type.right then
-    state.combinator:remove_item_slot(slot)
+    state.combinator:remove_item_slot(section_index, slot)
     element.locked = false
     element.elem_value = nil
     element.label.caption = ""
     element.style = "flib_slot_button_default"
-    if state.selected_slot == slot then
+    if state.selected_section_index == section_index and state.selected_slot == slot then
       state.signal_value_stacks.enabled = false
       state.signal_value_items.enabled = false
       state.signal_value_confirm.enabled = false
     end
     if slot == total_count then
-      update_signal_table(state)
+      for _, section_element in pairs(state.section_container.children) do
+        if section_element.tags.section_index == section_index then
+          update_signal_table(state, section_element.signal_table, true)
+          break
+        end
+      end
     else
       update_totals(state)
     end
@@ -576,10 +610,11 @@ local function handle_signal_click(event)
     if state.selected_slot_button then
       state.selected_slot_button.style = "flib_slot_button_default"
     end
+    state.selected_section_index = section_index
     state.selected_slot = slot
     state.selected_slot_button = element
-    element.style = "flib_selected_slot_button_default"
-    change_signal_count(state, event)
+    element.style = active and SLOT_BUTTON_PRESSED_STYLE or SLOT_BUTTON_DISABLED_PRESSED_STYLE -- "flib_selected_slot_button_default"
+    change_signal_count(state, event.player_index)
   end
 end
 
@@ -599,12 +634,12 @@ local function handle_signal_value_changed(event)
     local stack_size = state.stack_size
     if state.stack_size == nil then
       -- Try to recover stack size
-      if state.selected_slot == nil then
+      if state.selected_section_index == nil or state.selected_slot == nil then
         log:error("Unexpected nil values in handle_signal_value_changed while handling change in ", element.name, " please tell a developer")
         return
       end
       log:warn("stack size for current selection unexpectedly nil")
-      local combi_sig = state.combinator:get_item_slot(state.selected_slot)
+      local combi_sig = state.combinator:get_item_slot(state.selected_section_index, state.selected_slot)
       if combi_sig.signal.type == "item" then
         stack_size = prototypes.item[combi_sig.signal.name].stack_size
       else
@@ -625,11 +660,11 @@ end
 local function set_new_signal_value(player_index, state, value, clear_selected)
   local new_value = util.clamp(value, constants.INT32_MIN, constants.INT32_MAX)
   local convert = settings.get_player_settings(player_index)[constants.SETTINGS.NEGATIVE_SIGNALS].value == true
-  local current = state.combinator:get_item_slot(state.selected_slot)
+  local current = state.combinator:get_item_slot(state.selected_section_index, state.selected_slot)
   if convert and current.signal.type ~= "virtual" and new_value > 0 then
     new_value = -new_value
   end
-  state.combinator:set_item_slot_value(state.selected_slot, new_value)
+  state.combinator:set_item_slot_value(state.selected_section_index, state.selected_slot, new_value)
   state.signal_value_items.enabled = false
   state.signal_value_stacks.enabled = false
   state.signal_value_confirm.enabled = false
@@ -640,16 +675,22 @@ local function set_new_signal_value(player_index, state, value, clear_selected)
   end
   state.selected_slot_button.label.caption = format_signal_count(new_value)
   local section_index = state.selected_slot_button.tags.section_index --[[@as integer]]
-  local section = state.combinator:get_section_by_index(section_index)
+  local section = state.combinator:get_item_section(section_index) --state.combinator:get_section_by_index(section_index)
   local slot = state.selected_slot
   local total_slots = section and section.filters_count or nil
   if clear_selected then
+    state.selected_section_index = nil
     state.selected_slot = nil
     state.selected_slot_button = nil
   end
   state.stack_size = nil
   if slot == total_slots then
-    update_signal_table(state)
+    for _, section_element in pairs(state.section_container.children) do
+      if section_element.tags.section_index == section_index then
+        update_signal_table(state, section_element.signal_table, true)
+        break
+      end
+    end
   else
     update_totals(state)
   end
@@ -658,10 +699,10 @@ end
 --- @param event EventData.on_gui_confirmed
 local function handle_signal_value_confirmed(event)
   local state = get_player_state(event.player_index)
-  if not state or not state.selected_slot then return end
+  if not state or not state.selected_section_index or not state.selected_slot then return end
   local slot_button = state.selected_slot_button
   if slot_button then slot_button.style = "flib_slot_button_default" end
-  local current = state.combinator:get_item_slot(state.selected_slot)
+  local current = state.combinator:get_item_slot(state.selected_section_index, state.selected_slot)
   local value = resolve_textfield_number(state.signal_value_items, event.player_index, current.count or 0)
   if not value then
     if current and current.count then
@@ -681,10 +722,10 @@ end
 --- @param state UiState?
 --- @param clear_selected boolean
 local function confirm_signal_value(player_index, state, clear_selected)
-  if not state or not state.selected_slot then return end
+  if not state or not state.selected_section_index or not state.selected_slot then return end
   local slot_button = state.selected_slot_button
   if slot_button and slot_button.valid then slot_button.style = "flib_slot_button_default" end
-  local current = state.combinator:get_item_slot(state.selected_slot)
+  local current = state.combinator:get_item_slot(state.selected_section_index, state.selected_slot)
   local value = resolve_textfield_number(state.signal_value_items, player_index, current.count or 0)
   if not value then
     state.signal_value_confirm.enabled = false
@@ -709,56 +750,714 @@ local function handle_signal_value_confirm(event)
   -- set_new_signal_value(event.player_index, state, value)
 end
 
----@param state UiState
-update_signal_table = function(state)
+--- @param event EventData.on_gui_click
+local function handle_dimmer_click(event)
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  local player = game.get_player(event.player_index)
+  if not player then return end
+  destroy(player, DIMMER_ID)
+  if state.main_window then
+    player.opened = state.main_window
+  end
+end
+
+--- @param player_index integer
+local function create_dimmer(player_index)
+  local player = game.get_player(player_index)
+  if not player then return end
+  local screen = player.gui.screen
+  if screen[DIMMER_ID] then
+    log:debug("dimmer already exists")
+    return
+  end
+  local _, dimmer = flib_gui.add(screen, {
+    type = "frame",
+    name = DIMMER_ID,
+    style = "cybersyn-combinator_frame_transparent",
+    style_mods = {
+      natural_width = 1000000,
+      natural_height = 1000000,
+      padding = 0,
+      use_header_filler = false
+    },
+    handler = {
+      [defines.events.on_gui_click] = handle_dimmer_click
+    }
+  })
+  dimmer.location = { 0, 0 }
+  local state = get_player_state(player_index)
+  if state then state.dimmer = dimmer end
+end
+
+--- @param state UiState
+local function show_all_logistic_groups(state)
+  if not state.logistic_group_edit then return end
+  for _, elem in pairs(state.logistic_group_edit.group_list.children) do
+    elem.visible = true
+  end
+end
+
+local function set_logistic_group_search(state, enable)
+  if not state.logistic_group_edit then return end
+  local textfield = state.logistic_group_edit.search_textfield
+  local current = textfield.visible
+  if enable then
+    textfield.visible = true
+    textfield.focus()
+    state.logistic_group_edit.search_button.toggled = true
+    if current then
+      textfield.select_all()
+    end
+  else
+    textfield.visible = false
+    textfield.text = ""
+    state.logistic_group_edit.search_button.toggled = false
+    show_all_logistic_groups(state)
+  end
+end
+
+--- @param state UiState
+local function toggle_logistic_group_search(state)
+  if not state.logistic_group_edit then return end
+  local textfield = state.logistic_group_edit.search_textfield
+  set_logistic_group_search(state, not textfield.visible)
+end
+
+--- @param event EventData.on_gui_click
+local function handle_logistic_group_search_click(event)
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  toggle_logistic_group_search(state)
+end
+
+--- @param event EventData.on_gui_text_changed
+local function handle_logistic_group_search_text_changed(event)
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  local filter = event.element.text:upper()
+  for _, elem in pairs(state.logistic_group_edit.group_list.children) do
+    ---@type string
+    ---@diagnostic disable-next-line: param-type-mismatch
+    local group = elem.tags.group:upper()
+    local matches = group:find(filter, nil, true) ~= nil
+    elem.visible = matches
+  end
+end
+
+--- @param player_index integer
+--- @param close boolean
+local function confirm_logistic_group(player_index, close)
+  local player = game.get_player(player_index)
+  if not player then return end
+  local state = get_player_state(player_index)
   if not state then return end
 
-  local signal_table = state.signal_table
+  local group = state.logistic_group_edit.group_name_textfield.text
+  local multiplier_text = state.logistic_group_edit.group_multiplier_textfield.text
+  local multiplier = tonumber(multiplier_text) or 1
+
+  local special_no_group = "[No group assigned]"
+  local player_data = cc_util.get_player_data(player_index)
+  if player_data and player_data.translations and player_data.translations["gui-train.empty-train-group"] then
+    log:debug("Updating 'no group' string from cached translation")
+    special_no_group = player_data.translations["gui-train.empty-train-group"]
+  end
+
+  if group == special_no_group then
+    group = ""
+  end
+
+  log:debug("confirm logistic group '", group, "' with multiplier ", multiplier)
+
+  state.logistic_group_edit.section.group = group or ""
+  state.logistic_group_edit.section.multiplier = multiplier
+
+  update_cs_signals(state)
+  update_signal_sections(state, false)
+
+  state.logistic_group_edit.confirmed = true
+
+  if not close then return end
+
+  player.opened = state.main_window
+end
+
+--- @param event EventData.on_gui_confirmed
+local function handle_logistic_group_confirmed(event)
+  confirm_logistic_group(event.player_index, true)
+end
+
+--- @param event EventData.on_gui_click
+local function handle_logistic_group_confirm(event)
+  confirm_logistic_group(event.player_index, true)
+end
+
+--- @param event EventData.on_gui_click
+local function handle_logistic_group_item_click(event)
+  local element = event.element
+  local group = element.tags.group --[[@as string?]]
+  if not group then return end
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  if not state.logistic_group_edit then return end
+  state.logistic_group_edit.group_name_textfield.text = group
+end
+
+--- @param name string?
+--- @param count number?
+--- @param is_empty boolean
+local function make_logistic_group_item(name, count, is_empty)
+  count = count or 0
+  local group = name or ""
+  ---@type string|LocalisedString
+  local caption = name
+  if group == "" then
+    caption = { "gui-train.empty-train-group" }
+  end
+  local item = {
+    type = "flow",
+    direction = "horizontal",
+    style = "packed_horizontal_flow",
+    tags = {
+      group = group
+    },
+    children = {
+      {
+        type = "button",
+        style = "list_box_item",
+        style_mods = {
+          horizontally_stretchable = true,
+          horizontal_align = "right"
+        },
+        caption = (group == "" or is_empty) and "" or tostring(count),
+        tooltip = caption,
+        tags = {
+          group = group
+        },
+        handler = {
+          [defines.events.on_gui_click] = handle_logistic_group_item_click
+        },
+        children = {
+          {
+            type = "label",
+            caption = caption,
+            style_mods = {
+              -- horizontally_stretchable = true
+              width = group == "" and 300 or 300 - 28 - 40
+            }
+          }
+        }
+      },
+      {
+        type = "sprite-button",
+        style = "tool_button_red",
+        sprite = "utility/trash",
+        visible = group ~= "" and not is_empty
+      }
+    }
+  }
+
+  return item
+end
+
+--- @param player_index integer
+--- @param state UiState
+--- @param section_id integer?
+--- @param section_index integer?
+local function create_logistic_group_edit(player_index, state, section_id, section_index)
+  if not section_id and not section_index then
+    error("create_logistic_group_edit: Either section_id or section_index must be provided")
+  end
+
+  local player = game.players[player_index]
+  local screen = player.gui.screen
+  create_dimmer(player_index)
+
+  local section
+
+  if section_id then
+    section = state.combinator:get_or_create_section(section_id)
+  elseif section_index then
+    -- section = state.combinator.entity.get_control_behavior().get_section(section_index)
+    section = state.combinator:get_item_section(section_index)
+  end
+
+  local named, dialog
+
+  do
+    local titlebar = {
+      type = "flow",
+      direction = "horizontal",
+      drag_target = LOGI_GROUP_EDIT_ID,
+      style = "frame_header_flow",
+      style_mods = {
+        vertically_stretchable = false
+      },
+      children = {
+        {
+          type = "label",
+          style = "frame_title",
+          caption = { "gui-rename.rename-group" },
+          drag_target = LOGI_GROUP_EDIT_ID,
+          style_mods = {
+            vertically_stretchable = true,
+            horizontally_squashable = true,
+            top_margin = -3,
+            bottom_padding = 3
+          }
+        },
+        {
+          type = "empty-widget",
+          style = "draggable_space_header",
+          drag_target = LOGI_GROUP_EDIT_ID,
+          style_mods = {
+            height = 24,
+            natural_height = 24,
+            horizontally_stretchable = true,
+            vertically_stretchable = true
+          }
+        },
+        {
+          type = "sprite-button",
+          style = "frame_action_button",
+          name = "search_button",
+          sprite = "utility/search",
+          handler = {
+            [defines.events.on_gui_click] = handle_logistic_group_search_click
+          }
+        },
+        {
+          type = "sprite-button",
+          style = "close_button",
+          name = DESC_EDIT_ID .. "_close",
+          sprite = "utility/close",
+          handler = {
+            [defines.events.on_gui_click] = handle_dialog_close
+          }
+        }
+      }
+    }
+
+    local entry_header = {
+      type = "frame",
+      style = "subheader_frame",
+      style_mods = {
+        width = 300
+      },
+      children = {
+        {
+          type = "flow",
+          direction = "horizontal",
+          style_mods = {
+            vertical_align = "center"
+          },
+          children = {
+            {
+              type = "textfield",
+              name = "group_name_textfield",
+              style = "textbox",
+              style_mods = {
+                maximal_width = 0,
+                horizontally_stretchable = true
+              },
+              text = section and section.group or "",
+              icon_selector = true,
+              handler = {
+                [defines.events.on_gui_confirmed] = handle_logistic_group_confirmed
+              }
+            },
+            {
+              type = "label",
+              caption = "×"
+            },
+            {
+              type = "textfield",
+              name = "group_multiplier_textfield",
+              style = "very_short_number_textfield",
+              style_mods = {
+                width = 40,
+                natural_width = 40
+              },
+              text = section and section.multiplier or 1,
+              numeric = true,
+              allow_decimal = true,
+              allow_negative = false,
+              handler = {
+                [defines.events.on_gui_confirmed] = handle_logistic_group_confirmed
+              }
+            },
+            {
+              type = "sprite-button",
+              name = "confirm_button",
+              style = "item_and_count_select_confirm",
+              sprite = "utility/enter",
+              handler = {
+                [defines.events.on_gui_click] = handle_logistic_group_confirm
+              }
+            }
+          }
+        }
+      }
+    }
+
+    local entry_list = {
+      type = "scroll-pane",
+      name = "group_list",
+      direction = "vertical",
+      style = "cybersyn-combinator_group-list_scroll-pane",
+      style_mods = {
+        width = 300,
+        minimal_height = 130,
+        maximal_height = 400
+      },
+      horizontal_scroll_policy = "never"
+    }
+
+    local content = {
+      type = "flow",
+      direction = "vertical",
+      style = "inset_frame_container_vertical_flow",
+      style_mods = {
+        top_margin = -12
+      },
+      children = {
+        {
+          type = "frame",
+          direction = "vertical",
+          style = "inside_deep_frame",
+          children = {
+            entry_header,
+            entry_list
+          }
+        }
+      }
+    }
+
+    named, dialog = flib_gui.add(screen, {
+      name = LOGI_GROUP_EDIT_ID,
+      type = "frame",
+      style = "inset_frame_container_frame",
+      direction = "vertical",
+      style_mods = {
+        -- width = 324,
+        maximal_height = 1290
+      },
+      tags = {
+        section_id = section_id,
+        section_index = section_index
+      },
+      children = {
+        titlebar,
+        {
+          type = "textfield",
+          style = "search_popup_textfield",
+          name = "search_textfield",
+          visible = false,
+          style_mods = {
+            top_margin = -46,
+            bottom_margin = 6,
+            left_margin = 132
+          },
+          handler = {
+            [defines.events.on_gui_text_changed] = handle_logistic_group_search_text_changed
+          }
+        },
+        content
+      }
+    })
+  end
+
+  local group_list = named.group_list
+  local logistic_groups = get_logistic_groups(player_index)
+  for _, group in pairs(logistic_groups) do
+    flib_gui.add(group_list, make_logistic_group_item(group.name, group.count, group.count == nil))
+  end
+
+  state.logistic_group_edit = {
+    dialog = dialog,
+    section = section --[[@as LuaLogisticSection]],
+    search_textfield = named.search_textfield,
+    search_button = named.search_button,
+    group_name_textfield = named.group_name_textfield,
+    group_multiplier_textfield = named.group_multiplier_textfield,
+    group_confirm_button = named.confirm_button,
+    group_list = group_list,
+    confirmed = false
+  }
+
+  dialog.force_auto_center()
+  named.group_name_textfield.select_all()
+  named.group_name_textfield.focus()
+  player.opened = dialog
+end
+
+--- @param event EventData.on_gui_click
+local function handle_logistic_group_edit_click(event)
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  log:debug("Showing logistic group editor")
+  local section_id = event.element.tags.section_id --[[@as integer]]
+  local section_index = event.element.tags.section_index --[[@as integer]]
+  create_logistic_group_edit(event.player_index, state, section_id, section_index)
+end
+
+---@param event EventData.on_gui_checked_state_changed
+local function handle_signal_section_group_checked_state_changed(event)
+  local section_index = event.element.tags.section_index
+  if not section_index then return end
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  local enabled = event.element.state
+  local section = state.combinator:get_item_section(section_index)
+  section.active = enabled
+  local container = state.section_container
+  for _, section_entry in pairs(container.children) do
+    if section_entry.tags.section_index == section_index then
+      -- section_entry.signal_table.enabled = enabled
+      update_signal_table(state, section_entry.signal_table, false)
+      break
+    end
+  end
+end
+
+---@param event EventData.on_gui_click
+local function handle_signal_section_remove_clicked(event)
+  local section_index = event.element.tags.section_index
+  if not section_index then return end
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  ---@cast section_index integer
+  state.combinator:remove_item_section(section_index)
+  update_signal_sections(state, true)
+end
+
+---@param section LuaLogisticSection
+local function create_signal_section(section)
+  local section_index = section.index
+  local active = section.active
+  local caption = create_logistic_section_caption(section)
+  local rows = calc_slot_rows(section.filters_count)
+  local overlay_height = 40 * rows
+
+  local header = {
+    type = "frame",
+    name = "header",
+    style = "repeated_subheader_frame",
+    style_mods = {
+      horizontally_stretchable = true
+    },
+    children = {
+      {
+        type = "checkbox",
+        name = "checkbox",
+        style = "subheader_caption_checkbox",
+        caption = caption,
+        state = active,
+        handler = {
+          [defines.events.on_gui_checked_state_changed] = handle_signal_section_group_checked_state_changed
+        },
+        tags = {
+          section_index = section_index
+        }
+      },
+      {
+        type = "sprite-button",
+        style = "mini_button_aligned_to_text_vertically_when_centered",
+        sprite = "utility/rename_icon",
+        handler = {
+          [defines.events.on_gui_click] = handle_logistic_group_edit_click
+        },
+        tags = {
+          section_index = section_index
+        }
+      },
+      {
+        type = "empty-widget",
+        style_mods = {
+          horizontally_stretchable = true,
+          vertically_stretchable = true
+        }
+      },
+      {
+        type = "sprite-button",
+        style = "tool_button_red",
+        sprite = "utility/trash",
+        handler = {
+          [defines.events.on_gui_click] = handle_signal_section_remove_clicked
+        },
+        tags = {
+          section_index = section_index
+        }
+      }
+    }
+  }
+
+  local signal_table = {
+    type = "table",
+    name = "signal_table",
+    style = "slot_table",
+    column_count = SLOT_COL_COUNT,
+    enabled = active,
+    tags = {
+      section_index = section_index
+    }
+  }
+
+  local section_element = {
+    type = "flow",
+    direction = "vertical",
+    style_mods = {
+      vertical_spacing = 0
+    },
+    tags = {
+      section_index = section_index
+    },
+    children = {
+      header,
+      signal_table,
+      {
+        type = "frame",
+        name = "overlay",
+        visible = not active,
+        style = "cybersyn-combinator_frame_semitransparent",
+        style_mods = {
+          width = 400,
+          height = overlay_height,
+          top_margin = -overlay_height
+        },
+        ignored_by_interaction = true,
+      }
+    }
+  }
+
+  return section_element
+end
+
+---@param state UiState
+---@param section LuaLogisticSection
+---@return { [string]: LuaGuiElement } named
+---@return LuaGuiElement element
+local function add_signal_section(state, section)
+  log:debug("adding new signal section to GUI")
+  local container = state.section_container
+  local section_element = create_signal_section(section)
+  local named, element = flib_gui.add(container, section_element)
+  update_signal_table(state, named.signal_table, true)
+  return named, element
+end
+
+---@param state UiState
+---@param signal_table LuaGuiElement
+---@param reset boolean?
+update_signal_table = function(state, signal_table, reset)
+  if not state then return end
+  if not signal_table or not signal_table.valid then return end
 
   local combinator = state.combinator
-  local section = combinator:get_or_create_section(CybersynCombinator.SIGNALS_SECTION_ID)
+  -- local section = combinator:get_or_create_section(CybersynCombinator.SIGNALS_SECTION_ID)
+  local section = combinator:get_item_section(signal_table.tags.section_index)
 
   if not section then
     error("Failed to get signals section")
   end
 
-  ---@diagnostic disable-next-line: undefined-field
-  signal_table.clear()
-
+  local section_index = section.index
+  local active = section.active
+  local slot_rows = calc_slot_rows(section.filters_count)
   local slot_count = calc_slot_count(section)
+  local button_style = active and SLOT_BUTTON_STYLE or SLOT_BUTTON_DISABLED_STYLE
+  local overlay_height = 40 * slot_rows
 
-  for slot = 1, slot_count do
-    local signal = state.combinator:get_item_slot(slot --[[@as uint]])
-    local _, button = flib_gui.add(signal_table, {
-      type = "choose-elem-button",
-      style = "slot_button",
-      elem_type = "signal",
-      handler = {
-        [defines.events.on_gui_elem_changed] = handle_signal_changed,
-        [defines.events.on_gui_click] = handle_signal_click
-      },
-      tags = {
-        section_index = section.index,
-        slot = slot
-      },
-      children = {
-        {
-          type = "label",
-          name = "label",
-          style = "cybersyn-combinator_signal-count",
-          ignored_by_interaction = true,
-          caption = ""
+  if reset then
+    ---@diagnostic disable-next-line: undefined-field
+    signal_table.clear()
+
+    log:debug("Adding ", slot_count, " slots to signal table for section ", section.index)
+
+    for slot = 1, slot_count do
+      local signal = state.combinator:get_item_slot(section_index, slot --[[@as uint]])
+      local _, button = flib_gui.add(signal_table, {
+        type = "choose-elem-button",
+        style = button_style,
+        elem_type = "signal",
+        handler = {
+          [defines.events.on_gui_elem_changed] = handle_signal_changed,
+          [defines.events.on_gui_click] = handle_signal_click
+        },
+        tags = {
+          section_index = section_index,
+          slot = slot
+        },
+        children = {
+          {
+            type = "label",
+            name = "label",
+            style = "cybersyn-combinator_signal-count",
+            ignored_by_interaction = true,
+            caption = ""
+          }
         }
-      }
-    })
-    if signal and signal.signal then
-      button.elem_value = signal.signal
-      button.label.caption = format_signal_count(signal.count)
-      button.locked = true
+      })
+      -- button.label.enabled = active
+      if signal and signal.signal then
+        button.elem_value = signal.signal
+        button.label.caption = format_signal_count(signal.count)
+        button.locked = true
+      end
+    end
+  else
+    for _, button in pairs(signal_table.children) do
+      button.style = button_style
+      -- button.label.enabled = active
+      local slot = button.tags.slot --[[@as uint]]
+      if not slot then goto continue end
+      local signal = state.combinator:get_item_slot(section_index, slot)
+      if signal and signal.signal then
+        button.elem_value = signal.signal
+        button.label.caption = format_signal_count(signal.count)
+        button.locked = true
+      else
+        button.locked = false
+      end
+      ::continue::
     end
   end
 
+  local overlay = signal_table.parent.overlay
+  overlay.visible = not active
+  overlay.style.height = overlay_height
+  overlay.style.top_margin = -overlay_height
+
   update_totals(state)
+end
+
+---@param state UiState
+---@param reset boolean
+update_signal_sections = function(state, reset)
+  if not state then return end
+
+  local container = state.section_container
+
+  if reset then
+    container.clear()
+    for section_index, section in state.combinator:iter_item_sections() do
+      add_signal_section(state, section)
+    end
+  else
+    for _, section_entry in pairs(container.children) do
+      local section_index = section_entry.tags.section_index
+      if not section_index then goto continue end
+      local section = state.combinator:get_item_section(section_index)
+      if not section then goto continue end
+      local active = section.active
+      local caption = create_logistic_section_caption(section)
+      section_entry.header.checkbox.state = active
+      section_entry.header.checkbox.caption = caption
+      update_signal_table(state, section_entry.signal_table, reset)
+      ::continue::
+    end
+  end
 end
 
 ---@param event EventData.on_gui_checked_state_changed
@@ -821,6 +1520,7 @@ local function handle_mask_signal_changed(event, on_failure)
     on_failure()
     local player = game.get_player(event.player_index)
     if not player then return false end
+    player.play_sound { path = constants.CANNOT_BUILD_SOUND }
     player.print({ "cybersyn-combinator-window.invalid-signal" })
     return false
   end
@@ -830,6 +1530,7 @@ local function handle_mask_signal_changed(event, on_failure)
     log:info("attempt to use non-virtual signal as network mask")
     local player = game.get_player(event.player_index)
     if not player then return false end
+    player.play_sound { path = constants.CANNOT_BUILD_SOUND }
     player.print { "cybersyn-combinator-window.non-virtual-network-mask", signal.signal.type, signal.signal.name }
     return false
   end
@@ -840,34 +1541,6 @@ end
 local function handle_network_mask_signal_changed(event)
   local state = get_player_state(event.player_index)
   if not state then return end
-  -- local element = event.element
-  -- if not element then return end
-  -- --- @type Signal
-  -- local signal = { signal = element.elem_value --[[@as SignalID]], count = 0 }
-  -- if not signal.signal then
-  --   state.network_mask.signal = nil
-  --   state.network_mask.add_button.enabled = false
-  --   return
-  -- end
-  -- if not cc_util.is_valid_output_signal(signal) then
-  --   event.element.elem_value = nil
-  --   state.network_mask.signal = nil
-  --   state.network_mask.add_button.enabled = false
-  --   local player = game.get_player(event.player_index)
-  --   if not player then return end
-  --   player.print({ "cybersyn-combinator-window.invalid-signal" })
-  --   return
-  -- end
-  -- if signal.signal.type ~= "virtual" then
-  --   event.element.elem_value = nil
-  --   state.network_mask.signal = nil
-  --   state.network_mask.add_button.enabled = false
-  --   log:info("attempt to use non-virtual signal as network mask")
-  --   local player = game.get_player(event.player_index)
-  --   if not player then return end
-  --   player.print { "cybersyn-combinator-window.non-virtual-network-mask", signal.signal.type, signal.signal.name }
-  --   return
-  -- end
   local signal = handle_mask_signal_changed(event, function()
     state.network_mask.signal = nil
     state.network_mask.add_button.enabled = false
@@ -931,17 +1604,6 @@ end
 local function handle_network_mask_add_click(event)
   local state = get_player_state(event.player_index)
   add_network_mask(event.player_index, state)
-end
-
---- @param event EventData.on_gui_click
-local function handle_dialog_close(event)
-  log:debug("dialog close button clicked")
-  local player = game.get_player(event.player_index)
-  local state = get_player_state(event.player_index)
-  if not state then return end
-  if state.main_window then
-    player.opened = state.main_window
-  end
 end
 
 --- @param player_index integer
@@ -1077,158 +1739,6 @@ local function handle_encoder_none(event)
   if not state then return end
   state.encoder.mask = 0
   refresh_encoder(event.player_index, state, true)
-end
-
---- @param event EventData.on_gui_click
-local function handle_dimmer_click(event)
-  local state = get_player_state(event.player_index)
-  if not state then return end
-  local player = game.get_player(event.player_index)
-  if not player then return end
-  destroy(player, DIMMER_ID)
-  if state.main_window then
-    player.opened = state.main_window
-  end
-end
-
---- @param state UiState
-local function show_all_logistic_groups(state)
-  if not state.logistic_group_edit then return end
-  for _, elem in pairs(state.logistic_group_edit.group_list.children) do
-    elem.visible = true
-  end
-end
-
-local function set_logistic_group_search(state, enable)
-  if not state.logistic_group_edit then return end
-  local textfield = state.logistic_group_edit.search_textfield
-  local current = textfield.visible
-  if enable then
-    textfield.visible = true
-    textfield.focus()
-    state.logistic_group_edit.search_button.toggled = true
-    if current then
-      textfield.select_all()
-    end
-  else
-    textfield.visible = false
-    textfield.text = ""
-    state.logistic_group_edit.search_button.toggled = false
-    show_all_logistic_groups(state)
-  end
-end
-
---- @param state UiState
-local function toggle_logistic_group_search(state)
-  if not state.logistic_group_edit then return end
-  local textfield = state.logistic_group_edit.search_textfield
-  set_logistic_group_search(state, not textfield.visible)
-end
-
---- @param event EventData.on_gui_click
-local function handle_logistic_group_search_click(event)
-  local state = get_player_state(event.player_index)
-  if not state then return end
-  toggle_logistic_group_search(state)
-end
-
---- @param event EventData.on_gui_text_changed
-local function handle_logistic_group_search_text_changed(event)
-  local state = get_player_state(event.player_index)
-  if not state then return end
-  local filter = event.element.text:upper()
-  for _, elem in pairs(state.logistic_group_edit.group_list.children) do
-    ---@type string
-    local group = elem.tags.group:upper()
-    local matches = group:find(filter, nil, true) ~= nil
-    elem.visible = matches
-  end
-end
-
---- @param player_index integer
---- @param close boolean
-local function confirm_logistic_group(player_index, close)
-  local player = game.get_player(player_index)
-  if not player then return end
-  local state = get_player_state(player_index)
-  if not state then return end
-
-  local group = state.logistic_group_edit.group_name_textfield.text
-  local multiplier_text = state.logistic_group_edit.group_multiplier_textfield.text
-  local multiplier = tonumber(multiplier_text) or 1
-
-  local special_no_group = "[No group assigned]"
-  local player_data = cc_util.get_player_data(player_index)
-  if player_data and player_data.translations and player_data.translations["gui-train.empty-train-group"] then
-    log:debug("Updating 'no group' string from cached translation")
-    special_no_group = player_data.translations["gui-train.empty-train-group"]
-  end
-
-  if group == special_no_group then
-    group = ""
-  end
-
-  log:debug("confirm logistic group '", group, "' with multiplier ", multiplier)
-
-  state.logistic_group_edit.section.group = group or ""
-  state.logistic_group_edit.section.multiplier = multiplier
-
-  update_cs_signals(state)
-
-  state.logistic_group_edit.confirmed = true
-
-  if not close then return end
-
-  player.opened = state.main_window
-end
-
---- @param event EventData.on_gui_confirmed
-local function handle_logistic_group_confirmed(event)
-  confirm_logistic_group(event.player_index, true)
-end
-
---- @param event EventData.on_gui_click
-local function handle_logistic_group_confirm(event)
-  confirm_logistic_group(event.player_index, true)
-end
-
---- @param event EventData.on_gui_click
-local function handle_logistic_group_item_click(event)
-  local element = event.element
-  local group = element.tags.group --[[@as string?]]
-  if not group then return end
-  local state = get_player_state(event.player_index)
-  if not state then return end
-  if not state.logistic_group_edit then return end
-  state.logistic_group_edit.group_name_textfield.text = group
-end
-
---- @param player_index integer
-local function create_dimmer(player_index)
-  local player = game.get_player(player_index)
-  if not player then return end
-  local screen = player.gui.screen
-  if screen[DIMMER_ID] then
-    log:debug("dimmer already exists")
-    return
-  end
-  local _, dimmer = flib_gui.add(screen, {
-    type = "frame",
-    name = DIMMER_ID,
-    style = "invisible_frame",
-    style_mods = {
-      natural_width = 1000000,
-      natural_height = 1000000,
-      padding = 0,
-      use_header_filler = false
-    },
-    handler = {
-      [defines.events.on_gui_click] = handle_dimmer_click
-    }
-  })
-  dimmer.location = { 0, 0 }
-  local state = get_player_state(player_index)
-  if state then state.dimmer = dimmer end
 end
 
 --- @param player_index integer
@@ -1662,292 +2172,7 @@ local function create_description_edit(player_index, state)
   player.opened = dialog
 end
 
---- @param name string?
---- @param count number?
---- @param is_empty boolean
-local function make_logistic_group_item(name, count, is_empty)
-  count = count or 0
-  local group = name or ""
-  ---@type string|LocalisedString
-  local caption = name
-  if group == "" then
-    caption = { "gui-train.empty-train-group" }
-  end
-  local item = {
-    type = "flow",
-    direction = "horizontal",
-    style = "packed_horizontal_flow",
-    tags = {
-      group = group
-    },
-    children = {
-      {
-        type = "button",
-        style = "list_box_item",
-        style_mods = {
-          horizontally_stretchable = true,
-          horizontal_align = "right"
-        },
-        caption = (group == "" or is_empty) and "" or tostring(count),
-        tooltip = caption,
-        tags = {
-          group = group
-        },
-        handler = {
-          [defines.events.on_gui_click] = handle_logistic_group_item_click
-        },
-        children = {
-          {
-            type = "label",
-            caption = caption,
-            style_mods = {
-              -- horizontally_stretchable = true
-              width = group == "" and 300 or 300 - 28 - 40
-            }
-          }
-        }
-      },
-      {
-        type = "sprite-button",
-        style = "tool_button_red",
-        sprite = "utility/trash",
-        visible = group ~= "" and not is_empty
-      }
-    }
-  }
 
-  return item
-end
-
---- @param player_index integer
---- @param state UiState
---- @param section_id integer?
---- @param section_index integer?
-local function create_logistic_group_edit(player_index, state, section_id, section_index)
-  if not section_id and not section_index then
-    error("create_logistic_group_edit: Either section_id or section_index must be provided")
-  end
-
-  local player = game.players[player_index]
-  local screen = player.gui.screen
-  create_dimmer(player_index)
-
-  local section
-
-  if section_id then
-    section = state.combinator:get_or_create_section(section_id)
-  elseif section_index then
-    section = state.combinator.entity.get_control_behavior().get_section(section_index)
-  end
-
-  local named, dialog
-
-  do
-    local titlebar = {
-      type = "flow",
-      direction = "horizontal",
-      drag_target = LOGI_GROUP_EDIT_ID,
-      style = "frame_header_flow",
-      style_mods = {
-        vertically_stretchable = false
-      },
-      children = {
-        {
-          type = "label",
-          style = "frame_title",
-          caption = { "gui-rename.rename-group" },
-          drag_target = LOGI_GROUP_EDIT_ID,
-          style_mods = {
-            vertically_stretchable = true,
-            horizontally_squashable = true,
-            top_margin = -3,
-            bottom_padding = 3
-          }
-        },
-        {
-          type = "empty-widget",
-          style = "draggable_space_header",
-          drag_target = LOGI_GROUP_EDIT_ID,
-          style_mods = {
-            height = 24,
-            natural_height = 24,
-            horizontally_stretchable = true,
-            vertically_stretchable = true
-          }
-        },
-        {
-          type = "sprite-button",
-          style = "frame_action_button",
-          name = "search_button",
-          sprite = "utility/search",
-          handler = {
-            [defines.events.on_gui_click] = handle_logistic_group_search_click
-          }
-        },
-        {
-          type = "sprite-button",
-          style = "close_button",
-          name = DESC_EDIT_ID .. "_close",
-          sprite = "utility/close",
-          handler = {
-            [defines.events.on_gui_click] = handle_dialog_close
-          }
-        }
-      }
-    }
-
-    local entry_header = {
-      type = "frame",
-      style = "subheader_frame",
-      style_mods = {
-        width = 300
-      },
-      children = {
-        {
-          type = "flow",
-          direction = "horizontal",
-          style_mods = {
-            vertical_align = "center"
-          },
-          children = {
-            {
-              type = "textfield",
-              name = "group_name_textfield",
-              style = "textbox",
-              style_mods = {
-                maximal_width = 0,
-                horizontally_stretchable = true
-              },
-              text = section and section.group or "",
-              icon_selector = true,
-              handler = {
-                [defines.events.on_gui_confirmed] = handle_logistic_group_confirmed
-              }
-            },
-            {
-              type = "label",
-              caption = "×"
-            },
-            {
-              type = "textfield",
-              name = "group_multiplier_textfield",
-              style = "very_short_number_textfield",
-              style_mods = {
-                width = 40,
-                natural_width = 40
-              },
-              text = section and section.multiplier or 1,
-              numeric = true,
-              allow_decimal = true,
-              allow_negative = false,
-              handler = {
-                [defines.events.on_gui_confirmed] = handle_logistic_group_confirmed
-              }
-            },
-            {
-              type = "sprite-button",
-              name = "confirm_button",
-              style = "item_and_count_select_confirm",
-              sprite = "utility/enter",
-              handler = {
-                [defines.events.on_gui_click] = handle_logistic_group_confirm
-              }
-            }
-          }
-        }
-      }
-    }
-
-    local entry_list = {
-      type = "scroll-pane",
-      name = "group_list",
-      direction = "vertical",
-      style = "cybersyn-combinator_group-list_scroll-pane",
-      style_mods = {
-        width = 300,
-        minimal_height = 130,
-        maximal_height = 400
-      },
-      horizontal_scroll_policy = "never"
-    }
-
-    local content = {
-      type = "flow",
-      direction = "vertical",
-      style = "inset_frame_container_vertical_flow",
-      style_mods = {
-        top_margin = -12
-      },
-      children = {
-        {
-          type = "frame",
-          direction = "vertical",
-          style = "inside_deep_frame",
-          children = {
-            entry_header,
-            entry_list
-          }
-        }
-      }
-    }
-
-    named, dialog = flib_gui.add(screen, {
-      name = LOGI_GROUP_EDIT_ID,
-      type = "frame",
-      style = "inset_frame_container_frame",
-      direction = "vertical",
-      style_mods = {
-        -- width = 324,
-        maximal_height = 1290
-      },
-      tags = {
-        section_id = section_id,
-        section_index = section_index
-      },
-      children = {
-        titlebar,
-        {
-          type = "textfield",
-          style = "search_popup_textfield",
-          name = "search_textfield",
-          visible = false,
-          style_mods = {
-            top_margin = -46,
-            bottom_margin = 6,
-            left_margin = 132
-          },
-          handler = {
-            [defines.events.on_gui_text_changed] = handle_logistic_group_search_text_changed
-          }
-        },
-        content
-      }
-    })
-  end
-
-  local group_list = named.group_list
-  local logistic_groups = get_logistic_groups(player_index)
-  for _, group in pairs(logistic_groups) do
-    flib_gui.add(group_list, make_logistic_group_item(group.name, group.count, group.count == nil))
-  end
-
-  state.logistic_group_edit = {
-    dialog = dialog,
-    section = section --[[@as LuaLogisticSection]],
-    search_textfield = named.search_textfield,
-    search_button = named.search_button,
-    group_name_textfield = named.group_name_textfield,
-    group_multiplier_textfield = named.group_multiplier_textfield,
-    group_confirm_button = named.confirm_button,
-    group_list = group_list,
-    confirmed = false
-  }
-
-  dialog.force_auto_center()
-  named.group_name_textfield.select_all()
-  named.group_name_textfield.focus()
-  player.opened = dialog
-end
 
 --- @param event EventData.on_gui_click
 handle_network_list_item_click = function(event)
@@ -1981,20 +2206,25 @@ handle_network_list_item_click = function(event)
   end
 end
 
+---@param event EventData.on_gui_click
+local function handle_logistic_section_add_click(event)
+  log:debug("add section button click")
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  local section = state.combinator:add_item_section()
+  if not section then
+    log:error("Failed to add logistic section")
+    return
+  end
+  add_signal_section(state, section)
+end
+
 --- @param event EventData.on_gui_click
 local function handle_description_edit_click(event)
   local state = get_player_state(event.player_index)
   if not state then return end
   log:debug("Showing description editor")
   create_description_edit(event.player_index, state)
-end
-
---- @param event EventData.on_gui_click
-local function handle_logistic_group_edit_click(event)
-  local state = get_player_state(event.player_index)
-  if not state then return end
-  log:debug("Showing logistic group editor")
-  create_logistic_group_edit(event.player_index, state, event.element.tags.section_id, event.element.tags.section_index)
 end
 
 --- @param player LuaPlayer
@@ -2369,12 +2599,26 @@ local function create_window(player, combinator)
           type = "scroll-pane",
           direction = "vertical",
           style = "deep_slots_scroll_pane",
+          style_mods = {
+            minimal_width = 400,
+            minimal_height = 80
+          },
           children = {
             {
-              type = "table",
-              style = "slot_table",
-              name = "signal_table",
-              column_count = SLOT_COL_COUNT
+              type = "flow",
+              name = "section_container",
+              direction = "vertical",
+              style = "packed_vertical_flow"
+            },
+            {
+              type = "button",
+              style_mods = {
+                horizontally_stretchable = true
+              },
+              caption = { "gui-logistic.add-section" },
+              handler = {
+                [defines.events.on_gui_click] = handle_logistic_section_add_click
+              }
             }
           }
         },
@@ -2479,12 +2723,6 @@ local function create_window(player, combinator)
         {
           type = "line",
           style_mods = { top_margin = 5 }
-        },
-        {
-          type = "label",
-          style = "semibold_label",
-          style_mods = { top_margin = 0 },
-          caption = { "gui-constant.output-signals" }
         },
         signals_container
       }
@@ -2639,11 +2877,6 @@ local function create_window(player, combinator)
     end
   end
 
-  local signal_table = named.signal_table
-  if not signal_table then
-    error("signal_table is nil")
-  end
-
   local cs_signals_table = named.cs_signals_table
   if not cs_signals_table then
     error("cs_signals_table is nil")
@@ -2713,7 +2946,7 @@ local function create_window(player, combinator)
   state.item_total_label = named.item_total
   state.item_stacks_label = named.item_stacks
   state.fluid_total_label = named.fluid_total
-  state.signal_table = signal_table
+  state.section_container = named.section_container
   state.signal_value_stacks = named.signal_value_stacks
   state.signal_value_items = named.signal_value_items
   state.signal_value_confirm = named.signal_value_confirm
@@ -2762,10 +2995,12 @@ function cc_gui:open(player_index, entity)
   state.on_off.switch_state = combinator:is_enabled() and "right" or "left"
 
   update_cs_signals(state)
-  update_signal_table(state)
+  update_signal_sections(state, true)
   refresh_network_list(player_index, state)
 
   set_player_state(player_index, state)
+
+  update_totals(state)
 
   player.opened = state.main_window
   return true
@@ -2818,6 +3053,7 @@ function cc_gui:on_gui_closed(event)
   local state = get_player_state(player_index)
   local screen = player.gui.screen
   if DIALOG_IDS[element.name] then
+    log:debug("dialog is closing")
     if screen[LOGI_GROUP_EDIT_ID] and screen[DIMMER_ID] and state and state.logistic_group_edit then
       local is_searching = state.logistic_group_edit.search_textfield.visible
       local confirmed = state.logistic_group_edit.confirmed
@@ -2835,6 +3071,7 @@ function cc_gui:on_gui_closed(event)
       state.logistic_group_edit = nil
       if state.main_window then
         state.main_window.visible = true
+        log:debug("opening main window back")
         player.opened = state.main_window
       end
     end
@@ -2843,8 +3080,9 @@ function cc_gui:on_gui_closed(event)
   if element.name ~= WINDOW_ID then return end
   if state then
     if state.encoder or state.description_edit or state.logistic_group_edit then return end
-    if state.selected_slot or state.selected_slot_button then
+    if state.selected_section_index or state.selected_slot or state.selected_slot_button then
       player.opened = state.main_window
+      state.selected_section_index = nil
       state.selected_slot = nil
       state.selected_slot_button = nil
       return
@@ -2889,7 +3127,7 @@ function cc_gui:on_input_confirm(event)
   end
   ---@type LuaGuiElement?
   local window = screen[WINDOW_ID]
-  if window and state.selected_slot then
+  if window and state.selected_section_index and state.selected_slot then
     log:debug("input_confirm from ", event.player_index)
     confirm_signal_value(event.player_index, state, false)
   end
@@ -2946,6 +3184,9 @@ function cc_gui:register()
     [WINDOW_ID .. "_network_list_item_click"] = handle_network_list_item_click,
     [WINDOW_ID .. "_description_edit_click"] = handle_description_edit_click,
     [WINDOW_ID .. "_logistic_group_edit_click"] = handle_logistic_group_edit_click,
+    [WINDOW_ID .. "_section_checkbox_checked_state_changed"] = handle_signal_section_group_checked_state_changed,
+    [WINDOW_ID .. "_section_remove_click"] = handle_signal_section_remove_clicked,
+    [WINDOW_ID .. "_add_section_click"] = handle_logistic_section_add_click,
     [ENCODER_ID .. "_close"] = handle_dialog_close,
     [ENCODER_ID .. "_confirm"] = handle_encoder_confirm,
     [ENCODER_ID .. "_signal_changed"] = handle_encoder_signal_changed,
