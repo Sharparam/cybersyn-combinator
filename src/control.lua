@@ -89,6 +89,9 @@ script.on_event(defines.events.on_player_mined_entity, function(event)
   local pname = player.name
   log:debug(entity.name, "[", entity.unit_number, "] destroyed by ", pname)
   cc_gui:on_entity_destroyed(entity.unit_number)
+  if storage.combinator_sections[entity.unit_number] then
+    storage.combinator_sections[entity.unit_number] = nil
+  end
 end, entity_event_filters)
 
 script.on_event(defines.events.on_robot_mined_entity, function(event)
@@ -96,6 +99,9 @@ script.on_event(defines.events.on_robot_mined_entity, function(event)
   if not entity then return end
   log:debug(entity.name, "[", entity.unit_number, "] destroyed by bot")
   cc_gui:on_entity_destroyed(entity.unit_number)
+  if storage.combinator_sections[entity.unit_number] then
+    storage.combinator_sections[entity.unit_number] = nil
+  end
 end, entity_event_filters)
 
 script.on_event(defines.events.script_raised_destroy, function(event)
@@ -103,6 +109,9 @@ script.on_event(defines.events.script_raised_destroy, function(event)
   if not entity then return end
   log:debug(entity.name, "[", entity.unit_number, "] destroyed by script")
   cc_gui:on_entity_destroyed(entity.unit_number)
+  if storage.combinator_sections[entity.unit_number] then
+    storage.combinator_sections[entity.unit_number] = nil
+  end
 end, entity_event_filters)
 
 script.on_event(defines.events.on_built_entity, function(event)
