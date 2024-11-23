@@ -669,42 +669,59 @@ function CC:sort_signals()
   end
 
   for _, section in pairs(control.sections) do
-    if not section then goto continue end
+    if not section or not section.valid then goto continue end
     if section == cs_sec or section == net_sec then goto continue end
+    if section.group ~= "" then goto continue end
+    local multiplier = section.multiplier or 1
     for filter_index, filter in pairs(section.filters) do
       local value = filter.value
       if not value or not value.name then goto filter_continue end
       local type = value.type
       local name = value.name
+      local count = filter.min * multiplier
       local cs_signal = config.cs_signals[name]
 
       if type == "virtual" and cs_signal ~= nil then
         local cs_slot = cs_signal.slot
         local cs_filter = cs_sec.get_slot(cs_slot)
         if cs_filter and cs_filter.value then
-          cs_filter.min = cs_filter.min + filter.min
+          cs_filter.min = cs_filter.min + count
           cs_sec.set_slot(cs_slot, cs_filter)
         else
-          self:set_cs_value(name, filter.min)
+          self:set_cs_value(name, count)
         end
-        if section.group == "" then section.clear_slot(filter_index) end
+        section.clear_slot(filter_index)
       elseif type == "virtual" then
         local net_key = name .. "__|__" .. (value.quality or "normal")
         local net_slot = net_lookup[net_key]
         if net_slot then
+          log:debug("found net signal ", net_key, " in slot ", net_slot)
           local net_filter = net_sec.get_slot(net_slot)
-          net_filter.min = net_filter.min + filter.min
+          net_filter.min = net_filter.min + count
           net_sec.set_slot(net_slot, net_filter)
         else
+          log:debug("net signal ", net_key, " not found, creating it")
           net_slot = net_sec.filters_count + 1
+          filter.min = count
           net_sec.set_slot(net_slot, filter)
           net_lookup[net_key] = net_slot
         end
-        if section.group == "" then section.clear_slot(filter_index) end
+        section.clear_slot(filter_index)
       end
       ::filter_continue::
     end
     ::continue::
+  end
+
+  local section_count = control.sections_count
+  local section_index = 1
+  while section_index <= section_count do
+    local section = control.get_section(section_index)
+    if section and section.valid and section.group == "" and section.filters_count == 0 then
+      control.remove_section(section_index)
+    else
+      section_index = section_index + 1
+    end
   end
 end
 
