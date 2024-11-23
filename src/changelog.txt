@@ -1,9 +1,12 @@
 ---------------------------------------------------------------------------------------------------
 Version: 2.3.0
-Date: 2024-11-13
+Date: 2024-11-23
   Features:
     - Can now paste recipes from assembling machines into combinators
       (uses same logic as requester chests except also supports fluids).
+  Bugfixes:
+    - Fix an issue where duplicate network signals could cause a crash when building a blueprint containing
+      combinator entitites.
 ---------------------------------------------------------------------------------------------------
 Version: 2.2.3
 Date: 2024-11-13
