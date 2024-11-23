@@ -557,6 +557,15 @@ function CC:sort_signals()
     return
   end
 
+  local net_lookup = {}
+
+  for index, filter in pairs(net_sec.filters) do
+    if not filter or not filter.value or not filter.value.name then goto continue end
+    local key = filter.value.name .. "__|__" .. (filter.value.quality or "normal")
+    net_lookup[key] = index
+    ::continue::
+  end
+
   for _, section in pairs(control.sections) do
     if not section then goto continue end
     if section == cs_sec or section == sig_sec or section == net_sec then goto continue end
@@ -570,7 +579,17 @@ function CC:sort_signals()
       if type == "virtual" and cs_signal ~= nil then
         self:set_cs_value(name, filter.min)
       elseif type == "virtual" then
-        net_sec.set_slot(net_sec.filters_count + 1, filter)
+        local net_key = name .. "__|__" .. (value.quality or "normal")
+        local net_slot = net_lookup[net_key]
+        if net_slot then
+          local net_filter = net_sec.get_slot(net_slot)
+          net_filter.min = net_filter.min + filter.min
+          net_sec.set_slot(net_slot, net_filter)
+        else
+          net_slot = net_sec.filters_count + 1
+          net_sec.set_slot(net_slot, filter)
+          net_lookup[net_key] = net_slot
+        end
       elseif type == "item" or type == "fluid" then
         local item_slot = find_empty_or_existing_slot(sig_sec, value)
         if item_slot and item_slot <= config.slot_count then
