@@ -932,6 +932,7 @@ local function make_logistic_group_item(name, count, is_empty)
         },
         caption = (group == "" or is_empty) and "" or tostring(count),
         tooltip = caption,
+        mouse_button_filter = { "left" },
         tags = {
           group = group
         },
@@ -953,7 +954,8 @@ local function make_logistic_group_item(name, count, is_empty)
         type = "sprite-button",
         style = "tool_button_red",
         sprite = "utility/trash",
-        visible = group ~= "" and not is_empty
+        visible = group ~= "" and not is_empty,
+        mouse_button_filter = { "left" }
       }
     }
   }
@@ -1023,6 +1025,7 @@ local function create_logistic_group_edit(player_index, state, section_id, secti
           style = "frame_action_button",
           name = "search_button",
           sprite = "utility/search",
+          mouse_button_filter = { "left" },
           handler = {
             [defines.events.on_gui_click] = handle_logistic_group_search_click
           }
@@ -1032,6 +1035,7 @@ local function create_logistic_group_edit(player_index, state, section_id, secti
           style = "close_button",
           name = DESC_EDIT_ID .. "_close",
           sprite = "utility/close",
+          mouse_button_filter = { "left" },
           handler = {
             [defines.events.on_gui_click] = handle_dialog_close
           }
@@ -1092,6 +1096,7 @@ local function create_logistic_group_edit(player_index, state, section_id, secti
               name = "confirm_button",
               style = "item_and_count_select_confirm",
               sprite = "utility/enter",
+              mouse_button_filter = { "left" },
               handler = {
                 [defines.events.on_gui_click] = handle_logistic_group_confirm
               }
@@ -1265,6 +1270,7 @@ local function create_signal_section(section)
         type = "sprite-button",
         style = "mini_button_aligned_to_text_vertically_when_centered",
         sprite = "utility/rename_icon",
+        mouse_button_filter = { "left" },
         handler = {
           [defines.events.on_gui_click] = handle_logistic_group_edit_click
         },
@@ -1283,6 +1289,7 @@ local function create_signal_section(section)
         type = "sprite-button",
         style = "tool_button_red",
         sprite = "utility/trash",
+        mouse_button_filter = { "left" },
         handler = {
           [defines.events.on_gui_click] = handle_signal_section_remove_clicked
         },
@@ -1870,11 +1877,13 @@ local function create_encoder(player_index, state)
                 {
                   type = "button",
                   caption = { "cybersyn-combinator-encoder.all" },
+                  mouse_button_filter = { "left" },
                   handler = handle_encoder_all
                 },
                 {
                   type = "button",
                   caption = { "cybersyn-combinator-encoder.none" },
+                  mouse_button_filter = { "left" },
                   handler = handle_encoder_none
                 }
               }
@@ -1991,6 +2000,7 @@ local function create_encoder(player_index, state)
               style = "back_button",
               caption = { "gui.cancel" },
               name = ENCODER_ID .. "_close",
+              mouse_button_filter = { "left" },
               handler = handle_dialog_close
             },
             {
@@ -2004,6 +2014,7 @@ local function create_encoder(player_index, state)
               style = "confirm_button",
               caption = { "gui.confirm" },
               tooltip = nil,
+              mouse_button_filter = { "left" },
               handler = handle_encoder_confirm
             }
           }
@@ -2105,6 +2116,7 @@ local function create_description_edit(player_index, state)
               style = "cancel_close_button",
               name = DESC_EDIT_ID .. "_close",
               sprite = "utility/close",
+              mouse_button_filter = { "left" },
               handler = {
                 [defines.events.on_gui_click] = handle_dialog_close
               }
@@ -2149,6 +2161,7 @@ local function create_description_edit(player_index, state)
                   type = "button",
                   style = "confirm_button",
                   caption = { "gui-edit-label.save-description" },
+                  mouse_button_filter = { "left" },
                   handler = {
                     [defines.events.on_gui_click] = handle_description_edit_confirm
                   }
@@ -2462,6 +2475,7 @@ local function create_window(player, combinator)
               type = "sprite-button",
               style = "mini_button_aligned_to_text_vertically",
               sprite = "utility/rename_icon",
+              mouse_button_filter = { "left" },
               tags = {
                 section_id = CybersynCombinator.CYBERSYN_SECTION_ID
               },
@@ -2616,6 +2630,7 @@ local function create_window(player, combinator)
                 horizontally_stretchable = true
               },
               caption = { "gui-logistic.add-section" },
+              mouse_button_filter = { "left" },
               handler = {
                 [defines.events.on_gui_click] = handle_logistic_section_add_click
               }
@@ -2751,6 +2766,7 @@ local function create_window(player, combinator)
           name = "add_description_button",
           caption = { "gui-edit-label.add-description" },
           visible = not has_description,
+          mouse_button_filter = { "left" },
           handler = {
             [defines.events.on_gui_click] = handle_description_edit_click
           }
@@ -2770,6 +2786,7 @@ local function create_window(player, combinator)
               type = "sprite-button",
               style = "mini_button_aligned_to_text_vertically",
               sprite = "utility/rename_icon",
+              mouse_button_filter = { "left" },
               handler = {
                 [defines.events.on_gui_click] = handle_description_edit_click
               }
