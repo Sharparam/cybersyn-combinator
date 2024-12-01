@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.3.1
+Date: 2024-12-01
+  Bugfixes:
+    - Fix issues when pasting entity settings on the same combinator it was copied from.
+      (Copy-pasting onto the same entity is disabled completely to match base game behaviour.)
+---------------------------------------------------------------------------------------------------
 Version: 2.3.0
 Date: 2024-11-23
   Features:

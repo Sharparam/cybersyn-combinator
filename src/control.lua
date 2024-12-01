@@ -167,6 +167,7 @@ end, entity_event_filters)
 ---@param source LuaEntity
 ---@param dest LuaEntity
 local function on_cc_pasted(source, dest)
+  if source.unit_number == dest.unit_number then return end
   local needs_sort = source.name ~= dest.name
   local dest_combinator = CybersynCombinator:new(dest, needs_sort)
   if needs_sort then return end
