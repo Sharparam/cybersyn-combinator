@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.3.2
+Date: 2024-12-02
+  Bugfixes:
+    - Fix ghost entities not being handled in some events.
+    - Fix some data in storage not being cleaned up.
+---------------------------------------------------------------------------------------------------
 Version: 2.3.1
 Date: 2024-12-01
   Bugfixes:
