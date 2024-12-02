@@ -179,7 +179,9 @@ end, entity_event_filters)
 ---@param dest LuaEntity
 local function on_cc_pasted(source, dest)
   if source.unit_number == dest.unit_number then return end
-  local needs_sort = source.name ~= dest.name
+  local source_name = source.name == "entity-ghost" and source.ghost_name or source.name
+  local dest_name = dest.name == "entity-ghost" and dest.ghost_name or dest.name
+  local needs_sort = source_name ~= dest_name
   local dest_combinator = CybersynCombinator:new(dest, needs_sort)
   if needs_sort then return end
   local src_combinator = CybersynCombinator:new(source, false)
@@ -220,9 +222,9 @@ script.on_event(defines.events.on_entity_settings_pasted, function(event)
   if not is_cc_dest then return end
   local src = event.source
   if not src or not src.valid then return end
-  if src.type == "constant-combinator" then
+  if src.type == "constant-combinator" or (src.name == "entity-ghost" and src.ghost_type == "constant-combinator") then
     on_cc_pasted(src, dest)
-  elseif src.type == "assembling-machine" then
+  elseif src.type == "assembling-machine" or (src.name == "entity-ghost" and src.ghost_type == "assembling-machine") then
     on_am_pasted(event.player_index, src, dest)
   end
 end)
