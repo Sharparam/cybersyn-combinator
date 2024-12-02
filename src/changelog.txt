@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.3.4
+Date: 2024-12-02
+  Bugfixes:
+    - Fix another case where pasting settings to/from ghost combinators could cause hidden signals to be set.
+---------------------------------------------------------------------------------------------------
 Version: 2.3.3
 Date: 2024-12-02
   Bugfixes:
