@@ -116,6 +116,7 @@ local function try_get_cs_section(control)
   if control.sections_count == 0 then return end
   for _, section in pairs(control.sections) do
     if not section or not section.valid then goto continue end
+    if section.filters_count == 0 then goto continue end
     local found = true
     for _, filter in pairs(section.filters) do
       if not filter or not filter.value then goto f_continue end
