@@ -178,7 +178,6 @@ end, entity_event_filters)
 ---@param source LuaEntity
 ---@param dest LuaEntity
 local function on_cc_pasted(source, dest)
-  if source.unit_number == dest.unit_number then return end
   local source_name = source.name == "entity-ghost" and source.ghost_name or source.name
   local dest_name = dest.name == "entity-ghost" and dest.ghost_name or dest.name
   local needs_sort = source_name ~= dest_name
@@ -216,15 +215,22 @@ local function on_am_pasted(player_index, source, dest)
 end
 
 script.on_event(defines.events.on_entity_settings_pasted, function(event)
-  local dest = event.destination
-  if not dest or not dest.valid or dest.type ~= "constant-combinator" then return end
-  local is_cc_dest = dest.name == constants.ENTITY_NAME or (dest.name == "entity-ghost" and dest.ghost_name == constants.ENTITY_NAME)
-  if not is_cc_dest then return end
   local src = event.source
   if not src or not src.valid then return end
-  if src.type == "constant-combinator" or (src.name == "entity-ghost" and src.ghost_type == "constant-combinator") then
+  local dest = event.destination
+  if not dest or not dest.valid then return end
+  if src.unit_number == dest.unit_number then return end
+  local dest_type = dest.name == "entity-ghost" and dest.ghost_type or dest.type
+  if dest_type ~= "constant-combinator" then return end
+  local dest_name = dest.name == "entity-ghost" and dest.ghost_name or dest.name
+  if dest_name ~= constants.ENTITY_NAME then return end
+  if not src or not src.valid then return end
+  local src_type = src.name == "entity-ghost" and src.ghost_type or src.type
+  local src_name = src.name == "entity-ghost" and src.ghost_name or src.name
+  log:debug("Paste from ", src_name, " (", src_type, ") [", src.unit_number, "] to ", dest.unit_number)
+  if src_type == "constant-combinator" then
     on_cc_pasted(src, dest)
-  elseif src.type == "assembling-machine" or (src.name == "entity-ghost" and src.ghost_type == "assembling-machine") then
+  elseif src_type == "assembling-machine" then
     on_am_pasted(event.player_index, src, dest)
   end
 end)
