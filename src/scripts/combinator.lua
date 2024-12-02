@@ -265,6 +265,7 @@ function CC:get_item_section_count()
   if not control then return 0 end
   self:get_or_create_section(CYBERSYN_SECTION_ID)
   self:get_or_create_section(NETWORK_SECTION_ID)
+  if control.sections_count < 2 then return 0 end
   return control.sections_count - 2
 end
 
