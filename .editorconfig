@@ -13,7 +13,7 @@ call_arg_parentheses = keep
 continuation_indent = 4
 # EmmyLua's line breaking logic is pretty terrible,
 # so better to manually take care of it.
-# max_line_length = 120
+max_line_length = unset
 trailing_table_separator = never
 ## Whitespace options
 space_around_table_field_list = true
