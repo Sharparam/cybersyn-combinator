@@ -111,20 +111,27 @@ function CC:set_description(description)
 end
 
 ---@param control LuaConstantCombinatorControlBehavior?
+---@param exclude_section LuaLogisticSection?
+---@param signal_predicate fun(signal: SignalFilter): boolean
 ---@return LuaLogisticSection?
-local function try_get_cs_section(control)
-  if not control then return end
+local function try_get_section(control, exclude_section, signal_predicate)
+  if not control or not control.valid then return end
   if control.sections_count == 0 then return end
+  local valid_empty_section = nil
   for _, section in pairs(control.sections) do
     if not section or not section.valid then goto continue end
-    if section.filters_count == 0 then goto continue end
+    if section.filters_count == 0 then
+      if not valid_empty_section and section.group == "" and section ~= exclude_section then
+        valid_empty_section = section
+      end
+      goto continue
+    end
     local found = true
     for _, filter in pairs(section.filters) do
-      if not filter or not filter.value then goto f_continue end
+      if not filter then goto f_continue end
       local value = filter.value
       if not value or not value.name then goto f_continue end
-      local cs_signal = config.cs_signals[value.name]
-      if value.type ~= "virtual" or not cs_signal then
+      if not signal_predicate(value) then
         found = false
         break
       end
@@ -133,6 +140,7 @@ local function try_get_cs_section(control)
     if found then return section end
     ::continue::
   end
+  if valid_empty_section then return valid_empty_section end
 end
 
 --- @param id integer
@@ -154,7 +162,15 @@ function CC:get_or_create_section(id)
     return section
   end
   if id == CYBERSYN_SECTION_ID then
-    section = try_get_cs_section(control)
+    section = try_get_section(control, storage.combinator_sections[unit_number][NETWORK_SECTION_ID], function(signal)
+      local cs_signal = config.cs_signals[signal.name]
+      return signal.type == "virtual" and cs_signal ~= nil
+    end)
+  elseif id == NETWORK_SECTION_ID then
+    section = try_get_section(control, storage.combinator_sections[unit_number][CYBERSYN_SECTION_ID], function(signal)
+      local cs_signal = config.cs_signals[signal.name]
+      return signal.type == "virtual" and not cs_signal
+    end)
   end
   if not section or not section.valid then
     section = control.add_section()
