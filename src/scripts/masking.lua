@@ -61,7 +61,7 @@ end
 --- @param int integer
 --- @return string
 local function int32_to_hex(int)
-  local result = ''
+  local result = ""
   for o = 0, 7 do
     local byte = bextract(int, o * 4, 4)
     local hex = sformat("%X", byte)
@@ -76,7 +76,7 @@ end
 --- @param int integer
 --- @return string
 local function int32_to_bin(int)
-  local result = ''
+  local result = ""
   for o = 0, 31 do
     local bit = bextract(int, o, 1)
     result = tostring(bit) .. result
@@ -90,7 +90,7 @@ end
 --- @param int integer
 --- @return string
 local function int32_to_oct(int)
-  local result = ''
+  local result = ""
   for o = 0, 10 do
     local octal = bextract(int, o * 3, o == 10 and 2 or 3)
     local oct = sformat("%o", octal)

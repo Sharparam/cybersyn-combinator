@@ -195,8 +195,10 @@ local function on_cc_pasted(source, dest)
   local dest_combinator = CybersynCombinator:new(dest, needs_sort)
   if needs_sort then return end
   local src_combinator = CybersynCombinator:new(source, false)
-  dest_combinator:set_section_index(CybersynCombinator.CYBERSYN_SECTION_ID, src_combinator:get_or_create_section(CybersynCombinator.CYBERSYN_SECTION_ID).index)
-  dest_combinator:set_section_index(CybersynCombinator.NETWORK_SECTION_ID, src_combinator:get_or_create_section(CybersynCombinator.NETWORK_SECTION_ID).index)
+  dest_combinator:set_section_index(CybersynCombinator.CYBERSYN_SECTION_ID,
+    src_combinator:get_or_create_section(CybersynCombinator.CYBERSYN_SECTION_ID).index)
+  dest_combinator:set_section_index(CybersynCombinator.NETWORK_SECTION_ID,
+    src_combinator:get_or_create_section(CybersynCombinator.NETWORK_SECTION_ID).index)
 end
 
 ---@param player_index integer

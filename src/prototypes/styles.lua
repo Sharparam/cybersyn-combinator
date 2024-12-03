@@ -100,12 +100,12 @@ styles["cybersyn-combinator_network-list_scroll-pane"] = {
   type = "scroll_pane_style",
   parent = "list_box_in_shallow_frame_scroll_pane",
   background_graphical_set = { -- rubber grid
-      position = { 282, 17 },
-      corner_size = 8,
-      overall_tiling_vertical_size = 22,
-      overall_tiling_vertical_spacing = 6,
-      overall_tiling_vertical_padding = 4,
-      overall_tiling_horizontal_padding = 4
+    position = { 282, 17 },
+    corner_size = 8,
+    overall_tiling_vertical_size = 22,
+    overall_tiling_vertical_spacing = 6,
+    overall_tiling_vertical_padding = 4,
+    overall_tiling_horizontal_padding = 4
   },
   vertically_stretchable = "on",
   horizontally_stretchable = "on",
@@ -150,7 +150,7 @@ styles["cybersyn-combinator_frame_transparent"] = {
       type = "composition",
       filename = "__cybersyn-combinator__/graphics/frame/transparent-pixel.png",
       corner_size = 1,
-      position = {0, 0}
+      position = { 0, 0 }
     }
   }
 }
@@ -162,7 +162,7 @@ styles["cybersyn-combinator_frame_semitransparent"] = {
       type = "composition",
       filename = "__cybersyn-combinator__/graphics/frame/semitransparent-pixel.png",
       corner_size = 1,
-      position = {0, 0}
+      position = { 0, 0 }
     }
   }
 }

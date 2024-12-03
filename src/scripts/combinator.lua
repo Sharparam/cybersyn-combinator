@@ -79,6 +79,7 @@ function CC:set_enabled(enabled)
 end
 
 function CC:enable() self:set_enabled(true) end
+
 function CC:disable() self:set_enabled(false) end
 
 function CC:is_ghost()

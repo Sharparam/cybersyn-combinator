@@ -567,7 +567,7 @@ local function handle_signal_changed(event)
   state.selected_slot_button = element
   state.combinator:set_item_slot(section_index, slot, signal)
   element.locked = true
-  element.style = active and SLOT_BUTTON_PRESSED_STYLE or SLOT_BUTTON_DISABLED_PRESSED_STYLE -- "flib_selected_slot_button_default"
+  element.style = active and SLOT_BUTTON_PRESSED_STYLE or SLOT_BUTTON_DISABLED_PRESSED_STYLE
   change_signal_count(state, event.player_index)
 end
 
@@ -613,7 +613,7 @@ local function handle_signal_click(event)
     state.selected_section_index = section_index
     state.selected_slot = slot
     state.selected_slot_button = element
-    element.style = active and SLOT_BUTTON_PRESSED_STYLE or SLOT_BUTTON_DISABLED_PRESSED_STYLE -- "flib_selected_slot_button_default"
+    element.style = active and SLOT_BUTTON_PRESSED_STYLE or SLOT_BUTTON_DISABLED_PRESSED_STYLE
     change_signal_count(state, event.player_index)
   end
 end
@@ -1333,7 +1333,7 @@ local function create_signal_section(section)
           height = overlay_height,
           top_margin = -overlay_height
         },
-        ignored_by_interaction = true,
+        ignored_by_interaction = true
       }
     }
   }
@@ -1844,7 +1844,7 @@ local function create_encoder(player_index, state)
                 {
                   type = "flow",
                   style_mods = { horizontally_stretchable = true }
-                },
+                }
               }
             },
             { -- Bit buttons
@@ -2399,7 +2399,7 @@ local function create_window(player, combinator)
       direction = "vertical",
       style_mods = { horizontal_align = "left" },
       children = {
-        {                   -- Status
+        { -- Status
           type = "flow",
           direction = "horizontal",
           style_mods = { vertical_align = "center", horizontally_stretchable = true, bottom_padding = 4 },
@@ -2407,20 +2407,18 @@ local function create_window(player, combinator)
             {
               type = "sprite",
               name = "status_sprite",
-              sprite = entity.name == "entity-ghost" and GHOST_STATUS_SPRITE or STATUS_SPRITES[entity.status] or
-              DEFAULT_STATUS_SPRITE,
+              sprite = entity.name == "entity-ghost" and GHOST_STATUS_SPRITE or STATUS_SPRITES[entity.status] or DEFAULT_STATUS_SPRITE,
               style = "status_image",
               style_mods = { stretch_image_to_widget_size = true }
             },
             {
               type = "label",
               name = "status_label",
-              caption = entity.name == "entity-ghost" and GHOST_STATUS_NAME or STATUS_NAMES[entity.status] or
-              DEFAULT_STATUS_NAME
+              caption = entity.name == "entity-ghost" and GHOST_STATUS_NAME or STATUS_NAMES[entity.status] or DEFAULT_STATUS_NAME
             }
           }
         },
-        {                   -- Preview
+        { -- Preview
           type = "frame",
           style = "deep_frame_in_shallow_frame",
           style_mods = { minimal_width = 0, horizontally_stretchable = true, padding = 0 },
@@ -2519,7 +2517,7 @@ local function create_window(player, combinator)
       }
     }
 
-    local request_totals = {                   -- Request totals
+    local request_totals = {
       type = "flow",
       style_mods = {
         horizontal_align = "right",
@@ -2712,16 +2710,16 @@ local function create_window(player, combinator)
       }
     }
 
-    local main_view = { -- Main view
+    local main_view = {
       type = "flow",
       direction = "vertical",
       style_mods = { left_margin = 8 },
       children = {
-        {           -- status, preview, CS signals
+        { -- status, preview, CS signals
           type = "flow",
           direction = "horizontal",
           children = {
-            status_and_preview,           -- Combinator status and preview
+            status_and_preview,
             cs_signals_pane
           }
         },
@@ -2734,8 +2732,7 @@ local function create_window(player, combinator)
             request_totals
           }
         },
-        -- Separator
-        {
+        { -- Separator
           type = "line",
           style_mods = { top_margin = 5 }
         },
@@ -2853,7 +2850,6 @@ local function create_window(player, combinator)
         }
       }
     })
-
   end
 
   ---@type LuaGuiElement.add_param.flow
@@ -3225,9 +3221,12 @@ function cc_gui:register()
   flib_gui.handle_events()
   script.on_event(defines.events.on_gui_opened, function(event) self:on_gui_opened(event) end)
   script.on_event(defines.events.on_gui_closed, function(event) self:on_gui_closed(event) end)
-  script.on_event(constants.MOD_NAME .. "-toggle-menu", function(event) self:on_input_close(event --[[@as EventData.CustomInputEvent]]) end)
-  script.on_event(constants.MOD_NAME .. "-confirm-gui", function(event) self:on_input_confirm(event --[[@as EventData.CustomInputEvent]]) end)
-  script.on_event(constants.MOD_NAME .. "-focus-search", function(event) self:on_focus_search(event --[[@as EventData.CustomInputEvent]]) end)
+  script.on_event(constants.MOD_NAME .. "-toggle-menu",
+    function(event) self:on_input_close(event --[[@as EventData.CustomInputEvent]]) end)
+  script.on_event(constants.MOD_NAME .. "-confirm-gui",
+    function(event) self:on_input_confirm(event --[[@as EventData.CustomInputEvent]]) end)
+  script.on_event(constants.MOD_NAME .. "-focus-search",
+    function(event) self:on_focus_search(event --[[@as EventData.CustomInputEvent]]) end)
 end
 
 return cc_gui
