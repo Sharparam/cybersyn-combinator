@@ -2185,8 +2185,6 @@ local function create_description_edit(player_index, state)
   player.opened = dialog
 end
 
-
-
 --- @param event EventData.on_gui_click
 handle_network_list_item_click = function(event)
   local state = get_player_state(event.player_index)
