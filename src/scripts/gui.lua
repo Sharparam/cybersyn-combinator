@@ -105,6 +105,7 @@ local cc_gui = {
 --- @field button LuaGuiElement
 
 --- @class NetworkMaskState
+--- @field section_group_checkbox LuaGuiElement
 --- @field list LuaGuiElement
 --- @field signal_button LuaGuiElement
 --- @field textfield LuaGuiElement
@@ -431,6 +432,14 @@ local function refresh_network_list(player, state)
   if not state then return end
   local list = state.network_mask.list
   list.clear()
+  local section = state.combinator:get_or_create_section(CybersynCombinator.NETWORK_SECTION_ID)
+  if section then
+    local group_checkbox = state.network_mask.section_group_checkbox
+    group_checkbox.state = section.active
+    local caption = create_logistic_section_caption(section)
+    group_checkbox.caption = caption
+    group_checkbox.tooltip = caption
+  end
   local signals = state.combinator:get_network_signals()
   for slot, signal in ipairs(signals) do
     local mask = signal.count
@@ -874,6 +883,7 @@ local function confirm_logistic_group(player_index, close)
   state.logistic_group_edit.section.multiplier = multiplier
 
   update_cs_signals(state)
+  refresh_network_list(player, state)
   update_signal_sections(state, false)
 
   state.logistic_group_edit.confirmed = true
@@ -1506,6 +1516,15 @@ local function handle_cs_signal_reset(event)
   state.combinator:reset_cs_value(name)
   field.text = tostring(cs_signal.default)
   element.enabled = false
+end
+
+---@param event EventData.on_gui_checked_state_changed
+local function handle_network_group_checked_state_changed(event)
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  local enabled = event.element.state
+  local section = state.combinator:get_or_create_section(CybersynCombinator.NETWORK_SECTION_ID)
+  section.active = enabled
 end
 
 --- @param event EventData.on_gui_elem_changed
@@ -2306,6 +2325,9 @@ local function create_window(player, combinator)
       }
     }
 
+    local network_section = combinator:get_or_create_section(CybersynCombinator.NETWORK_SECTION_ID) --[[@as LuaLogisticSection]]
+    local network_caption = create_logistic_section_caption(network_section)
+
     local network_list = { -- Network list
       type = "frame",
       style = "deep_frame_in_shallow_frame",
@@ -2321,7 +2343,7 @@ local function create_window(player, combinator)
             {
               type = "flow",
               direction = "horizontal",
-              style_mods = { left_padding = 8 },
+              style_mods = { left_padding = 4 },
               children = {
                 {
                   type = "label",
@@ -2336,6 +2358,43 @@ local function create_window(player, combinator)
                 {
                   type = "empty-widget",
                   style = "flib_horizontal_pusher"
+                }
+              }
+            },
+            {
+              type = "flow",
+              direction = "horizontal",
+              style_mods = {
+                horizontally_stretchable = true,
+                left_padding = 4,
+                right_padding = 4
+              },
+              children = {
+                {
+                  type = "checkbox",
+                  name = "network_list_group_checkbox",
+                  caption = network_caption,
+                  tooltip = network_caption,
+                  -- style = "caption_checkbox",
+                  style_mods = {
+                    horizontally_squashable = true
+                  },
+                  state = network_section.active,
+                  handler = {
+                    [defines.events.on_gui_checked_state_changed] = handle_network_group_checked_state_changed
+                  }
+                },
+                {
+                  type = "sprite-button",
+                  style = "mini_button_aligned_to_text_vertically",
+                  sprite = "utility/rename_icon",
+                  mouse_button_filter = { "left" },
+                  tags = {
+                    section_id = CybersynCombinator.NETWORK_SECTION_ID
+                  },
+                  handler = {
+                    [defines.events.on_gui_click] = handle_logistic_group_edit_click
+                  }
                 }
               }
             },
@@ -2963,6 +3022,7 @@ local function create_window(player, combinator)
   state.signal_value_confirm = named.signal_value_confirm
   state.entity = entity
   state.network_mask = {
+    section_group_checkbox = named.network_list_group_checkbox,
     list = named.network_list,
     signal_button = named.network_mask_signal_button,
     textfield = named.network_mask_textfield,
@@ -3187,6 +3247,7 @@ function cc_gui:register()
     [WINDOW_ID .. "_cs_signal_value_changed"] = handle_cs_signal_value_changed,
     [WINDOW_ID .. "_cs_signal_value_confirmed"] = handle_cs_signal_value_confirmed,
     [WINDOW_ID .. "_cs_signal_reset"] = handle_cs_signal_reset,
+    [WINDOW_ID .. "_network_group_checked_state_changed"] = handle_network_group_checked_state_changed,
     [WINDOW_ID .. "_network_mask_signal_click"] = handle_network_mask_signal_click,
     [WINDOW_ID .. "_network_mask_signal_changed"] = handle_network_mask_signal_changed,
     [WINDOW_ID .. "_network_mask_changed"] = handle_network_mask_changed,
