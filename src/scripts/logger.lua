@@ -97,7 +97,7 @@ end
 --- @return Logger
 function Logger:new(...)
   return setmetatable({
-    context = tconcat({...}, ".")
+    context = tconcat({ ... }, ".")
   }, {
     --- @param t Logger
     --- @param k any

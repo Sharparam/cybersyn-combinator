@@ -6,14 +6,12 @@ local log = require("scripts.logger").combinator.class
 --- @diagnostic disable-next-line assign-type-mismatch
 local EMPTY_SIGNAL = { signal = nil, count = 0 }
 
-local SIGNALS_SECTION_ID = 1
 local CYBERSYN_SECTION_ID = 2
 local NETWORK_SECTION_ID = 3
 
 --- @class CybersynCombinator
 --- @field entity LuaEntity
 local CC = {
-  SIGNALS_SECTION_ID = SIGNALS_SECTION_ID,
   CYBERSYN_SECTION_ID = CYBERSYN_SECTION_ID,
   NETWORK_SECTION_ID = NETWORK_SECTION_ID
 }
@@ -56,7 +54,7 @@ end
 function CC:validate(sort_all)
   if not self:is_valid_entity() then return end
 
-  if sort_all and self:needs_sorting() then
+  if sort_all then
     self:sort_signals()
   end
 
@@ -81,6 +79,7 @@ function CC:set_enabled(enabled)
 end
 
 function CC:enable() self:set_enabled(true) end
+
 function CC:disable() self:set_enabled(false) end
 
 function CC:is_ghost()
@@ -112,19 +111,27 @@ function CC:set_description(description)
 end
 
 ---@param control LuaConstantCombinatorControlBehavior?
+---@param exclude_section LuaLogisticSection?
+---@param signal_predicate fun(signal: SignalFilter): boolean
 ---@return LuaLogisticSection?
-local function try_get_cs_section(control)
-  if not control then return end
+local function try_get_section(control, exclude_section, signal_predicate)
+  if not control or not control.valid then return end
   if control.sections_count == 0 then return end
+  local valid_empty_section = nil
   for _, section in pairs(control.sections) do
     if not section or not section.valid then goto continue end
+    if section.filters_count == 0 then
+      if not valid_empty_section and section.group == "" and section ~= exclude_section then
+        valid_empty_section = section
+      end
+      goto continue
+    end
     local found = true
     for _, filter in pairs(section.filters) do
-      if not filter or not filter.value then goto f_continue end
+      if not filter then goto f_continue end
       local value = filter.value
       if not value or not value.name then goto f_continue end
-      local cs_signal = config.cs_signals[value.name]
-      if value.type ~= "virtual" or not cs_signal then
+      if not signal_predicate(value) then
         found = false
         break
       end
@@ -133,6 +140,7 @@ local function try_get_cs_section(control)
     if found then return section end
     ::continue::
   end
+  if valid_empty_section then return valid_empty_section end
 end
 
 --- @param id integer
@@ -154,7 +162,15 @@ function CC:get_or_create_section(id)
     return section
   end
   if id == CYBERSYN_SECTION_ID then
-    section = try_get_cs_section(control)
+    section = try_get_section(control, storage.combinator_sections[unit_number][NETWORK_SECTION_ID], function(signal)
+      local cs_signal = config.cs_signals[signal.name]
+      return signal.type == "virtual" and cs_signal ~= nil
+    end)
+  elseif id == NETWORK_SECTION_ID then
+    section = try_get_section(control, storage.combinator_sections[unit_number][CYBERSYN_SECTION_ID], function(signal)
+      local cs_signal = config.cs_signals[signal.name]
+      return signal.type == "virtual" and not cs_signal
+    end)
   end
   if not section or not section.valid then
     section = control.add_section()
@@ -253,38 +269,174 @@ function CC:remove_cs_value(name)
   self:set_cs_value(name, nil)
 end
 
---- @param slot uint?
---- @return Signal
-function CC:get_item_slot(slot)
-  return self:get_slot(slot, SIGNALS_SECTION_ID)
+function CC:get_item_section(index)
+  if not self:is_valid_entity() then return nil end
+  local control = self:get_control_behavior()
+  if not control then return nil end
+  return control.get_section(index)
 end
 
---- @param slot uint?
---- @param signal Signal
-function CC:set_item_slot(slot, signal)
-  self:set_slot(slot, signal, SIGNALS_SECTION_ID)
+function CC:get_item_section_count()
+  if not self:is_valid_entity() then return 0 end
+  local control = self:get_control_behavior()
+  if not control then return 0 end
+  self:get_or_create_section(CYBERSYN_SECTION_ID)
+  self:get_or_create_section(NETWORK_SECTION_ID)
+  if control.sections_count < 2 then return 0 end
+  return control.sections_count - 2
 end
 
---- @param slot uint?
---- @param value integer
-function CC:set_item_slot_value(slot, value)
-  self:set_slot_value(slot, value, SIGNALS_SECTION_ID)
+---@param group string?
+---@return LuaLogisticSection?
+function CC:add_item_section(group)
+  if not self:is_valid_entity() then return end
+  local control = self:get_control_behavior()
+  if not control or not control.valid then return end
+  return control.add_section(group)
 end
 
---- @param slot uint?
-function CC:remove_item_slot(slot)
-  self:remove_slot(slot, SIGNALS_SECTION_ID)
+---@param index integer
+function CC:remove_item_section(index)
+  if not self:is_valid_entity() then return end
+  local control = self:get_control_behavior()
+  if not control or not control.valid then return end
+  control.remove_section(index)
 end
 
-function CC:clear_item_slots()
-  self:clear_section(SIGNALS_SECTION_ID)
+function CC:remove_item_sections()
+  if not self:is_valid_entity() then return end
+  local control = self:get_control_behavior()
+  if not control or not control.valid then return end
+  local cs_sec = self:get_or_create_section(CYBERSYN_SECTION_ID)
+  local net_sec = self:get_or_create_section(NETWORK_SECTION_ID)
+  local index = 1
+  for _ = 1, control.sections_count do
+    local section = control.get_section(index)
+    if section == cs_sec or section == net_sec then
+      index = index + 1
+    else
+      control.remove_section(index)
+    end
+  end
 end
 
---- @param signal SignalID|table|string
---- @param exclude_slot uint?
---- @return boolean, integer?
-function CC:has_item_signal(signal, exclude_slot)
-  return self:has_signal(signal, SIGNALS_SECTION_ID, exclude_slot)
+---@return fun(sections: LuaLogisticSection[], index: integer): integer?, LuaLogisticSection?
+---@return LuaLogisticSection[]?
+---@return integer?
+function CC:iter_item_sections()
+  if not self:is_valid_entity() then return function() end, nil, nil end
+  local control = self:get_control_behavior()
+  if not control or not control.valid then return function() end, nil, nil end
+  local cs_sec = self:get_or_create_section(CYBERSYN_SECTION_ID)
+  local net_sec = self:get_or_create_section(NETWORK_SECTION_ID)
+  local sections = control.sections
+
+  return function(t, k)
+    k = k + 1
+    local section = t[k]
+    if not section then return end
+    while not section.valid or section == cs_sec or section == net_sec do
+      k = k + 1
+      section = t[k]
+      if not section then return end
+    end
+    return k, section
+  end, sections, 0
+end
+
+---@param section_index integer?
+---@param slot uint?
+---@return Signal
+function CC:get_item_slot(section_index, slot)
+  if not section_index then return EMPTY_SIGNAL end
+  if not slot then return EMPTY_SIGNAL end
+  if not self:is_valid_entity() then return EMPTY_SIGNAL end
+  local section = self:get_item_section(section_index)
+  if not section then return EMPTY_SIGNAL end
+  local filter = section.get_slot(slot)
+  if not filter or not filter.value or not filter.min then return EMPTY_SIGNAL end
+  return { signal = filter.value, count = filter.min }
+end
+
+---@param section_index integer?
+---@param slot uint?
+---@param signal Signal
+function CC:set_item_slot(section_index, slot, signal)
+  if not section_index then return end
+  if not slot then return end
+  if not self:is_valid_entity() then return end
+  local section = self:get_item_section(section_index)
+  if not section then return end
+  ---@type LogisticFilter
+  local filter = {
+    value = {
+      type = signal.signal.type,
+      name = signal.signal.name,
+      ---@diagnostic disable-next-line: undefined-field
+      quality = signal.signal.quality or "normal"
+    },
+    min = signal.count
+  }
+  section.set_slot(slot, filter)
+end
+
+---@param section_index integer?
+---@param slot uint?
+---@param value integer
+function CC:set_item_slot_value(section_index, slot, value)
+  if not section_index then return end
+  if not slot then return end
+  if not self:is_valid_entity() then return end
+  local section = self:get_item_section(section_index)
+  if not section then return end
+  local filter = section.get_slot(slot)
+  if not filter or not filter.value then return end
+  filter.min = value
+  section.set_slot(slot, filter)
+end
+
+---@param section_index integer?
+---@param slot uint?
+function CC:remove_item_slot(section_index, slot)
+  if not section_index then return end
+  if not slot then return end
+  if not self:is_valid_entity() then return end
+  local section = self:get_item_section(section_index)
+  if not section then return end
+  section.clear_slot(slot)
+end
+
+---@param section_index integer
+function CC:clear_item_slots(section_index)
+  if not self:is_valid_entity() then return end
+  local control = self:get_control_behavior()
+  if not control or not control.valid then return end
+  local section = control.get_section(section_index)
+  if not section or not section.valid then return end
+  for i = section.filters_count, 1, -1 do
+    section.clear_slot(i)
+  end
+end
+
+---@param signal SignalID|table|string
+---@param section_index integer
+---@param exclude_slot uint?
+---@return boolean, integer?
+function CC:has_item_signal(signal, section_index, exclude_slot)
+  if not self:is_valid_entity() then return false end
+  if type(signal) == "string" then signal = { name = signal } end
+  if not signal or not signal.name then return false end
+  local section = self:get_item_section(section_index)
+  if not section then return false end
+  local signal_quality = signal.quality or "normal"
+  for filter_index, filter in pairs(section.filters) do
+    if not filter or not filter.value or filter_index == exclude_slot then goto continue end
+    if filter.value.name ~= signal.name then goto continue end
+    local filter_quality = filter.value.quality or "normal"
+    if filter_quality == signal_quality then return true, filter_index end
+    ::continue::
+  end
+  return false
 end
 
 --- @param slot uint?
@@ -332,9 +484,11 @@ end
 --- @param signal Signal
 function CC:add_or_update_network_signal(signal)
   self:sort_network_signals()
+  ---@diagnostic disable-next-line: undefined-field
   local quality = signal.signal.quality or "normal"
   local signals = self:get_network_signals()
   for slot, existing in ipairs(signals) do
+    ---@diagnostic disable-next-line: undefined-field
     local e_quality = existing.signal.quality or "normal"
     if existing.signal.type == signal.signal.type and existing.signal.name == signal.signal.name and e_quality == quality then
       self:set_network_slot_value(slot --[[@as uint]], signal.count)
@@ -371,6 +525,7 @@ function CC:set_slot(slot, signal, section_id)
     value = {
       type = signal.signal.type,
       name = signal.signal.name,
+      ---@diagnostic disable-next-line: undefined-field
       quality = signal.signal.quality or "normal"
     },
     min = signal.count
@@ -509,39 +664,6 @@ function CC:sort_network_signals()
   end
 end
 
---- @param section LuaLogisticSection
---- @return integer?
-local function find_empty_slot(section)
-  if not section then return nil end
-  for i = 1, section.filters_count do
-    local filter = section.get_slot(i)
-    if not filter then return i end
-  end
-
-  return section.filters_count + 1
-end
-
---- @param section LuaLogisticSection?
---- @param value SignalFilter
---- @return integer?
-local function find_empty_or_existing_slot(section, value)
-  if not section then return nil end
-  if type(value) == "string" then value = { name = value, type = "virtual", quality = "normal" } end
-  local first_empty_slot
-  for i = 1, section.filters_count do
-    local filter = section.get_slot(i)
-    if not filter and not first_empty_slot then
-      first_empty_slot = i
-    elseif filter and filter.value.type == value.type and filter.value.name == value.name and filter.value.quality == value.quality then
-      return i
-    end
-  end
-
-  if first_empty_slot then return first_empty_slot end
-
-  return section.filters_count + 1
-end
-
 function CC:sort_signals()
   log:debug("performing sort")
   if not self:is_valid_entity() then return end
@@ -549,10 +671,9 @@ function CC:sort_signals()
   if not control then return end
 
   local cs_sec = self:get_or_create_section(CYBERSYN_SECTION_ID)
-  local sig_sec = self:get_or_create_section(SIGNALS_SECTION_ID)
   local net_sec = self:get_or_create_section(NETWORK_SECTION_ID)
 
-  if not cs_sec or not sig_sec or not net_sec then
+  if not cs_sec or not net_sec then
     log:error("sort_signals: failed to get sections")
     return
   end
@@ -567,48 +688,58 @@ function CC:sort_signals()
   end
 
   for _, section in pairs(control.sections) do
-    if not section then goto continue end
-    if section == cs_sec or section == sig_sec or section == net_sec then goto continue end
-    for _, filter in pairs(section.filters) do
+    if not section or not section.valid then goto continue end
+    if section == cs_sec or section == net_sec then goto continue end
+    if section.group ~= "" then goto continue end
+    local multiplier = section.multiplier or 1
+    for filter_index, filter in pairs(section.filters) do
       local value = filter.value
       if not value or not value.name then goto filter_continue end
       local type = value.type
       local name = value.name
+      local count = filter.min * multiplier
       local cs_signal = config.cs_signals[name]
 
       if type == "virtual" and cs_signal ~= nil then
-        self:set_cs_value(name, filter.min)
+        local cs_slot = cs_signal.slot
+        local cs_filter = cs_sec.get_slot(cs_slot)
+        if cs_filter and cs_filter.value then
+          cs_filter.min = cs_filter.min + count
+          cs_sec.set_slot(cs_slot, cs_filter)
+        else
+          self:set_cs_value(name, count)
+        end
+        section.clear_slot(filter_index)
       elseif type == "virtual" then
         local net_key = name .. "__|__" .. (value.quality or "normal")
         local net_slot = net_lookup[net_key]
         if net_slot then
+          log:debug("found net signal ", net_key, " in slot ", net_slot)
           local net_filter = net_sec.get_slot(net_slot)
-          net_filter.min = net_filter.min + filter.min
+          net_filter.min = net_filter.min + count
           net_sec.set_slot(net_slot, net_filter)
         else
+          log:debug("net signal ", net_key, " not found, creating it")
           net_slot = net_sec.filters_count + 1
+          filter.min = count
           net_sec.set_slot(net_slot, filter)
           net_lookup[net_key] = net_slot
         end
-      elseif type == "item" or type == "fluid" then
-        local item_slot = find_empty_or_existing_slot(sig_sec, value)
-        if item_slot and item_slot <= config.slot_count then
-          sig_sec.set_slot(item_slot, filter)
-        end
+        section.clear_slot(filter_index)
       end
       ::filter_continue::
     end
     ::continue::
   end
 
-  local remove_index = 1
-  for _ = 1, control.sections_count do
-    if control.sections_count <= 3 then break end
-    local section = control.get_section(remove_index)
-    if section == cs_sec or section == sig_sec or section == net_sec then
-      remove_index = remove_index + 1
+  local section_count = control.sections_count
+  local section_index = 1
+  while section_index <= section_count do
+    local section = control.get_section(section_index)
+    if section and section.valid and section.group == "" and section.filters_count == 0 then
+      control.remove_section(section_index)
     else
-      control.remove_section(remove_index)
+      section_index = section_index + 1
     end
   end
 end
@@ -620,10 +751,9 @@ function CC:needs_sorting()
   local control = self:get_control_behavior()
   if not control then return false end
   self:get_or_create_section(CYBERSYN_SECTION_ID)
-  self:get_or_create_section(SIGNALS_SECTION_ID)
   self:get_or_create_section(NETWORK_SECTION_ID)
 
-  return control.sections_count > 3
+  return control.sections_count > 2
 end
 
 return CC

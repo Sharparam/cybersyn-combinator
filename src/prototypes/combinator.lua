@@ -1,5 +1,4 @@
 local constants = require "scripts.constants"
-local config = require "scripts.config"
 local flib_data_util = require "__flib__.data-util"
 
 local name = constants.ENTITY_NAME

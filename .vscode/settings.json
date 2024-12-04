@@ -40,7 +40,9 @@
       }
     ],
     "[lua]": {
-      "editor.codeLens": false
+      "editor.codeLens": false,
+      "editor.formatOnSave": true,
+      "editor.formatOnSaveMode": "file"
     },
     "lua.targetVersion": "5.2",
     "Lua.workspace.checkThirdParty": "ApplyInMemory"

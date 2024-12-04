@@ -7,14 +7,18 @@ trim_trailing_whitespace = true
 
 [*.lua]
 # https://github.com/CppCXY/EmmyLuaCodeStyle/blob/master/docs/format_config_EN.md
-# Basic options
+## Basic options
 quote_style = double
 call_arg_parentheses = keep
+continuation_indent = 4
+# EmmyLua's line breaking logic is pretty terrible,
+# so better to manually take care of it.
+max_line_length = unset
 trailing_table_separator = never
-# Whitespace options
+## Whitespace options
 space_around_table_field_list = true
 space_before_function_open_parenthesis = false
-space_before_function_call_optn_parenthesis = false
+space_before_function_call_open_parenthesis = false
 space_before_closure_open_parenthesis = false
 space_before_function_call_single_arg = true
 space_before_open_square_bracket = false
@@ -24,22 +28,34 @@ space_inside_square_brackets = false
 space_around_table_append_operator = false
 ignore_spaces_inside_function_call = false
 space_before_inline_comment = 1
-# Operator options
+# This unfortunately has to be set to `false` since it cannot differentiate between triple-dash (`---`)
+# and double-dash (`--`) comments.
+space_after_comment_dash = false
+## Operator options
 space_around_math_operator = true
+space_around_math_operator.exponent = false
 space_after_comma = true
 space_after_comma_in_for_statement = true
 space_around_concat_operator = true
-# Alignment options
+space_around_logical_operator = true
+space_around_assign_operator = true
+## Alignment options
 align_call_args = false
 align_function_params = false
 align_continuous_assign_statement = false
 align_continuous_rect_table_field = false
+# align_continuous_line_space = 2
 align_if_branch = false
 align_array_table = false
-# Other indentation settings
+align_continuous_similar_call_args = false
+align_continuous_inline_comment = false
+align_chain_expr = none
+## Other indentation settings
 never_indent_before_if_condition = false
 never_indent_comment_on_if_branch = false
-# Line spacing options
+keep_indents_on_empty_lines = false
+allow_non_indented_comments = false
+## Line spacing options
 line_space_after_if_statement = max(2)
 line_space_after_do_statement = max(2)
 line_space_after_while_statement = max(2)
@@ -49,9 +65,12 @@ line_space_after_local_or_assign_statement = max(2)
 line_space_after_function_statement = fixed(2)
 line_space_after_expression_statement = max(2)
 line_space_after_comment = max(2)
-# Line break options
+line_space_around_block = fixed(1)
+## Line break options
 break_all_list_when_line_exceed = false
 auto_collapse_lines = false
-# Preferences
+break_before_braces = false
+## Preferences
 ignore_space_after_colon = false
 remove_call_expression_list_finish_comma = true
+end_statement_with_semicolon = replace_with_newline

@@ -1,6 +1,7 @@
 local constants = require "scripts.constants"
 local config = require "scripts.config"
 local log = require("scripts.logger").control
+local cc_util = require "scripts.cc_util"
 local cc_gui = require "scripts.gui"
 local cc_remote = require "scripts.remote"
 local CybersynCombinator = require "scripts.combinator"
@@ -50,6 +51,7 @@ script.on_configuration_changed(function(data)
   -- end
   if not cc_changes then return end
   for player_index, player in pairs(game.players) do
+    player.request_translation({ "gui-train.empty-train-group" })
     if player.gui.screen[cc_gui.WINDOW_ID] then
       cc_gui:close(player_index, true)
     end
@@ -125,6 +127,9 @@ script.on_event(defines.events.on_built_entity, function(event)
   if event.tags and event.tags.description then
     combinator:set_description(event.tags.description --[[@as string]])
   end
+  if combinator:get_item_section_count() == 0 then
+    combinator:add_item_section()
+  end
   if not disable then return end
   combinator:disable()
   log:debug(entity.name, "[", entity.unit_number, "] disabled due to per-player setting")
@@ -145,6 +150,9 @@ local function on_script_raised_built_or_revive(event)
   local combinator = CybersynCombinator:new(entity, true)
   if event.tags and event.tags.description then
     combinator:set_description(event.tags.description --[[@as string]])
+  end
+  if combinator:get_item_section_count() == 0 then
+    combinator:add_item_section()
   end
   if not disable then return end
   combinator:disable()
@@ -170,6 +178,9 @@ script.on_event(defines.events.on_robot_built_entity, function(event)
   if event.tags and event.tags.description then
     combinator:set_description(event.tags.description --[[@as string]])
   end
+  if combinator:get_item_section_count() == 0 then
+    combinator:add_item_section()
+  end
   if not disable then return end
   combinator:disable()
   log:debug(entity.name, "[", entity.unit_number, "] disabled due to per-player or global setting")
@@ -184,9 +195,10 @@ local function on_cc_pasted(source, dest)
   local dest_combinator = CybersynCombinator:new(dest, needs_sort)
   if needs_sort then return end
   local src_combinator = CybersynCombinator:new(source, false)
-  dest_combinator:set_section_index(CybersynCombinator.SIGNALS_SECTION_ID, src_combinator:get_or_create_section(CybersynCombinator.SIGNALS_SECTION_ID).index)
-  dest_combinator:set_section_index(CybersynCombinator.CYBERSYN_SECTION_ID, src_combinator:get_or_create_section(CybersynCombinator.CYBERSYN_SECTION_ID).index)
-  dest_combinator:set_section_index(CybersynCombinator.NETWORK_SECTION_ID, src_combinator:get_or_create_section(CybersynCombinator.NETWORK_SECTION_ID).index)
+  dest_combinator:set_section_index(CybersynCombinator.CYBERSYN_SECTION_ID,
+    src_combinator:get_or_create_section(CybersynCombinator.CYBERSYN_SECTION_ID).index)
+  dest_combinator:set_section_index(CybersynCombinator.NETWORK_SECTION_ID,
+    src_combinator:get_or_create_section(CybersynCombinator.NETWORK_SECTION_ID).index)
 end
 
 ---@param player_index integer
@@ -196,21 +208,21 @@ local function on_am_pasted(player_index, source, dest)
   local speed = source.crafting_speed
   local recipe, quality = source.get_recipe()
   local combinator = CybersynCombinator:new(dest, false)
-  combinator:clear_item_slots()
+  combinator:remove_item_sections()
   if not recipe then return end
   local negative = settings.get_player_settings(player_index)[constants.SETTINGS.NEGATIVE_SIGNALS].value == true
   local quality_name = quality and quality.name or "normal"
   local crafting_time = recipe.energy
   local craft_count = 30 / (crafting_time / speed)
+  local section = combinator:add_item_section()
+  if not section then return end
   for i, ingredient in pairs(recipe.ingredients) do
     local count = math.ceil(ingredient.amount * craft_count)
     local ingredient_quality = ingredient.type == "fluid" and "normal" or quality_name
     if negative then count = count * -1 end
-    if i <= config.slot_count then
-      ---@type Signal
-      local signal = { count = count, signal = { type = ingredient.type, name = ingredient.name, quality = ingredient_quality } }
-      combinator:set_item_slot(i, signal)
-    end
+    ---@type Signal
+    local signal = { count = count, signal = { type = ingredient.type, name = ingredient.name, quality = ingredient_quality } }
+    combinator:set_item_slot(section.index, i, signal)
   end
 end
 
@@ -233,6 +245,33 @@ script.on_event(defines.events.on_entity_settings_pasted, function(event)
   elseif src_type == "assembling-machine" then
     on_am_pasted(event.player_index, src, dest)
   end
+end)
+
+script.on_event(defines.events.on_string_translated, function(event)
+  log:debug("on_string_translated: ", serpent.line(event))
+  if not event.translated then return end
+  if not type(event.localised_string) == "table" then return end
+  local key = event.localised_string[1]
+  if key ~= "gui-train.empty-train-group" then return end
+  local player_data = cc_util.get_player_data(event.player_index)
+  if not player_data then return end
+  if not player_data.translations then player_data.translations = {} end
+  player_data.translations[key] = event.result
+  log:debug("on_string_translated: ", key, " = ", event.result)
+end)
+
+script.on_event(defines.events.on_player_joined_game, function(event)
+  local player = game.get_player(event.player_index)
+  if not player then return end
+  log:debug("Player ", event.player_index, " joined, requesting translation")
+  player.request_translation({ "gui-train.empty-train-group" })
+end)
+
+script.on_event(defines.events.on_player_locale_changed, function(event)
+  local player = game.get_player(event.player_index)
+  if not player then return end
+  log:debug("Locale changed for player ", event.player_index, ", requesting translation")
+  player.request_translation({ "gui-train.empty-train-group" })
 end)
 
 local function sort_combinator(command)

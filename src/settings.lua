@@ -32,15 +32,6 @@ data:extend {
   },
   {
     type = "int-setting",
-    name = NAMES.SLOT_ROWS,
-    setting_type = "startup",
-    default_value = 4,
-    minimum_value = 1,
-    maximum_value = 64,
-    order = "c[cybersyn]-c[combinator]-s[slotrows]"
-  },
-  {
-    type = "int-setting",
     name = NAMES.SLOT_COUNT_WAGON,
     setting_type = "startup",
     default_value = 1000,

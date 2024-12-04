@@ -27,6 +27,50 @@ styles["cybersyn-combinator_cs-signal-reset"] = {
   horizontally_stretchable = "off"
 }
 
+styles["cybersyn-combinator_signal-button"] = {
+  type = "button_style",
+  parent = "flib_slot_button_default"
+}
+
+styles["cybersyn-combinator_signal-button_pressed"] = {
+  type = "button_style",
+  parent = "flib_selected_slot_button_default"
+}
+
+-- styles["cybersyn-combinator_signal-button_disabled"] = {
+--   type = "button_style",
+--   parent = "flib_slot_button_default",
+--   draw_grayscale_picture = true,
+--   default_graphical_set = {
+--     base = {
+--       border = 4, position = { 0, 0 }, size = 80,
+--       filename = "__cybersyn-combinator__/graphics/gui/disabled-slot-button-tileset.png"
+--     },
+--     shadow = offset_by_2_rounded_corners_glow(default_dirt_color)
+--   },
+--   hovered_graphical_set = {
+--     base = {
+--       border = 4, position = { 80, 0 }, size = 80,
+--       filename = "__cybersyn-combinator__/graphics/gui/disabled-slot-button-tileset.png"
+--     },
+--     shadow = offset_by_2_rounded_corners_glow(default_dirt_color),
+--     glow = offset_by_2_rounded_corners_glow(default_glow_color)
+--   },
+--   clicked_graphical_set = {
+--     base = {
+--       border = 4, position = { 160, 0 }, size = 80,
+--       filename = "__cybersyn-combinator__/graphics/gui/disabled-slot-button-tileset.png"
+--     },
+--     shadow = offset_by_2_rounded_corners_glow(default_dirt_color)
+--   }
+-- }
+
+-- styles["cybersyn-combinator_signal-button_disabled_pressed"] = {
+--   type = "button_style",
+--   parent = "cybersyn-combinator_signal-button_disabled",
+--   default_graphical_set = styles["cybersyn-combinator_signal-button_disabled"].clicked_graphical_set
+-- }
+
 styles["cybersyn-combinator_signal-count"] = {
   type = "label_style",
   parent = "count_label",
@@ -56,12 +100,12 @@ styles["cybersyn-combinator_network-list_scroll-pane"] = {
   type = "scroll_pane_style",
   parent = "list_box_in_shallow_frame_scroll_pane",
   background_graphical_set = { -- rubber grid
-      position = { 282, 17 },
-      corner_size = 8,
-      overall_tiling_vertical_size = 22,
-      overall_tiling_vertical_spacing = 6,
-      overall_tiling_vertical_padding = 4,
-      overall_tiling_horizontal_padding = 4
+    position = { 282, 17 },
+    corner_size = 8,
+    overall_tiling_vertical_size = 22,
+    overall_tiling_vertical_spacing = 6,
+    overall_tiling_vertical_padding = 4,
+    overall_tiling_horizontal_padding = 4
   },
   vertically_stretchable = "on",
   horizontally_stretchable = "on",
@@ -89,6 +133,28 @@ styles["cybersyn-combinator_network-list_item-active"] = {
   default_vertical_offset = styles.button.selected_vertical_offset
 }
 
+styles["cybersyn-combinator_group-list_scroll-pane"] = {
+  type = "scroll_pane_style",
+  parent = "list_box_in_shallow_frame_under_subheader_scroll_pane",
+  padding = 0,
+  vertical_flow_style = {
+    type = "vertical_flow_style",
+    vertical_spacing = 0
+  }
+}
+
+styles["cybersyn-combinator_frame_transparent"] = {
+  type = "frame_style",
+  graphical_set = {
+    base = {
+      type = "composition",
+      filename = "__cybersyn-combinator__/graphics/frame/transparent-pixel.png",
+      corner_size = 1,
+      position = { 0, 0 }
+    }
+  }
+}
+
 styles["cybersyn-combinator_frame_semitransparent"] = {
   type = "frame_style",
   graphical_set = {
@@ -96,7 +162,7 @@ styles["cybersyn-combinator_frame_semitransparent"] = {
       type = "composition",
       filename = "__cybersyn-combinator__/graphics/frame/semitransparent-pixel.png",
       corner_size = 1,
-      position = {0, 0}
+      position = { 0, 0 }
     }
   }
 }
