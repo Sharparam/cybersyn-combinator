@@ -735,6 +735,7 @@ local function confirm_signal_value(player_index, state, clear_selected)
   local slot_button = state.selected_slot_button
   if slot_button and slot_button.valid then slot_button.style = "flib_slot_button_default" end
   local current = state.combinator:get_item_slot(state.selected_section_index, state.selected_slot)
+  if not current.signal or not current.signal.name then return end
   local value = resolve_textfield_number(state.signal_value_items, player_index, current.count or 0)
   if not value then
     state.signal_value_confirm.enabled = false

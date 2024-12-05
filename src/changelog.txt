@@ -1,12 +1,15 @@
 ---------------------------------------------------------------------------------------------------
 Version: 2.4.0
-Date: 2024-12-04
+Date: 2024-12-05
   Major Features:
     - Support for logistic sections and groups.
   Features:
     - Show circuit network connection info in GUI.
   Optimizations:
     - Better detection of existing signals/sections when copy-pasting.
+  Bugfixes:
+    - Fix pressing confirm button (default "E") while signal picker dialog is open causing a crash
+      under certain circumstances.
   Gui:
     - Make UI more consistent with base game UI by only allowing left click on some UI elements.
 ---------------------------------------------------------------------------------------------------
