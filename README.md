@@ -7,6 +7,9 @@
 
 A mod for Factorio that adds a special combinator for use with the [Project Cybersyn][cybersyn] mod.
 
+For more information on the mod features, check out the [information file](src/information.md).
+(The text in the information file is what's used for the mod portal description.)
+
 ## Usage
 
  1. Install mod
