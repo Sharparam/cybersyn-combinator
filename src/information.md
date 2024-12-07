@@ -14,21 +14,20 @@ with the new system. If this still doesn't work, there's also new commands added
 
 ## Features
 
- - More slots than a regular constant combinator (configurable)
  - Dedicated inputs for Cybersyn signals
    - Request threshold
    - Priority
    - Locked slots
  - Ability to input signals using stack counts
  - Panel to input network masks with options to display them in various formats.
- - You could use it instead of a constant combinator for purposes other than Cybersyn, if you want to (perhaps for the higher slot count)
+ - You could use it instead of a constant combinator for purposes other than Cybersyn, if you want to (perhaps for the bitmask features)
 
 ### Network masks
 
 On the left side of the combinator window is an area to input network masks.
 You can read more about how the masks themselves work on the [Cybersyn][cybersyn] mod page.
 
-At the moment, the interface only has manual input of mask values, but there's a plan to add a friendlier GUI option down the line.
+You can either input bitmask values by hand, or use the GUI encoder for a more visual way where you can toggle specific bits on or off with buttons (described in more detail below).
 
 There are options to display masks as decimal, hexadecimal, binary, or octal numbers, with or without a prefix.
 
