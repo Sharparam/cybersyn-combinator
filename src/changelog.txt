@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 Version: 2.4.0
-Date: 2024-12-05
+Date: 2024-12-07
   Major Features:
     - Support for logistic sections and groups.
   Features:
