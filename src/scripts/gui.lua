@@ -574,6 +574,7 @@ local function handle_signal_changed(event)
   state.selected_section_index = section_index
   state.selected_slot = slot
   state.selected_slot_button = element
+  state.selected_slot_button.label.caption = "0"
   state.combinator:set_item_slot(section_index, slot, signal)
   element.locked = true
   element.style = active and SLOT_BUTTON_PRESSED_STYLE or SLOT_BUTTON_DISABLED_PRESSED_STYLE
