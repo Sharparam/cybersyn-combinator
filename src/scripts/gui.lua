@@ -616,15 +616,22 @@ local function handle_signal_click(event)
     else
       update_totals(state)
     end
-  elseif event.button == defines.mouse_button_type.left and element.elem_value then
+  elseif event.button == defines.mouse_button_type.left then
     if state.selected_slot_button then
-      state.selected_slot_button.style = "flib_slot_button_default"
+      state.selected_section_index = nil
+      state.selected_slot = nil
+      state.selected_slot_button.style = SLOT_BUTTON_STYLE
+      state.signal_value_stacks.enabled = false
+      state.signal_value_items.enabled = false
+      state.signal_value_confirm.enabled = false
     end
-    state.selected_section_index = section_index
-    state.selected_slot = slot
-    state.selected_slot_button = element
-    element.style = active and SLOT_BUTTON_PRESSED_STYLE or SLOT_BUTTON_DISABLED_PRESSED_STYLE
-    change_signal_count(state, event.player_index)
+    if element.elem_value then
+      state.selected_section_index = section_index
+      state.selected_slot = slot
+      state.selected_slot_button = element
+      element.style = active and SLOT_BUTTON_PRESSED_STYLE or SLOT_BUTTON_DISABLED_PRESSED_STYLE
+      change_signal_count(state, event.player_index)
+    end
   end
 end
 
