@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.4.1
+Date: 2024-12-08
+  Bugfixes:
+    - Fix crash when selecting a new signal slot while already editing a different slot.
+  Gui:
+    - Fix caption for signal count not always showing a value under certain circumstances.
+---------------------------------------------------------------------------------------------------
 Version: 2.4.0
 Date: 2024-12-07
   Major Features:
