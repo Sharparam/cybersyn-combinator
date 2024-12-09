@@ -606,6 +606,11 @@ local function handle_signal_click(event)
       state.signal_value_items.enabled = false
       state.signal_value_confirm.enabled = false
     end
+    if state.selected_slot_button == element then
+      state.selected_slot_button = nil
+      state.selected_section_index = nil
+      state.selected_slot = nil
+    end
     if slot == total_count then
       for _, section_element in pairs(state.section_container.children) do
         if section_element.tags.section_index == section_index then
