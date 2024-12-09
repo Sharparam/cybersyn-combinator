@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.4.2
+Date: 2024-12-09
+  Bugfixes:
+    - Fix crash when clearing signal while editing it, followed by trying to set a new signal afterwards.
+---------------------------------------------------------------------------------------------------
 Version: 2.4.1
 Date: 2024-12-08
   Bugfixes:
