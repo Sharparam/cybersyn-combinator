@@ -600,7 +600,7 @@ local function handle_signal_click(event)
     element.locked = false
     element.elem_value = nil
     element.label.caption = ""
-    element.style = "flib_slot_button_default"
+    element.style = SLOT_BUTTON_STYLE
     if state.selected_section_index == section_index and state.selected_slot == slot then
       state.signal_value_stacks.enabled = false
       state.signal_value_items.enabled = false
