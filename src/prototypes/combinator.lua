@@ -3,9 +3,9 @@ local flib_data_util = require "__flib__.data-util"
 
 local name = constants.ENTITY_NAME
 local combi = flib_data_util.copy_prototype(data.raw["constant-combinator"]["constant-combinator"], name)
-combi.icon = "__cybersyn-combinator__/graphics/entity/combinator/cybersyn-combinator.png"
+combi.icon = "__cybersyn-combinator__/graphics/icons/cybersyn-combinator.png"
 combi.icon_size = 64
-combi.icon_mipmaps = nil
+combi.icon_mipmaps = 4
 combi.next_upgrade = nil
 combi.fast_replaceable_group = "constant-combinator"
 combi.sprites = make_4way_animation_from_spritesheet {
