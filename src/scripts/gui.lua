@@ -1423,6 +1423,9 @@ update_signal_table = function(state, signal_table, reset)
       local _, button = flib_gui.add(signal_table, {
         type = "choose-elem-button",
         style = button_style,
+        style_mods = {
+          padding = 0
+        },
         elem_type = "signal",
         handler = {
           [defines.events.on_gui_elem_changed] = handle_signal_changed,
@@ -1435,6 +1438,43 @@ update_signal_table = function(state, signal_table, reset)
         children = {
           {
             type = "label",
+            name = "comparator",
+            style = "cybersyn-combinator_signal-comparator",
+            style_mods = {
+              top_padding = -8
+            },
+            ignored_by_interaction = true,
+            caption = "",
+            visible = false
+          },
+          {
+            type = "flow",
+            name = "any_quality",
+            direction = "vertical",
+            ignored_by_interaction = true,
+            visible = false,
+            style_mods = {
+              size = 36,
+              vertical_align = "bottom",
+              margin = 0,
+              padding = 0,
+              bottom_padding = 4
+            },
+            children = {
+              {
+                type = "sprite",
+                sprite = "utility/any_quality",
+                resize_to_sprite = false,
+                style_mods = {
+                  size = 13,
+                  margin = 0
+                },
+                ignored_by_interaction = true
+              }
+            }
+          },
+          {
+            type = "label",
             name = "label",
             style = "cybersyn-combinator_signal-count",
             ignored_by_interaction = true,
@@ -1444,6 +1484,15 @@ update_signal_table = function(state, signal_table, reset)
       })
       if signal and signal.signal then
         button.elem_value = signal.signal
+        log:debug(serpent.line(signal.signal))
+        if signal.signal.comparator and signal.signal.quality then
+          button.comparator.visible = signal.signal.comparator ~= "="
+          button.comparator.caption = signal.signal.comparator
+        else
+          button.comparator.visible = false
+          button.comparator.caption = ""
+        end
+        button.any_quality.visible = signal.signal.quality == nil
         button.label.caption = format_signal_count(signal.count)
         button.locked = true
       end
@@ -1456,6 +1505,14 @@ update_signal_table = function(state, signal_table, reset)
       local signal = state.combinator:get_item_slot(section_index, slot)
       if signal and signal.signal then
         button.elem_value = signal.signal
+        if signal.signal.comparator and signal.signal.quality then
+          button.comparator.visible = signal.signal.comparator ~= "="
+          button.comparator.caption = signal.signal.comparator
+        else
+          button.comparator.visible = false
+          button.comparator.caption = ""
+        end
+        button.any_quality.visible = signal.signal.quality == nil
         button.label.caption = format_signal_count(signal.count)
         button.locked = true
       else

@@ -71,6 +71,18 @@ styles["cybersyn-combinator_signal-button_pressed"] = {
 --   default_graphical_set = styles["cybersyn-combinator_signal-button_disabled"].clicked_graphical_set
 -- }
 
+styles["cybersyn-combinator_signal-comparator"] = {
+  type = "label_style",
+  parent = "label",
+  font = "cybersyn-combinator_signal-comparator-font",
+  size = 36,
+  horizontal_align = "left",
+  vertical_align = "top",
+  margin = 0,
+  padding = 0,
+  parent_hovered_font_color = { 1, 1, 1 }
+}
+
 styles["cybersyn-combinator_signal-count"] = {
   type = "label_style",
   parent = "count_label",
