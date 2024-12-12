@@ -6,6 +6,8 @@ Date: 2024-12-12
       (This happened when sharing logistic sections with requester entities that are able to set a max amount.)
     - Fix issues where trying to set some signals and/or values could cause errors depending on existing signals in
       other slots (it will now show an error message for the player instead).
+  Graphics:
+    - Improve display of non-constant signals in output signals.
 ---------------------------------------------------------------------------------------------------
 Version: 2.4.4
 Date: 2024-12-12
