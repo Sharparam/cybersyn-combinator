@@ -96,6 +96,8 @@ local function calc_slot_count(section)
   return slot_rows * SLOT_COL_COUNT
 end
 
+local handlers = {}
+
 local cc_gui = {
   WINDOW_ID = WINDOW_ID,
   ENCODER_ID = ENCODER_ID
@@ -424,8 +426,6 @@ local function set_cs_signal_value(element, player, update_element)
   if update_element then element.text = tostring(value) end
 end
 
-local handle_network_list_item_click
-
 --- @param player PlayerIdentification?
 --- @param state UiState?
 local function refresh_network_list(player, state)
@@ -458,7 +458,7 @@ local function refresh_network_list(player, state)
       caption = rich,
       tooltip = { "cybersyn-combinator-window.network-list-item-tooltip", dec, hex, bin, oct },
       handler = {
-        [defines.events.on_gui_click] = handle_network_list_item_click
+        [defines.events.on_gui_click] = handlers.network_list_item_click
       },
       tags = {
         slot = slot,
@@ -498,13 +498,13 @@ local function add_network_mask(player, state)
 end
 
 --- @param event EventData.on_gui_click
-local function handle_close(event)
+function handlers.close(event)
   log:debug("close button clicked")
   cc_gui:close(event.player_index)
 end
 
 --- @param event EventData.on_gui_click
-local function handle_dialog_close(event)
+function handlers.dialog_close(event)
   log:debug("dialog close button clicked")
   local player = game.get_player(event.player_index)
   local state = get_player_state(event.player_index)
@@ -515,7 +515,7 @@ local function handle_dialog_close(event)
 end
 
 --- @param event EventData.on_gui_switch_state_changed
-local function handle_on_off(event)
+function handlers.on_off(event)
   local element = event.element
   if not element then return end
   local enabled = element.switch_state == "right"
@@ -536,7 +536,7 @@ local update_signal_sections
 local update_signal_table
 
 --- @param event EventData.on_gui_elem_changed
-local function handle_signal_changed(event)
+function handlers.signal_changed(event)
   local element = event.element
   local state = get_player_state(event.player_index)
   if not state then return end
@@ -582,7 +582,7 @@ local function handle_signal_changed(event)
 end
 
 --- @param event EventData.on_gui_click
-local function handle_signal_click(event)
+function handlers.signal_click(event)
   local element = event.element
   local state = get_player_state(event.player_index)
   if not state then return end
@@ -641,7 +641,7 @@ local function handle_signal_click(event)
 end
 
 --- @param event EventData.on_gui_text_changed
-local function handle_signal_value_changed(event)
+function handlers.signal_value_changed(event)
   local element = event.element
   local state = get_player_state(event.player_index)
   if not state then return end
@@ -657,7 +657,7 @@ local function handle_signal_value_changed(event)
     if state.stack_size == nil then
       -- Try to recover stack size
       if state.selected_section_index == nil or state.selected_slot == nil then
-        log:error("Unexpected nil values in handle_signal_value_changed while handling change in ", element.name, " please tell a developer")
+        log:error("Unexpected nil values in handlers.signal_value_changed while handling change in ", element.name, " please tell a developer")
         return
       end
       log:warn("stack size for current selection unexpectedly nil")
@@ -731,7 +731,7 @@ local function set_new_signal_value(player_index, state, value, clear_selected)
 end
 
 --- @param event EventData.on_gui_confirmed
-local function handle_signal_value_confirmed(event)
+function handlers.signal_value_confirmed(event)
   local state = get_player_state(event.player_index)
   if not state or not state.selected_section_index or not state.selected_slot then return end
   local slot_button = state.selected_slot_button
@@ -770,7 +770,7 @@ local function confirm_signal_value(player_index, state, clear_selected)
 end
 
 --- @param event EventData.on_gui_click
-local function handle_signal_value_confirm(event)
+function handlers.signal_value_confirm(event)
   local state = get_player_state(event.player_index)
   confirm_signal_value(event.player_index, state, true)
   -- if not state or not state.selected_slot then return end
@@ -786,7 +786,7 @@ local function handle_signal_value_confirm(event)
 end
 
 --- @param event EventData.on_gui_click
-local function handle_dimmer_click(event)
+function handlers.dimmer_click(event)
   local state = get_player_state(event.player_index)
   if not state then return end
   local player = game.get_player(event.player_index)
@@ -817,7 +817,7 @@ local function create_dimmer(player_index)
       use_header_filler = false
     },
     handler = {
-      [defines.events.on_gui_click] = handle_dimmer_click
+      [defines.events.on_gui_click] = handlers.dimmer_click
     }
   })
   dimmer.location = { 0, 0 }
@@ -860,14 +860,14 @@ local function toggle_logistic_group_search(state)
 end
 
 --- @param event EventData.on_gui_click
-local function handle_logistic_group_search_click(event)
+function handlers.logistic_group_search_click(event)
   local state = get_player_state(event.player_index)
   if not state then return end
   toggle_logistic_group_search(state)
 end
 
 --- @param event EventData.on_gui_text_changed
-local function handle_logistic_group_search_text_changed(event)
+function handlers.logistic_group_search_text_changed(event)
   local state = get_player_state(event.player_index)
   if not state then return end
   local filter = event.element.text:upper()
@@ -920,17 +920,17 @@ local function confirm_logistic_group(player_index, close)
 end
 
 --- @param event EventData.on_gui_confirmed
-local function handle_logistic_group_confirmed(event)
+function handlers.logistic_group_confirmed(event)
   confirm_logistic_group(event.player_index, true)
 end
 
 --- @param event EventData.on_gui_click
-local function handle_logistic_group_confirm(event)
+function handlers.logistic_group_confirm(event)
   confirm_logistic_group(event.player_index, true)
 end
 
 --- @param event EventData.on_gui_click
-local function handle_logistic_group_item_click(event)
+function handlers.logistic_group_item_click(event)
   local element = event.element
   local group = element.tags.group --[[@as string?]]
   if not group then return end
@@ -973,7 +973,7 @@ local function make_logistic_group_item(name, count, is_empty)
           group = group
         },
         handler = {
-          [defines.events.on_gui_click] = handle_logistic_group_item_click
+          [defines.events.on_gui_click] = handlers.logistic_group_item_click
         },
         children = {
           {
@@ -1063,7 +1063,7 @@ local function create_logistic_group_edit(player_index, state, section_id, secti
           sprite = "utility/search",
           mouse_button_filter = { "left" },
           handler = {
-            [defines.events.on_gui_click] = handle_logistic_group_search_click
+            [defines.events.on_gui_click] = handlers.logistic_group_search_click
           }
         },
         {
@@ -1073,7 +1073,7 @@ local function create_logistic_group_edit(player_index, state, section_id, secti
           sprite = "utility/close",
           mouse_button_filter = { "left" },
           handler = {
-            [defines.events.on_gui_click] = handle_dialog_close
+            [defines.events.on_gui_click] = handlers.dialog_close
           }
         }
       }
@@ -1104,7 +1104,7 @@ local function create_logistic_group_edit(player_index, state, section_id, secti
               text = section and section.group or "",
               icon_selector = true,
               handler = {
-                [defines.events.on_gui_confirmed] = handle_logistic_group_confirmed
+                [defines.events.on_gui_confirmed] = handlers.logistic_group_confirmed
               }
             },
             {
@@ -1124,7 +1124,7 @@ local function create_logistic_group_edit(player_index, state, section_id, secti
               allow_decimal = true,
               allow_negative = false,
               handler = {
-                [defines.events.on_gui_confirmed] = handle_logistic_group_confirmed
+                [defines.events.on_gui_confirmed] = handlers.logistic_group_confirmed
               }
             },
             {
@@ -1134,7 +1134,7 @@ local function create_logistic_group_edit(player_index, state, section_id, secti
               sprite = "utility/enter",
               mouse_button_filter = { "left" },
               handler = {
-                [defines.events.on_gui_click] = handle_logistic_group_confirm
+                [defines.events.on_gui_click] = handlers.logistic_group_confirm
               }
             }
           }
@@ -1201,7 +1201,7 @@ local function create_logistic_group_edit(player_index, state, section_id, secti
             left_margin = 132
           },
           handler = {
-            [defines.events.on_gui_text_changed] = handle_logistic_group_search_text_changed
+            [defines.events.on_gui_text_changed] = handlers.logistic_group_search_text_changed
           }
         },
         content
@@ -1234,7 +1234,7 @@ local function create_logistic_group_edit(player_index, state, section_id, secti
 end
 
 --- @param event EventData.on_gui_click
-local function handle_logistic_group_edit_click(event)
+function handlers.logistic_group_edit_click(event)
   local state = get_player_state(event.player_index)
   if not state then return end
   log:debug("Showing logistic group editor")
@@ -1244,7 +1244,7 @@ local function handle_logistic_group_edit_click(event)
 end
 
 ---@param event EventData.on_gui_checked_state_changed
-local function handle_signal_section_group_checked_state_changed(event)
+function handlers.signal_section_group_checked_state_changed(event)
   local section_index = event.element.tags.section_index
   if not section_index then return end
   local state = get_player_state(event.player_index)
@@ -1263,7 +1263,7 @@ local function handle_signal_section_group_checked_state_changed(event)
 end
 
 ---@param event EventData.on_gui_click
-local function handle_signal_section_remove_clicked(event)
+function handlers.signal_section_remove_clicked(event)
   local section_index = event.element.tags.section_index
   if not section_index then return end
   local state = get_player_state(event.player_index)
@@ -1296,7 +1296,7 @@ local function create_signal_section(section)
         caption = caption,
         state = active,
         handler = {
-          [defines.events.on_gui_checked_state_changed] = handle_signal_section_group_checked_state_changed
+          [defines.events.on_gui_checked_state_changed] = handlers.signal_section_group_checked_state_changed
         },
         tags = {
           section_index = section_index
@@ -1308,7 +1308,7 @@ local function create_signal_section(section)
         sprite = "utility/rename_icon",
         mouse_button_filter = { "left" },
         handler = {
-          [defines.events.on_gui_click] = handle_logistic_group_edit_click
+          [defines.events.on_gui_click] = handlers.logistic_group_edit_click
         },
         tags = {
           section_index = section_index
@@ -1327,7 +1327,7 @@ local function create_signal_section(section)
         sprite = "utility/trash",
         mouse_button_filter = { "left" },
         handler = {
-          [defines.events.on_gui_click] = handle_signal_section_remove_clicked
+          [defines.events.on_gui_click] = handlers.signal_section_remove_clicked
         },
         tags = {
           section_index = section_index
@@ -1428,8 +1428,8 @@ update_signal_table = function(state, signal_table, reset)
         },
         elem_type = "signal",
         handler = {
-          [defines.events.on_gui_elem_changed] = handle_signal_changed,
-          [defines.events.on_gui_click] = handle_signal_click
+          [defines.events.on_gui_elem_changed] = handlers.signal_changed,
+          [defines.events.on_gui_click] = handlers.signal_click
         },
         tags = {
           section_index = section_index,
@@ -1560,7 +1560,7 @@ update_signal_sections = function(state, reset, reset_section_index)
 end
 
 ---@param event EventData.on_gui_checked_state_changed
-local function handle_cs_group_checked_state_changed(event)
+function handlers.cs_group_checked_state_changed(event)
   local enabled = event.element.state
   local state = get_player_state(event.player_index)
   if not state then return end
@@ -1570,21 +1570,21 @@ local function handle_cs_group_checked_state_changed(event)
 end
 
 --- @param event EventData.on_gui_text_changed
-local function handle_cs_signal_value_changed(event)
+function handlers.cs_signal_value_changed(event)
   local element = event.element
   if not element then return end
   set_cs_signal_value(element, event.player_index, false)
 end
 
 --- @param event EventData.on_gui_confirmed
-local function handle_cs_signal_value_confirmed(event)
+function handlers.cs_signal_value_confirmed(event)
   local element = event.element
   if not element then return end
   set_cs_signal_value(element, event.player_index, true)
 end
 
 --- @param event EventData.on_gui_click
-local function handle_cs_signal_reset(event)
+function handlers.cs_signal_reset(event)
   local element = event.element
   if not element then return end
   local state = get_player_state(event.player_index)
@@ -1601,7 +1601,7 @@ local function handle_cs_signal_reset(event)
 end
 
 ---@param event EventData.on_gui_checked_state_changed
-local function handle_network_group_checked_state_changed(event)
+function handlers.network_group_checked_state_changed(event)
   local state = get_player_state(event.player_index)
   if not state then return end
   local enabled = event.element.state
@@ -1612,7 +1612,7 @@ end
 --- @param event EventData.on_gui_elem_changed
 --- @param on_failure function
 --- @return Signal|false
-local function handle_mask_signal_changed(event, on_failure)
+function handlers.mask_signal_changed(event, on_failure)
   local state = get_player_state(event.player_index)
   if not state then return false end
   local element = event.element
@@ -1646,10 +1646,10 @@ local function handle_mask_signal_changed(event, on_failure)
 end
 
 --- @param event EventData.on_gui_elem_changed
-local function handle_network_mask_signal_changed(event)
+function handlers.network_mask_signal_changed(event)
   local state = get_player_state(event.player_index)
   if not state then return end
-  local signal = handle_mask_signal_changed(event, function()
+  local signal = handlers.mask_signal_changed(event, function()
     state.network_mask.signal = nil
     state.network_mask.add_button.enabled = false
   end)
@@ -1677,7 +1677,7 @@ local function handle_network_mask_signal_changed(event)
 end
 
 --- @param event EventData.on_gui_click
-local function handle_network_mask_signal_click(event)
+function handlers.network_mask_signal_click(event)
   local state = get_player_state(event.player_index)
   if not state then return end
   if event.button == defines.mouse_button_type.right then
@@ -1687,7 +1687,7 @@ local function handle_network_mask_signal_click(event)
 end
 
 --- @param event EventData.on_gui_text_changed
-local function handle_network_mask_changed(event)
+function handlers.network_mask_changed(event)
   local state = get_player_state(event.player_index)
   if not state then return end
   local text = event.element.text
@@ -1703,13 +1703,13 @@ local function handle_network_mask_changed(event)
 end
 
 --- @param event EventData.on_gui_confirmed
-local function handle_network_mask_confirmed(event)
+function handlers.network_mask_confirmed(event)
   local state = get_player_state(event.player_index)
   add_network_mask(event.player_index, state)
 end
 
 --- @param event EventData.on_gui_click
-local function handle_network_mask_add_click(event)
+function handlers.network_mask_add_click(event)
   local state = get_player_state(event.player_index)
   add_network_mask(event.player_index, state)
 end
@@ -1749,13 +1749,13 @@ local function confirm_description(player_index, close)
 end
 
 --- @param event EventData.on_gui_click
-local function handle_encoder_confirm(event)
+function handlers.encoder_confirm(event)
   log:debug("encoder confirm button clicked")
   confirm_encoder(event.player_index, true)
 end
 
 --- @param event EventData.on_gui_click
-local function handle_description_edit_confirm(event)
+function handlers.description_edit_confirm(event)
   log:debug("description edit confirm button clicked")
   confirm_description(event.player_index, true)
 end
@@ -1787,10 +1787,10 @@ local function refresh_encoder(player_index, state, update_textfield)
 end
 
 --- @param event EventData.on_gui_elem_changed
-local function handle_encoder_signal_changed(event)
+function handlers.encoder_signal_changed(event)
   local state = get_player_state(event.player_index)
   if not state then return end
-  local signal = handle_mask_signal_changed(event, function()
+  local signal = handlers.mask_signal_changed(event, function()
     state.encoder.signal_button.elem_value = nil
   end)
   refresh_encoder(event.player_index, state, true)
@@ -1800,14 +1800,14 @@ local function handle_encoder_signal_changed(event)
 end
 
 --- @param event EventData.on_gui_click
-local function handle_encoder_signal_click(event)
+function handlers.encoder_signal_click(event)
   local state = get_player_state(event.player_index)
   if not state then return end
   refresh_encoder(event.player_index, state, true)
 end
 
 --- @param event EventData.on_gui_text_changed
-local function handle_encoder_mask_changed(event)
+function handlers.encoder_mask_changed(event)
   local state = get_player_state(event.player_index)
   if not state then return end
   local text = event.element.text
@@ -1817,13 +1817,13 @@ local function handle_encoder_mask_changed(event)
 end
 
 -- --- @param event EventData.on_gui_confirmed
--- local function handle_encoder_mask_confirmed(event)
+-- function handlers.encoder_mask_confirmed(event)
 --   local state = get_player_state(event.player_index)
 --   if not state then return end
 -- end
 
 --- @param event EventData.on_gui_click
-local function handle_encoder_bit_button_click(event)
+function handlers.encoder_bit_button_click(event)
   local state = get_player_state(event.player_index)
   if not state then return end
   local index = event.element.tags.index
@@ -1834,7 +1834,7 @@ local function handle_encoder_bit_button_click(event)
 end
 
 --- @param event EventData.on_gui_click
-local function handle_encoder_all(event)
+function handlers.encoder_all(event)
   local state = get_player_state(event.player_index)
   if not state then return end
   state.encoder.mask = 0xFFFFFFFF
@@ -1842,7 +1842,7 @@ local function handle_encoder_all(event)
 end
 
 --- @param event EventData.on_gui_click
-local function handle_encoder_none(event)
+function handlers.encoder_none(event)
   local state = get_player_state(event.player_index)
   if not state then return end
   state.encoder.mask = 0
@@ -1925,8 +1925,8 @@ local function create_encoder(player_index, state)
                   elem_type = "signal",
                   style_mods = { width = 48, height = 48 },
                   handler = {
-                    [defines.events.on_gui_elem_changed] = handle_encoder_signal_changed,
-                    [defines.events.on_gui_click] = handle_encoder_signal_click
+                    [defines.events.on_gui_elem_changed] = handlers.encoder_signal_changed,
+                    [defines.events.on_gui_click] = handlers.encoder_signal_click
                   }
                 },
                 {
@@ -1938,8 +1938,8 @@ local function create_encoder(player_index, state)
                   clear_and_focus_on_right_click = true,
                   lose_focus_on_confirm = true,
                   handler = {
-                    [defines.events.on_gui_text_changed] = handle_encoder_mask_changed
-                    -- [defines.events.on_gui_confirmed] = handle_encoder_mask_confirmed
+                    [defines.events.on_gui_text_changed] = handlers.encoder_mask_changed
+                    -- [defines.events.on_gui_confirmed] = handlers.encoder_mask_confirmed
                   }
                 },
                 {
@@ -1979,13 +1979,13 @@ local function create_encoder(player_index, state)
                   type = "button",
                   caption = { "cybersyn-combinator-encoder.all" },
                   mouse_button_filter = { "left" },
-                  handler = handle_encoder_all
+                  handler = handlers.encoder_all
                 },
                 {
                   type = "button",
                   caption = { "cybersyn-combinator-encoder.none" },
                   mouse_button_filter = { "left" },
-                  handler = handle_encoder_none
+                  handler = handlers.encoder_none
                 }
               }
             },
@@ -2102,7 +2102,7 @@ local function create_encoder(player_index, state)
               caption = { "gui.cancel" },
               name = ENCODER_ID .. "_close",
               mouse_button_filter = { "left" },
-              handler = handle_dialog_close
+              handler = handlers.dialog_close
             },
             {
               type = "empty-widget",
@@ -2116,7 +2116,7 @@ local function create_encoder(player_index, state)
               caption = { "gui.confirm" },
               tooltip = nil,
               mouse_button_filter = { "left" },
-              handler = handle_encoder_confirm
+              handler = handlers.encoder_confirm
             }
           }
         }
@@ -2153,7 +2153,7 @@ local function create_encoder(player_index, state)
         index = i,
         bit_index = bit_index
       },
-      handler = handle_encoder_bit_button_click
+      handler = handlers.encoder_bit_button_click
     })
   end
   refresh_encoder(player_index, state, true)
@@ -2219,7 +2219,7 @@ local function create_description_edit(player_index, state)
               sprite = "utility/close",
               mouse_button_filter = { "left" },
               handler = {
-                [defines.events.on_gui_click] = handle_dialog_close
+                [defines.events.on_gui_click] = handlers.dialog_close
               }
             }
           }
@@ -2264,7 +2264,7 @@ local function create_description_edit(player_index, state)
                   caption = { "gui-edit-label.save-description" },
                   mouse_button_filter = { "left" },
                   handler = {
-                    [defines.events.on_gui_click] = handle_description_edit_confirm
+                    [defines.events.on_gui_click] = handlers.description_edit_confirm
                   }
                 }
               }
@@ -2287,7 +2287,7 @@ local function create_description_edit(player_index, state)
 end
 
 --- @param event EventData.on_gui_click
-handle_network_list_item_click = function(event)
+function handlers.network_list_item_click(event)
   local state = get_player_state(event.player_index)
   if not state then return end
   local element = event.element
@@ -2319,7 +2319,7 @@ handle_network_list_item_click = function(event)
 end
 
 ---@param event EventData.on_gui_click
-local function handle_logistic_section_add_click(event)
+function handlers.logistic_section_add_click(event)
   log:debug("add section button click")
   local state = get_player_state(event.player_index)
   if not state then return end
@@ -2332,7 +2332,7 @@ local function handle_logistic_section_add_click(event)
 end
 
 --- @param event EventData.on_gui_click
-local function handle_description_edit_click(event)
+function handlers.description_edit_click(event)
   local state = get_player_state(event.player_index)
   if not state then return end
   log:debug("Showing description editor")
@@ -2383,7 +2383,7 @@ local function create_window(player, combinator)
           mouse_button_filter = { "left" },
           sprite = "utility/close",
           name = WINDOW_ID .. "_close",
-          handler = handle_close
+          handler = handlers.close
         }
       }
     }
@@ -2463,7 +2463,7 @@ local function create_window(player, combinator)
                   },
                   state = network_section.active,
                   handler = {
-                    [defines.events.on_gui_checked_state_changed] = handle_network_group_checked_state_changed
+                    [defines.events.on_gui_checked_state_changed] = handlers.network_group_checked_state_changed
                   }
                 },
                 {
@@ -2475,7 +2475,7 @@ local function create_window(player, combinator)
                     section_id = CybersynCombinator.NETWORK_SECTION_ID
                   },
                   handler = {
-                    [defines.events.on_gui_click] = handle_logistic_group_edit_click
+                    [defines.events.on_gui_click] = handlers.logistic_group_edit_click
                   }
                 }
               }
@@ -2491,8 +2491,8 @@ local function create_window(player, combinator)
                   elem_type = "signal",
                   style_mods = { width = 32, height = 32 },
                   handler = {
-                    [defines.events.on_gui_elem_changed] = handle_network_mask_signal_changed,
-                    [defines.events.on_gui_click] = handle_network_mask_signal_click
+                    [defines.events.on_gui_elem_changed] = handlers.network_mask_signal_changed,
+                    [defines.events.on_gui_click] = handlers.network_mask_signal_click
                   }
                 },
                 {
@@ -2505,8 +2505,8 @@ local function create_window(player, combinator)
                   clear_and_focus_on_right_click = true,
                   lose_focus_on_confirm = true,
                   handler = {
-                    [defines.events.on_gui_text_changed] = handle_network_mask_changed,
-                    [defines.events.on_gui_confirmed] = handle_network_mask_confirmed
+                    [defines.events.on_gui_text_changed] = handlers.network_mask_changed,
+                    [defines.events.on_gui_confirmed] = handlers.network_mask_confirmed
                   }
                 },
                 {
@@ -2517,7 +2517,7 @@ local function create_window(player, combinator)
                   enabled = false,
                   mouse_button_filter = { "left" },
                   handler = {
-                    [defines.events.on_gui_click] = handle_network_mask_add_click
+                    [defines.events.on_gui_click] = handlers.network_mask_add_click
                   }
                 }
               }
@@ -2605,7 +2605,7 @@ local function create_window(player, combinator)
               },
               state = cs_section.active,
               handler = {
-                [defines.events.on_gui_checked_state_changed] = handle_cs_group_checked_state_changed
+                [defines.events.on_gui_checked_state_changed] = handlers.cs_group_checked_state_changed
               }
             },
             {
@@ -2617,7 +2617,7 @@ local function create_window(player, combinator)
                 section_id = CybersynCombinator.CYBERSYN_SECTION_ID
               },
               handler = {
-                [defines.events.on_gui_click] = handle_logistic_group_edit_click
+                [defines.events.on_gui_click] = handlers.logistic_group_edit_click
               }
             }
           }
@@ -2648,7 +2648,7 @@ local function create_window(player, combinator)
           type = "switch",
           name = "on_off",
           handler = {
-            [defines.events.on_gui_switch_state_changed] = handle_on_off
+            [defines.events.on_gui_switch_state_changed] = handlers.on_off
           },
           left_label_caption = { "gui-constant.off" },
           right_label_caption = { "gui-constant.on" }
@@ -2769,7 +2769,7 @@ local function create_window(player, combinator)
               caption = { "gui-logistic.add-section" },
               mouse_button_filter = { "left" },
               handler = {
-                [defines.events.on_gui_click] = handle_logistic_section_add_click
+                [defines.events.on_gui_click] = handlers.logistic_section_add_click
               }
             }
           }
@@ -2796,8 +2796,8 @@ local function create_window(player, combinator)
               allow_decimal = false,
               allow_negative = true,
               handler = {
-                [defines.events.on_gui_text_changed] = handle_signal_value_changed,
-                [defines.events.on_gui_confirmed] = handle_signal_value_confirmed
+                [defines.events.on_gui_text_changed] = handlers.signal_value_changed,
+                [defines.events.on_gui_confirmed] = handlers.signal_value_confirmed
               },
               tags = {
                 allow_decimal = true,
@@ -2823,8 +2823,8 @@ local function create_window(player, combinator)
               allow_decimal = false,
               allow_negative = true,
               handler = {
-                [defines.events.on_gui_text_changed] = handle_signal_value_changed,
-                [defines.events.on_gui_confirmed] = handle_signal_value_confirmed
+                [defines.events.on_gui_text_changed] = handlers.signal_value_changed,
+                [defines.events.on_gui_confirmed] = handlers.signal_value_confirmed
               },
               tags = {
                 allow_decimal = false,
@@ -2841,7 +2841,7 @@ local function create_window(player, combinator)
               enabled = false,
               mouse_button_filter = { "left" },
               handler = {
-                [defines.events.on_gui_click] = handle_signal_value_confirm
+                [defines.events.on_gui_click] = handlers.signal_value_confirm
               }
             }
           }
@@ -2904,7 +2904,7 @@ local function create_window(player, combinator)
           visible = not has_description,
           mouse_button_filter = { "left" },
           handler = {
-            [defines.events.on_gui_click] = handle_description_edit_click
+            [defines.events.on_gui_click] = handlers.description_edit_click
           }
         },
         {
@@ -2924,7 +2924,7 @@ local function create_window(player, combinator)
               sprite = "utility/rename_icon",
               mouse_button_filter = { "left" },
               handler = {
-                [defines.events.on_gui_click] = handle_description_edit_click
+                [defines.events.on_gui_click] = handlers.description_edit_click
               }
             }
           }
@@ -3057,8 +3057,8 @@ local function create_window(player, combinator)
       clear_and_focus_on_right_click = true,
       lose_focus_on_confirm = true,
       handler = {
-        [defines.events.on_gui_text_changed] = handle_cs_signal_value_changed,
-        [defines.events.on_gui_confirmed] = handle_cs_signal_value_confirmed
+        [defines.events.on_gui_text_changed] = handlers.cs_signal_value_changed,
+        [defines.events.on_gui_confirmed] = handlers.cs_signal_value_confirmed
       },
       tags = {
         signal_name = signal_name,
@@ -3075,7 +3075,7 @@ local function create_window(player, combinator)
       tooltip = { "cybersyn-combinator-window.cs-signal-reset" },
       mouse_button_filter = { "left" },
       handler = {
-        [defines.events.on_gui_click] = handle_cs_signal_reset
+        [defines.events.on_gui_click] = handlers.cs_signal_reset
       },
       tags = {
         signal_name = signal_name
@@ -3317,48 +3317,7 @@ function cc_gui:on_entity_destroyed(unit_number)
 end
 
 function cc_gui:register()
-  flib_gui.add_handlers {
-    [WINDOW_ID .. "_close"] = handle_close,
-    [WINDOW_ID .. "_on_off"] = handle_on_off,
-    [WINDOW_ID .. "_signal_changed"] = handle_signal_changed,
-    [WINDOW_ID .. "_signal_click"] = handle_signal_click,
-    [WINDOW_ID .. "_signal_value_changed"] = handle_signal_value_changed,
-    [WINDOW_ID .. "_signal_value_confirmed"] = handle_signal_value_confirmed,
-    [WINDOW_ID .. "_signal_value_confirm"] = handle_signal_value_confirm,
-    [WINDOW_ID .. "_cs_group_checked_state_changed"] = handle_cs_group_checked_state_changed,
-    [WINDOW_ID .. "_cs_signal_value_changed"] = handle_cs_signal_value_changed,
-    [WINDOW_ID .. "_cs_signal_value_confirmed"] = handle_cs_signal_value_confirmed,
-    [WINDOW_ID .. "_cs_signal_reset"] = handle_cs_signal_reset,
-    [WINDOW_ID .. "_network_group_checked_state_changed"] = handle_network_group_checked_state_changed,
-    [WINDOW_ID .. "_network_mask_signal_click"] = handle_network_mask_signal_click,
-    [WINDOW_ID .. "_network_mask_signal_changed"] = handle_network_mask_signal_changed,
-    [WINDOW_ID .. "_network_mask_changed"] = handle_network_mask_changed,
-    [WINDOW_ID .. "_network_mask_confirmed"] = handle_network_mask_confirmed,
-    [WINDOW_ID .. "_network_mask_add_click"] = handle_network_mask_add_click,
-    [WINDOW_ID .. "_network_list_item_click"] = handle_network_list_item_click,
-    [WINDOW_ID .. "_description_edit_click"] = handle_description_edit_click,
-    [WINDOW_ID .. "_logistic_group_edit_click"] = handle_logistic_group_edit_click,
-    [WINDOW_ID .. "_section_checkbox_checked_state_changed"] = handle_signal_section_group_checked_state_changed,
-    [WINDOW_ID .. "_section_remove_click"] = handle_signal_section_remove_clicked,
-    [WINDOW_ID .. "_add_section_click"] = handle_logistic_section_add_click,
-    [ENCODER_ID .. "_close"] = handle_dialog_close,
-    [ENCODER_ID .. "_confirm"] = handle_encoder_confirm,
-    [ENCODER_ID .. "_signal_changed"] = handle_encoder_signal_changed,
-    [ENCODER_ID .. "_signal_click"] = handle_encoder_signal_click,
-    [ENCODER_ID .. "_mask_changed"] = handle_encoder_mask_changed,
-    [ENCODER_ID .. "_bit_button_click"] = handle_encoder_bit_button_click,
-    [ENCODER_ID .. "_all"] = handle_encoder_all,
-    [ENCODER_ID .. "_none"] = handle_encoder_none,
-    [DESC_EDIT_ID .. "_close"] = handle_dialog_close,
-    [DESC_EDIT_ID .. "_confirm"] = handle_description_edit_confirm,
-    [LOGI_GROUP_EDIT_ID .. "_close"] = handle_dialog_close,
-    [LOGI_GROUP_EDIT_ID .. "_confirm"] = handle_logistic_group_confirm,
-    [LOGI_GROUP_EDIT_ID .. "_confirmed"] = handle_logistic_group_confirmed,
-    [LOGI_GROUP_EDIT_ID .. "_search_click"] = handle_logistic_group_search_click,
-    [LOGI_GROUP_EDIT_ID .. "_search_text_changed"] = handle_logistic_group_search_text_changed,
-    [LOGI_GROUP_EDIT_ID .. "_group_item_click"] = handle_logistic_group_item_click,
-    [DIMMER_ID .. "_click"] = handle_dimmer_click
-  }
+  flib_gui.add_handlers(handlers)
   flib_gui.handle_events()
   script.on_event(defines.events.on_gui_opened, function(event) self:on_gui_opened(event) end)
   script.on_event(defines.events.on_gui_closed, function(event) self:on_gui_closed(event) end)
