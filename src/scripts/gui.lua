@@ -1442,7 +1442,6 @@ update_signal_table = function(state, signal_table, reset)
           }
         }
       })
-      -- button.label.enabled = active
       if signal and signal.signal then
         button.elem_value = signal.signal
         button.label.caption = format_signal_count(signal.count)
@@ -1452,7 +1451,6 @@ update_signal_table = function(state, signal_table, reset)
   else
     for _, button in pairs(signal_table.children) do
       button.style = button_style
-      -- button.label.enabled = active
       local slot = button.tags.slot --[[@as uint]]
       if not slot then goto continue end
       local signal = state.combinator:get_item_slot(section_index, slot)
