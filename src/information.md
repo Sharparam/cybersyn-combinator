@@ -4,6 +4,20 @@ This mod adds a new fancy combinator to the game, made to be used with the [Proj
 
 It functions like a regular constant combinator, but has built-in support for setting the various Cybersyn-specific signals.
 
+## Missing Factorio APIs
+
+Currently (as of 2024-12-12), there are some APIs missing from Factorio to make some features work fully.
+
+With the new logistics section support introduced in v2.4.0, you can make use of logistic sections and groups for them
+just like in vanilla constant combinators, but it's currently impossible for mods to get the list of existing groups
+to show in the "Change logistic group" dialog.
+
+So for now, you will have to manually type the group names and reference them from vanilla combinators to see which
+ones you already have defined in your world.
+
+There is a thread on the forum for tracking the request to add the necessary APIs to make logistic groups work
+properly: https://forums.factorio.com/viewtopic.php?f=28&t=120136
+
 ## 2.0 changes
 
 With Factorio 2.0, the internal behaviour of constant combinators was changed.
