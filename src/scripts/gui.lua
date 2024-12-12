@@ -680,22 +680,33 @@ end
 --- @param value integer
 --- @param clear_selected boolean
 local function set_new_signal_value(player_index, state, value, clear_selected)
+  local player = game.get_player(player_index)
   local new_value = util.clamp(value, constants.INT32_MIN, constants.INT32_MAX)
   local convert = settings.get_player_settings(player_index)[constants.SETTINGS.NEGATIVE_SIGNALS].value == true
   local current = state.combinator:get_item_slot(state.selected_section_index, state.selected_slot)
   if convert and current.signal.type ~= "virtual" and new_value > 0 then
     new_value = -new_value
   end
-  state.combinator:set_item_slot_value(state.selected_section_index, state.selected_slot, new_value)
+  local success, error_msg = state.combinator:set_item_slot_value(state.selected_section_index, state.selected_slot, new_value)
+
+  if not success and player and player.valid then
+    player.play_sound { path = constants.CANNOT_BUILD_SOUND }
+    player.create_local_flying_text({ text = error_msg, create_at_cursor = true })
+    player.print(error_msg)
+  end
+
   state.signal_value_items.enabled = false
   state.signal_value_stacks.enabled = false
   state.signal_value_confirm.enabled = false
-  state.signal_value_items.text = tostring(new_value)
-  if state.stack_size then
-    local stacks = value / state.stack_size
-    state.signal_value_stacks.text = tostring(stacks >= 0 and ceil(stacks) or floor(stacks))
+
+  if success then
+    state.signal_value_items.text = tostring(new_value)
+    if state.stack_size then
+      local stacks = value / state.stack_size
+      state.signal_value_stacks.text = tostring(stacks >= 0 and ceil(stacks) or floor(stacks))
+    end
+    state.selected_slot_button.label.caption = format_signal_count(new_value)
   end
-  state.selected_slot_button.label.caption = format_signal_count(new_value)
   local section_index = state.selected_slot_button.tags.section_index --[[@as integer]]
   local section = state.combinator:get_item_section(section_index) --state.combinator:get_section_by_index(section_index)
   local slot = state.selected_slot
@@ -706,6 +717,7 @@ local function set_new_signal_value(player_index, state, value, clear_selected)
     state.selected_slot_button = nil
   end
   state.stack_size = nil
+  if not success then return end
   if slot == total_slots then
     for _, section_element in pairs(state.section_container.children) do
       if section_element.tags.section_index == section_index then

@@ -224,17 +224,19 @@ end
 
 --- @param name string
 --- @param value integer?
+--- @return boolean success
+--- @return string? error_msg
 function CC:set_cs_value(name, value)
-  if not self:is_valid_entity() then return end
+  if not self:is_valid_entity() then return false end
   if not config.cs_signals[name] then
     log:warn("set_cs_value: ", name, " is not a valid cybersyn signal")
-    return
+    return false
   end
 
   local slot = config.cs_signals[name].slot
 
   local section = self:get_or_create_section(CYBERSYN_SECTION_ID)
-  if not section then return end
+  if not section then return false end
 
   if value then
     local filter = {
@@ -245,23 +247,31 @@ function CC:set_cs_value(name, value)
       },
       min = value
     }
-    -- log:debug("setting CS signal ", name, " in slot ", slot, " to ", serpent.block(filter))
-    section.set_slot(slot, filter)
+
+    local success, error = pcall(section.set_slot, slot, filter)
+
+    if not success then
+      return false, type(error) == "string" and error or serpent.line(error)
+    end
   else
     section.clear_slot(slot)
   end
 
   self:validate_cs_signals()
+
+  return true
 end
 
 --- @param name string
+--- @return boolean success
+--- @return string? error_msg
 function CC:reset_cs_value(name)
   if not config.cs_signals[name] then
     log:warn("reset_cs_value: ", name, " is not a valid cybersyn signal")
-    return
+    return false
   end
 
-  self:set_cs_value(name, config.cs_signals[name].default)
+  return self:set_cs_value(name, config.cs_signals[name].default)
 end
 
 --- @param name string
@@ -383,16 +393,29 @@ end
 ---@param section_index integer?
 ---@param slot uint?
 ---@param value integer
+---@return boolean success
+---@return string? error
 function CC:set_item_slot_value(section_index, slot, value)
-  if not section_index then return end
-  if not slot then return end
-  if not self:is_valid_entity() then return end
+  if not section_index then return false end
+  if not slot then return false end
+  if not self:is_valid_entity() then return false end
   local section = self:get_item_section(section_index)
-  if not section then return end
+  if not section then return false end
   local filter = section.get_slot(slot)
-  if not filter or not filter.value then return end
+  if not filter or not filter.value then return false end
   filter.min = value
-  section.set_slot(slot, filter)
+  if filter.max and filter.min > filter.max then
+    filter.max = filter.min
+  end
+  if filter.value.comparator ~= "=" and filter.min ~= 0 then
+    filter.value.comparator = "="
+  end
+
+  local success, error = pcall(section.set_slot, slot, filter)
+
+  if success then return true end
+
+  return false, type(error) == "string" and error or serpent.line(error)
 end
 
 ---@param section_index integer?
@@ -454,8 +477,10 @@ end
 
 --- @param slot uint?
 --- @param value integer
+--- @return boolean success
+--- @return string? error_msg
 function CC:set_network_slot_value(slot, value)
-  self:set_slot_value(slot, value, NETWORK_SECTION_ID)
+  return self:set_slot_value(slot, value, NETWORK_SECTION_ID)
 end
 
 --- @param slot uint?
@@ -536,15 +561,28 @@ end
 --- @param slot uint?
 --- @param value integer
 --- @param section_id integer
+--- @return boolean success
+--- @return string? error_msg
 function CC:set_slot_value(slot, value, section_id)
-  if not self:is_valid_entity() then return end
-  if not slot then return end
+  if not self:is_valid_entity() then return false end
+  if not slot then return false end
   local section = self:get_or_create_section(section_id)
-  if not section then return end
+  if not section then return false end
   local filter = section.get_slot(slot)
-  if not filter or not filter.value then return end
+  if not filter or not filter.value then return false end
   filter.min = value
-  section.set_slot(slot, filter)
+  if filter.max and filter.min > filter.max then
+    filter.max = filter.min
+  end
+  if filter.value.comparator ~= "=" and filter.min ~= 0 then
+    filter.value.comparator = "="
+  end
+
+  local success, error = pcall(section.set_slot, slot, filter)
+
+  if success then return true end
+
+  return false, type(error) == "string" and error or serpent.line(error)
 end
 
 --- @param slot uint?
@@ -705,9 +743,15 @@ function CC:sort_signals()
         local cs_filter = cs_sec.get_slot(cs_slot)
         if cs_filter and cs_filter.value then
           cs_filter.min = cs_filter.min + count
-          cs_sec.set_slot(cs_slot, cs_filter)
+          local success, error = pcall(cs_sec.set_slot, cs_slot, cs_filter)
+          if not success then
+            log:error("Failed to set CS signal ", serpent.line(cs_filter), " in slot ", cs_slot, ": ", serpent.line(error))
+          end
         else
-          self:set_cs_value(name, count)
+          local success, error_msg = self:set_cs_value(name, count)
+          if not success then
+            log:error("Failed to set CS signal ", name, " to ", tostring(count), ": ", error_msg)
+          end
         end
         section.clear_slot(filter_index)
       elseif type == "virtual" then
