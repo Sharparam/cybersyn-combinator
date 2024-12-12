@@ -75,7 +75,6 @@ styles["cybersyn-combinator_signal-count"] = {
   type = "label_style",
   parent = "count_label",
   size = 36,
-  width = 36,
   horizontal_align = "right",
   vertical_align = "bottom",
   right_padding = 2,
