@@ -529,7 +529,7 @@ local function handle_on_off(event)
   state.status_label.caption = is_ghost and GHOST_STATUS_NAME or STATUS_NAMES[status] or DEFAULT_STATUS_NAME
 end
 
----@type fun(state: UiState, reset: boolean)
+---@type fun(state: UiState, reset: boolean, reset_section_index: integer?)
 local update_signal_sections
 
 ---@type fun(state: UiState, signal_table: LuaGuiElement, reset: boolean?)
@@ -898,7 +898,7 @@ local function confirm_logistic_group(player_index, close)
 
   update_cs_signals(state)
   refresh_network_list(player, state)
-  update_signal_sections(state, false)
+  update_signal_sections(state, false, state.logistic_group_edit.section.index)
 
   state.logistic_group_edit.confirmed = true
 
@@ -1465,7 +1465,8 @@ end
 
 ---@param state UiState
 ---@param reset boolean
-update_signal_sections = function(state, reset)
+---@param reset_section_index integer?
+update_signal_sections = function(state, reset, reset_section_index)
   if not state then return end
 
   local container = state.section_container
@@ -1485,7 +1486,7 @@ update_signal_sections = function(state, reset)
       local caption = create_logistic_section_caption(section)
       section_entry.header.checkbox.state = active
       section_entry.header.checkbox.caption = caption
-      update_signal_table(state, section_entry.signal_table, reset)
+      update_signal_table(state, section_entry.signal_table, reset or reset_section_index == section.index)
       ::continue::
     end
   end
