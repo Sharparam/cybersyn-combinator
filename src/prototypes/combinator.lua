@@ -5,7 +5,6 @@ local name = constants.ENTITY_NAME
 local combi = flib_data_util.copy_prototype(data.raw["constant-combinator"]["constant-combinator"], name)
 combi.icon = "__cybersyn-combinator__/graphics/icons/cybersyn-combinator.png"
 combi.icon_size = 64
-combi.icon_mipmaps = 4
 combi.next_upgrade = nil
 combi.fast_replaceable_group = "constant-combinator"
 combi.sprites = make_4way_animation_from_spritesheet {
@@ -15,7 +14,6 @@ combi.sprites = make_4way_animation_from_spritesheet {
       scale = 0.5,
       width = 114,
       height = 102,
-      frame_count = 1,
       shift = util.by_pixel(0, 5)
     },
     {
@@ -23,7 +21,6 @@ combi.sprites = make_4way_animation_from_spritesheet {
       scale = 0.5,
       width = 98,
       height = 66,
-      frame_count = 1,
       shift = util.by_pixel(8.5, 5.5),
       draw_as_shadow = true
     }
@@ -33,7 +30,6 @@ combi.sprites = make_4way_animation_from_spritesheet {
 local combi_item = flib_data_util.copy_prototype(data.raw.item["constant-combinator"], name)
 combi_item.icon = "__cybersyn-combinator__/graphics/icons/cybersyn-combinator.png"
 combi_item.icon_size = 64
-combi_item.icon_mipmaps = 4
 combi_item.subgroup = data.raw.item["train-stop"].subgroup
 combi_item.place_result = name
 
