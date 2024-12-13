@@ -1,49 +1,50 @@
 {
-    "Lua.workspace.library": [
-      "/home/sharparam/factorio/mods/flib",
-      "/home/sharparam/factorio/data",
-      "/home/sharparam/.config/Code/User/workspaceStorage/19194ab926a005c1b8add80c8d001947/justarandomgeek.factoriomod-debug/sumneko-3rd/factorio/library"
-    ],
-    "Lua.workspace.userThirdParty": [
-      "/home/sharparam/.config/Code/User/workspaceStorage/19194ab926a005c1b8add80c8d001947/justarandomgeek.factoriomod-debug/sumneko-3rd"
-    ],
-    "Lua.diagnostics.globals": [
-      "__DebugAdapter",
-      "__Profiler"
-    ],
-    "Lua.runtime.builtin": {
-      "io": "disable",
-      "os": "disable",
-      "math": "disable",
-      "debug": "disable",
-      "coroutine": "disable",
-      "package": "disable"
+  "Lua.workspace.library": [
+    "/home/sharparam/factorio/mods/flib",
+    "/home/sharparam/factorio/data",
+    "/home/sharparam/.config/Code/User/workspaceStorage/19194ab926a005c1b8add80c8d001947/justarandomgeek.factoriomod-debug/sumneko-3rd/factorio/library"
+  ],
+  "Lua.workspace.userThirdParty": [
+    "/home/sharparam/.config/Code/User/workspaceStorage/19194ab926a005c1b8add80c8d001947/justarandomgeek.factoriomod-debug/sumneko-3rd"
+  ],
+  "Lua.diagnostics.globals": ["__DebugAdapter", "__Profiler"],
+  "Lua.runtime.builtin": {
+    "io": "disable",
+    "os": "disable",
+    "math": "disable",
+    "debug": "disable",
+    "coroutine": "disable",
+    "package": "disable"
+  },
+  "Lua.runtime.version": "Lua 5.2",
+  "Lua.runtime.special": {
+    "__object_name": "type"
+  },
+  "Lua.runtime.plugin": "/home/sharparam/.config/Code/User/workspaceStorage/19194ab926a005c1b8add80c8d001947/justarandomgeek.factoriomod-debug/sumneko-3rd/factorio/plugin.lua",
+  "factorio.package.tagName": "v$VERSION",
+  "factorio.package.movedToCommitMessage": "Update version to $VERSION",
+  "factorio.package.preparingCommitMessage": "Prepare release of version $VERSION",
+  "factorio.package.zipLocation": "outside",
+  "[lua]": {
+    "editor.codeLens": false,
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file"
+  },
+  "lua.targetVersion": "5.2",
+  "Lua.workspace.checkThirdParty": "ApplyInMemory",
+  "factorio.versions": [
+    {
+      "name": "Stable",
+      "factorioPath": "/home/sharparam/games/factorio/latest/bin/x64/factorio"
     },
-    "Lua.runtime.version": "Lua 5.2",
-    "Lua.runtime.special": {
-      "__object_name": "type"
+    {
+      "name": "Space Age (Stable)",
+      "factorioPath": "/home/sharparam/games/factorio/sa_latest/bin/x64/factorio"
     },
-    "Lua.runtime.plugin": "/home/sharparam/.config/Code/User/workspaceStorage/19194ab926a005c1b8add80c8d001947/justarandomgeek.factoriomod-debug/sumneko-3rd/factorio/plugin.lua",
-    "factorio.package.tagName": "v$VERSION",
-    "factorio.package.movedToCommitMessage": "Update version to $VERSION",
-    "factorio.package.preparingCommitMessage": "Prepare release of version $VERSION",
-    "factorio.package.zipLocation": "outside",
-    "factorio.versions": [
-      {
-        "name": "Stable",
-        "factorioPath": "/home/sharparam/games/factorio/latest/bin/x64/factorio"
-      },
-      {
-        "name": "Space Age (Stable)",
-        "factorioPath": "/home/sharparam/games/factorio/sa_latest/bin/x64/factorio",
-        "active": true
-      }
-    ],
-    "[lua]": {
-      "editor.codeLens": false,
-      "editor.formatOnSave": true,
-      "editor.formatOnSaveMode": "file"
-    },
-    "lua.targetVersion": "5.2",
-    "Lua.workspace.checkThirdParty": "ApplyInMemory"
+    {
+      "name": "Spage Age (Experimental)",
+      "factorioPath": "/home/sharparam/games/factorio/sa_experimental/bin/x64/factorio",
+      "active": true
+    }
+  ]
 }
