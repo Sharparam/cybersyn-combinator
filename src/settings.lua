@@ -84,7 +84,7 @@ data:extend {
     type = "bool-setting",
     name = NAMES.ENABLE_EXPRESSIONS,
     setting_type = "runtime-per-user",
-    default_value = false,
+    default_value = true,
     order = "c[cybersyn]-c[combinator]-e[expressions]-e[enable]"
   },
   {
