@@ -549,7 +549,7 @@ function handlers.signal_changed(event)
   if not signal.signal then return end
   if not cc_util.is_valid_output_signal(signal) then
     element.elem_value = nil
-    element.style = "flib_slot_button_default"
+    element.style = SLOT_BUTTON_STYLE
     local player = game.get_player(event.player_index)
     if not player then return end
     player.play_sound { path = constants.CANNOT_BUILD_SOUND }
@@ -559,7 +559,7 @@ function handlers.signal_changed(event)
   local is_dupe, orig_slot = state.combinator:has_item_signal(signal.signal, section_index, slot)
   if is_dupe then
     element.elem_value = nil
-    element.style = "flib_slot_button_default"
+    element.style = SLOT_BUTTON_STYLE
     local player = game.get_player(event.player_index)
     if not player then return end
     player.play_sound { path = constants.CANNOT_BUILD_SOUND }
@@ -569,7 +569,7 @@ function handlers.signal_changed(event)
   end
   log:debug("elem changed in section", section_index, ", slot ", slot, ": ", serpent.line(element.elem_value))
   if state.selected_slot_button and state.selected_slot_button.valid then
-    state.selected_slot_button.style = "flib_slot_button_default"
+    state.selected_slot_button.style = SLOT_BUTTON_STYLE
   end
   state.selected_section_index = section_index
   state.selected_slot = slot
