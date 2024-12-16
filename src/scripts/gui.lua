@@ -543,7 +543,6 @@ function handlers.signal_changed(event)
   local section_index = element.tags.section_index --[[@as integer]]
   local section = state.combinator:get_item_section(section_index)
   if not section then return end
-  local active = section.active
   local slot = element.tags.slot --[[@as uint]]
   local signal = { signal = element.elem_value, count = 0 }
   if not signal.signal then return end
@@ -574,10 +573,10 @@ function handlers.signal_changed(event)
   state.selected_section_index = section_index
   state.selected_slot = slot
   state.selected_slot_button = element
-  state.selected_slot_button.label.caption = "0"
   state.combinator:set_item_slot(section_index, slot, signal)
   element.locked = true
-  element.style = active and SLOT_BUTTON_PRESSED_STYLE or SLOT_BUTTON_DISABLED_PRESSED_STYLE
+  element.style = SLOT_BUTTON_PRESSED_STYLE
+  element.label.caption = "0"
   change_signal_count(state, event.player_index)
 end
 
