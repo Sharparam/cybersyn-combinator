@@ -1399,7 +1399,6 @@ update_signal_table = function(state, signal_table, reset)
   if not signal_table or not signal_table.valid then return end
 
   local combinator = state.combinator
-  -- local section = combinator:get_or_create_section(CybersynCombinator.SIGNALS_SECTION_ID)
   local section = combinator:get_item_section(signal_table.tags.section_index)
 
   if not section then
