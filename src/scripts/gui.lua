@@ -622,14 +622,15 @@ function handlers.signal_click(event)
       update_totals(state)
     end
   elseif event.button == defines.mouse_button_type.left then
-    if state.selected_slot_button then
-      state.selected_section_index = nil
-      state.selected_slot = nil
+    state.selected_section_index = nil
+    state.selected_slot = nil
+    if state.selected_slot_button and state.selected_slot_button.valid then
       state.selected_slot_button.style = SLOT_BUTTON_STYLE
-      state.signal_value_stacks.enabled = false
-      state.signal_value_items.enabled = false
-      state.signal_value_confirm.enabled = false
     end
+    state.selected_slot_button = nil
+    state.signal_value_stacks.enabled = false
+    state.signal_value_items.enabled = false
+    state.signal_value_confirm.enabled = false
     if element.elem_value then
       state.selected_section_index = section_index
       state.selected_slot = slot
@@ -1413,6 +1414,18 @@ update_signal_table = function(state, signal_table, reset)
   local overlay_height = 40 * slot_rows
 
   if reset then
+    if state.selected_section_index == section_index then
+      if state.selected_slot_button and state.selected_slot_button.valid then
+        state.selected_slot_button.style = SLOT_BUTTON_STYLE
+      end
+      state.signal_value_stacks.enabled = false
+      state.signal_value_items.enabled = false
+      state.signal_value_confirm.enabled = false
+      state.selected_section_index = nil
+      state.selected_slot = nil
+      state.selected_slot_button = nil
+    end
+
     ---@diagnostic disable-next-line: undefined-field
     signal_table.clear()
 
@@ -1539,6 +1552,15 @@ update_signal_sections = function(state, reset, reset_section_index)
   local container = state.section_container
 
   if reset then
+    if state.selected_slot_button and state.selected_slot_button.valid then
+      state.selected_slot_button.style = SLOT_BUTTON_STYLE
+    end
+    state.signal_value_stacks.enabled = false
+    state.signal_value_items.enabled = false
+    state.signal_value_confirm.enabled = false
+    state.selected_section_index = nil
+    state.selected_slot = nil
+    state.selected_slot_button = nil
     container.clear()
     for section_index, section in state.combinator:iter_item_sections() do
       add_signal_section(state, section)
