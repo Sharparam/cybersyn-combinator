@@ -1,11 +1,15 @@
 ---------------------------------------------------------------------------------------------------
 Version: 2.4.5
-Date: 2024-12-12
+Date: 2024-12-16
+  Changes:
+    - Expressions in input fields will now be default enabled to match base game behaviour.
   Bugfixes:
     - Fix issue where setting a value larger than the max value in a shared filter would cause a crash.
       (This happened when sharing logistic sections with requester entities that are able to set a max amount.)
     - Fix issues where trying to set some signals and/or values could cause errors depending on existing signals in
       other slots (it will now show an error message for the player instead).
+    - Fix issue where game would crash if trying to edit a signal slot after deleting a section that contained
+      a signal being edited.
   Graphics:
     - Improve display of non-constant signals in output signals.
 ---------------------------------------------------------------------------------------------------
