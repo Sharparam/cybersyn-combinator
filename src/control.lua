@@ -58,15 +58,6 @@ script.on_configuration_changed(function(data)
   end
 end)
 
-script.on_load(function()
-  if not storage.player_data then return end
-  for _, player_data in pairs(storage.player_data) do
-    if player_data and player_data.state and player_data.state.combinator then
-      setmetatable(player_data.state.combinator, { __index = CybersynCombinator })
-    end
-  end
-end)
-
 script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
   local name = event.setting
   local tbl = config.cs_signals[name]

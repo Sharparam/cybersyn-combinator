@@ -16,6 +16,12 @@ local CC = {
   NETWORK_SECTION_ID = NETWORK_SECTION_ID
 }
 
+local CC_meta = {
+  __index = CC
+}
+
+script.register_metatable("CybersynCombinator_meta", CC_meta)
+
 --- @param name string?
 --- @return boolean
 local function should_emit_default(name)
@@ -43,11 +49,19 @@ function CC:new(entity, sort_all)
     error("CybersynCombinator:new: entity has to be a valid instance of " .. constants.ENTITY_NAME)
   end
 
-  local instance = setmetatable({ entity = entity }, { __index = self })
+  local instance = setmetatable({ entity = entity }, CC_meta)
 
   instance:validate(sort_all)
 
   return instance
+end
+
+--- Ensures class instance uses the correct metatable instance
+--- (the one that has been registered with the game).
+---
+--- The only purpose is usage in migration.
+function CC:ensure_metatable()
+  setmetatable(self, CC_meta)
 end
 
 --- @param sort_all boolean?
