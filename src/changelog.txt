@@ -4,6 +4,9 @@ Date: TBD
   Minor Features:
     - Add support for suffixes when using expression input (e.g. "1k" for 1 000 and "1M" for 1 000 000).
       Following suffixes are supported: "k", "M", "G", "B" (all suffixes are case insensitive).
+  Bugfixes:
+    - Fix crash when trying to modify fields in the GUI of a ghost after the entity was constructed and is no longer
+      a ghost.
 ---------------------------------------------------------------------------------------------------
 Version: 2.4.5
 Date: 2024-12-16
