@@ -110,6 +110,7 @@ end, entity_event_filters)
 script.on_event(defines.events.on_built_entity, function(event)
   local player = game.get_player(event.player_index)
   local entity = event.entity
+  cc_gui:on_entity_built(entity)
   if not player or not entity then return end
   local pname = player.name
   log:debug(entity.name, "[", entity.unit_number, "] built by ", pname)
@@ -130,6 +131,7 @@ end, entity_event_filters)
 local function on_script_raised_built_or_revive(event)
   local entity = event.entity
   if not entity then return end
+  cc_gui:on_entity_built(entity)
   local player = entity.last_user
   local disable = false
   if player then
@@ -156,6 +158,7 @@ script.on_event(defines.events.script_raised_revive, on_script_raised_built_or_r
 script.on_event(defines.events.on_robot_built_entity, function(event)
   local entity = event.entity
   if not entity then return end
+  cc_gui:on_entity_built(entity)
   local robot = event.robot
   local player = entity.last_user or robot.last_user
   local disable = false

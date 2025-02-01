@@ -3318,6 +3318,37 @@ function cc_gui:on_focus_search(event)
   set_logistic_group_search(state, true)
 end
 
+---@param entity LuaEntity?
+function cc_gui:on_entity_built(entity)
+  if not entity then return end
+  local unit_number = entity.unit_number
+  ---@type uint?
+  local ghost_unit_number = nil
+  if entity.name == "entity-ghost" then
+    ghost_unit_number = entity.ghost_unit_number
+  end
+  if not unit_number and not ghost_unit_number then return end
+  log:debug("entity built: ", unit_number, " (", ghost_unit_number, ")")
+  for _, player in pairs(game.players) do
+    if not player or not player.valid then goto continue end
+    local screen = player.gui.screen
+    local window = screen[WINDOW_ID]
+    if not window or not window.tags.unit_number then goto continue end
+    log:debug("current window unit number: ", window.tags.unit_number)
+    if window.tags.unit_number == unit_number or window.tags.unit_number == ghost_unit_number then
+      log:debug("closing window")
+      self:close(player.index)
+      goto continue
+    end
+    local state = get_player_state(player)
+    if state and (not state.entity or not state.entity.valid) then
+      log:debug("closing window, entity no longer valid")
+      self:close(player.index)
+    end
+    ::continue::
+  end
+end
+
 --- @param unit_number uint?
 function cc_gui:on_entity_destroyed(unit_number)
   if not unit_number then return end
