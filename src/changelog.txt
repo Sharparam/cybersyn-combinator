@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 Version: 2.5.0
-Date: TBD
+Date: 2025-02-01
   Minor Features:
     - Add support for suffixes when using expression input (e.g. "1k" for 1 000 and "1M" for 1 000 000).
       Following suffixes are supported: "k", "M", "G", "B" (all suffixes are case insensitive).
