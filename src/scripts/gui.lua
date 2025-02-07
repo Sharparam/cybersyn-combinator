@@ -328,7 +328,10 @@ local function update_cs_signals(state)
   end
   for name, data in pairs(config.cs_signals) do
     local value = state.combinator:get_cs_value(name)
-    local default = settings.global[name].value or data.default
+    local default = data.default
+    if settings.global[name] and settings.global[name].value then
+      default = settings.global[name].value --[[@as number]]
+    end
     local element = state[name]
     local reset = state[name .. "_reset"]
     if element then
@@ -419,7 +422,10 @@ local function set_cs_signal_value(element, player, update_element)
   end
   value = util.clamp(value, min, max)
   state.combinator:set_cs_value(signal_name, value)
-  local default = settings.global[signal_name].value or config.cs_signals[signal_name].default
+  local default = config.cs_signals[signal_name].default
+  if settings.global[signal_name] and settings.global[signal_name].value then
+    default = settings.global[signal_name].value --[[@as number]]
+  end
   local is_default = value == default
   local reset = state[signal_name .. "_reset"]
   if reset then reset.enabled = not is_default end
@@ -3057,7 +3063,10 @@ local function create_window(player, combinator)
   ---@diagnostic disable-next-line: missing-fields
   local state = {}
   for signal_name, data in pairs(config.cs_signals) do
-    local default = settings.global[signal_name].value or data.default
+    local default = data.default
+    if settings.global[signal_name] and settings.global[signal_name].value then
+      default = settings.global[signal_name].value --[[@as number]]
+    end
     flib_gui.add(cs_signals_table, {
       type = "sprite",
       style = "cybersyn-combinator_cs-signal-sprite",

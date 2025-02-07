@@ -17,6 +17,7 @@ end
 init_cs_default(constants.SETTINGS.CS_REQUEST_THRESHOLD)
 init_cs_default(constants.SETTINGS.CS_PRIORITY)
 init_cs_default(constants.SETTINGS.CS_LOCKED_SLOTS)
+init_cs_default(constants.SETTINGS.CS_RESERVED_FLUID_CAPACITY)
 
 local function sort_all_combinators()
   log:info("Sorting all Cybersyn Constant Combinators")

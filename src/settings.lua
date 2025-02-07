@@ -75,6 +75,13 @@ data:extend {
   },
   {
     type = "bool-setting",
+    name = NAMES.EMIT_DEFAULT_RESERVED_FLUID_CAPACITY,
+    setting_type = "runtime-global",
+    default_value = false,
+    order = "c[cybersyn]-c[combinator]-e[emit]-d[default]-r[reserved]-f[fluid]-c[capacity]"
+  },
+  {
+    type = "bool-setting",
     name = NAMES.USE_STACKS,
     setting_type = "runtime-per-user",
     default_value = false,

@@ -28,6 +28,12 @@ local config = {
       min = 0,
       max = slot_count_wagon
     },
+    [constants.SETTINGS.CS_RESERVED_FLUID_CAPACITY] = {
+      slot = 4,
+      default = 0,
+      min = 0,
+      max = constants.INT32_MAX
+    },
     ["cybersyn-priority"] = {
       slot = 3,
       default = 0,

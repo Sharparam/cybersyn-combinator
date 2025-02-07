@@ -13,6 +13,7 @@ local constants = {
     EMIT_DEFAULT_REQUEST_THRESHOLD = "cybersyn-combinator-emit-default-request-threshold",
     EMIT_DEFAULT_PRIORITY = "cybersyn-combinator-emit-default-priority",
     EMIT_DEFAULT_LOCKED_SLOTS = "cybersyn-combinator-emit-default-locked-slots",
+    EMIT_DEFAULT_RESERVED_FLUID_CAPACITY = "cybersyn-combinator-emit-default-reserved-fluid-capacity",
     USE_STACKS = "cybersyn-combinator-use-stacks",
     ENABLE_EXPRESSIONS = "cybersyn-combinator-expressions-enable",
     DISABLE_BUILT = "cybersyn-combinator-disable-built",
@@ -27,6 +28,7 @@ local constants = {
     CS_REQUEST_THRESHOLD = "cybersyn-request-threshold",
     CS_PRIORITY = "cybersyn-priority",
     CS_LOCKED_SLOTS = "cybersyn-locked-slots",
+    CS_RESERVED_FLUID_CAPACITY = "cybersyn-reserved-fluid-capacity",
     CS_NETWORK_FLAG = "cybersyn-network-flag"
   },
   ENTITY_NAME = "cybersyn-constant-combinator",
