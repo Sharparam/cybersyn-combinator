@@ -46,7 +46,7 @@ A lot was gained from looking at how the [LTN Combinator Modernized][ltnc] mod d
 
 ## License
 
-Copyright © 2023-2024 by [Adam Hellberg][sharparam].
+Copyright © 2023-2025 by [Adam Hellberg][sharparam].
 
 This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
