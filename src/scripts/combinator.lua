@@ -468,11 +468,15 @@ function CC:has_item_signal(signal, section_index, exclude_slot)
   local section = self:get_item_section(section_index)
   if not section then return false end
   local signal_quality = signal.quality or "normal"
+  local signal_type = signal.type or "unknown"
   for filter_index, filter in pairs(section.filters) do
     if not filter or not filter.value or filter_index == exclude_slot then goto continue end
     if filter.value.name ~= signal.name then goto continue end
     local filter_quality = filter.value.quality or "normal"
-    if filter_quality == signal_quality then return true, filter_index end
+    local filter_type = filter.value.type or "unknown"
+    if filter_quality == signal_quality and filter_type == signal_type then
+      return true, filter_index
+    end
     ::continue::
   end
   return false
