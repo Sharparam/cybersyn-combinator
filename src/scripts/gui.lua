@@ -2594,8 +2594,9 @@ local function create_window(player, combinator)
               style = "wide_entity_button",
               style_mods = {
                 width = 128,
-                height = 128,
-                horizontally_stretchable = true
+                maximal_height = 500,
+                horizontally_stretchable = true,
+                vertically_stretchable = true
               }
             }
           }
