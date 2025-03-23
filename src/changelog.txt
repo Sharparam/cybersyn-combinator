@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.7.0
+Date: 2025-03-23
+  Features:
+    - Add support for new fluid request threshold signal in Cybersyn.
+  Bugfixes:
+    - Fix issue where signals of different types were considered duplicate if
+      sharing the same name.
+---------------------------------------------------------------------------------------------------
 Version: 2.6.0
 Date: 2025-02-07
   Features:
