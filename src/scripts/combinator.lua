@@ -26,15 +26,21 @@ script.register_metatable("CybersynCombinator_meta", CC_meta)
 --- @return boolean
 local function should_emit_default(name)
   local is_r = name == constants.SETTINGS.CS_REQUEST_THRESHOLD
+  local is_fr = name == constants.SETTINGS.CS_FLUID_REQUEST_THRESHOLD
   local is_p = name == constants.SETTINGS.CS_PRIORITY
   local is_l = name == constants.SETTINGS.CS_LOCKED_SLOTS
   local is_f = name == constants.SETTINGS.CS_RESERVED_FLUID_CAPACITY
   local e_r = settings.global[constants.SETTINGS.EMIT_DEFAULT_REQUEST_THRESHOLD].value
+  local e_fr = settings.global[constants.SETTINGS.EMIT_DEFAULT_FLUID_REQUEST_THRESHOLD].value
   local e_p = settings.global[constants.SETTINGS.EMIT_DEFAULT_PRIORITY].value
   local e_l = settings.global[constants.SETTINGS.EMIT_DEFAULT_LOCKED_SLOTS].value
   local e_f = settings.global[constants.SETTINGS.EMIT_DEFAULT_RESERVED_FLUID_CAPACITY].value
 
-  return (is_r and e_r == true) or (is_p and e_p == true) or (is_l and e_l == true) or (is_f and e_f == true)
+  return (is_r and e_r == true)
+      or (is_fr and e_fr == true)
+      or (is_p and e_p == true)
+      or (is_l and e_l == true)
+      or (is_f and e_f == true)
 end
 
 --- @param entity LuaEntity

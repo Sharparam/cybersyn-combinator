@@ -22,6 +22,12 @@ local config = {
       min = 1,
       max = constants.INT32_MAX
     },
+    [constants.SETTINGS.CS_FLUID_REQUEST_THRESHOLD] = {
+      slot = 5,
+      default = 0,
+      min = 1,
+      max = constants.INT32_MAX
+    },
     ["cybersyn-locked-slots"] = {
       slot = 2,
       default = 0,

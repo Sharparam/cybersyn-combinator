@@ -15,6 +15,7 @@ local function init_cs_default(name)
 end
 
 init_cs_default(constants.SETTINGS.CS_REQUEST_THRESHOLD)
+init_cs_default(constants.SETTINGS.CS_FLUID_REQUEST_THRESHOLD)
 init_cs_default(constants.SETTINGS.CS_PRIORITY)
 init_cs_default(constants.SETTINGS.CS_LOCKED_SLOTS)
 init_cs_default(constants.SETTINGS.CS_RESERVED_FLUID_CAPACITY)

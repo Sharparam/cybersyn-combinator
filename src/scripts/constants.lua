@@ -11,6 +11,7 @@ local constants = {
     SLOT_COUNT_WAGON = "cybersyn-combinator-slotcount-wagon",
     UPGRADEABLE = "cybersyn-combinator-upgradeable",
     EMIT_DEFAULT_REQUEST_THRESHOLD = "cybersyn-combinator-emit-default-request-threshold",
+    EMIT_DEFAULT_FLUID_REQUEST_THRESHOLD = "cybersyn-combinator-emit-default-fluid-request-threshold",
     EMIT_DEFAULT_PRIORITY = "cybersyn-combinator-emit-default-priority",
     EMIT_DEFAULT_LOCKED_SLOTS = "cybersyn-combinator-emit-default-locked-slots",
     EMIT_DEFAULT_RESERVED_FLUID_CAPACITY = "cybersyn-combinator-emit-default-reserved-fluid-capacity",
@@ -26,6 +27,7 @@ local constants = {
     ENCODER_ZERO_INDEX = "cybersyn-combinator-encoder-zero-index",
     -- Project Cybersyn settings
     CS_REQUEST_THRESHOLD = "cybersyn-request-threshold",
+    CS_FLUID_REQUEST_THRESHOLD = "cybersyn-fluid-request-threshold",
     CS_PRIORITY = "cybersyn-priority",
     CS_LOCKED_SLOTS = "cybersyn-locked-slots",
     CS_RESERVED_FLUID_CAPACITY = "cybersyn-reserved-fluid-capacity",

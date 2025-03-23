@@ -61,6 +61,13 @@ data:extend {
   },
   {
     type = "bool-setting",
+    name = NAMES.EMIT_DEFAULT_FLUID_REQUEST_THRESHOLD,
+    setting_type = "runtime-global",
+    default_value = false,
+    order = "c[cybersyn]-c[combinator]-e[emit]-d[default]-r[request]-t[threshold]-f[fluid]"
+  },
+  {
+    type = "bool-setting",
     name = NAMES.EMIT_DEFAULT_PRIORITY,
     setting_type = "runtime-global",
     default_value = false,
