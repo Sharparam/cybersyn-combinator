@@ -168,6 +168,7 @@ local cc_gui = {
 --- @field description_header LuaGuiElement.add_param.flow
 --- @field description_scroll LuaGuiElement.add_param.scroll_pane
 --- @field description_label LuaGuiElement
+--- @field dialog_close_clicked boolean
 --- @field dimmer LuaGuiElement?
 --- @field encoder EncoderState?
 --- @field description_edit DescriptionEditState?
@@ -515,6 +516,7 @@ function handlers.dialog_close(event)
   local player = game.get_player(event.player_index)
   local state = get_player_state(event.player_index)
   if not state then return end
+  state.dialog_close_clicked = true
   if state.main_window then
     player.opened = state.main_window
   end
@@ -3240,7 +3242,7 @@ function cc_gui:on_gui_closed(event)
     if screen[LOGI_GROUP_EDIT_ID] and screen[DIMMER_ID] and state and state.logistic_group_edit then
       local is_searching = state.logistic_group_edit.search_textfield.visible
       local confirmed = state.logistic_group_edit.confirmed
-      if is_searching and not confirmed then
+      if is_searching and not confirmed and not state.dialog_close_clicked then
         toggle_logistic_group_search(state)
         player.opened = state.logistic_group_edit.dialog
         return
@@ -3252,6 +3254,7 @@ function cc_gui:on_gui_closed(event)
       state.encoder = nil
       state.description_edit = nil
       state.logistic_group_edit = nil
+      state.dialog_close_clicked = false
       if state.main_window then
         state.main_window.visible = true
         log:debug("opening main window back")
@@ -3262,6 +3265,7 @@ function cc_gui:on_gui_closed(event)
   end
   if element.name ~= WINDOW_ID then return end
   if state then
+    state.dialog_close_clicked = false
     if state.encoder or state.description_edit or state.logistic_group_edit then return end
     if state.selected_section_index or state.selected_slot or state.selected_slot_button then
       player.opened = state.main_window
