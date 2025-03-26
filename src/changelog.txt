@@ -1,4 +1,13 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.7.1
+Date: 2025-03-26
+  Minor Features:
+    - Ghosts will now properly store and show their descriptions in the tooltip (previously only visible inside the
+      combinator GUI window until they were constructed).
+  Bugfixes:
+    - Fix issue where UI would enter into a soft-locked state if attempting to close the logistic group edit dialog
+      while the search field was active/showing.
+---------------------------------------------------------------------------------------------------
 Version: 2.7.0
 Date: 2025-03-23
   Features:
