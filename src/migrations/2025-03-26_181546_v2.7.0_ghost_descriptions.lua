@@ -7,7 +7,7 @@ local filter = {
 for _, surface in pairs(game.surfaces) do
   local entities = surface.find_entities_filtered(filter)
   for _, entity in pairs(entities) do
-    if entity.valid and type(entity.tags.description) == "string" then
+    if entity.valid and entity.tags and type(entity.tags.description) == "string" then
       entity.combinator_description = entity.tags.description --[[@as string]]
       entity.tags.description = nil
     end
