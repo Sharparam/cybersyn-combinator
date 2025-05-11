@@ -1,4 +1,5 @@
 {
+  "$schema": "https://facti.rs/schemas/info.json",
   "name": "cybersyn-combinator",
   "version": "2.7.3",
   "title": "Cybersyn Combinator",
