@@ -202,9 +202,37 @@ local function get_logistic_groups(player_index)
   if player_data and player_data.translations then
     no_group = player_data.translations["gui-train.empty-train-group"] or no_group
   end
-  return {
+  local filter = {
+    type = { "constant-combinator" }
+  }
+  local found_groups = {}
+  local result = {
     { name = no_group }
   }
+  for _, surface in pairs(game.surfaces) do
+    local entities = surface.find_entities_filtered(filter)
+    for _, entity in pairs(entities) do
+      if not entity or not entity.valid then goto continue end
+      if entity.type == "constant-combinator" then
+        local control = entity.get_control_behavior() --[[@as LuaConstantCombinatorControlBehavior?]]
+        if not control or not control.valid then goto continue end
+        for _, section in pairs(control.sections) do
+          if section.group and section.group ~= "" then
+            local found_group = found_groups[section.group]
+            if not found_group then
+              found_group = { name = section.group, count = 0 }
+              found_groups[section.group] = found_group
+              table.insert(result, found_group)
+            end
+            found_group.count = found_group.count + 1
+          end
+        end
+      end
+      ::continue::
+    end
+  end
+
+  return result
 end
 
 ---@param section LuaLogisticSection
