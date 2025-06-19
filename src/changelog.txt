@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.8.0
+Date: TBD
+  Features:
+    - Implement a working logistic group editor using newly available APIs in Factorio 2.0.57.
+---------------------------------------------------------------------------------------------------
 Version: 2.7.3
 Date: 2025-05-06
   Bugfixes:
