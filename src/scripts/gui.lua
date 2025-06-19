@@ -562,7 +562,7 @@ function handlers.on_off(event)
   state.status_label.caption = is_ghost and GHOST_STATUS_NAME or STATUS_NAMES[status] or DEFAULT_STATUS_NAME
 end
 
----@type fun(state: UiState, reset: boolean, reset_section_index: integer?, deleted_group: string?)
+---@type fun(state: UiState, reset: boolean, reset_section_index: integer?, deleted_group: string?, updated_group: string?)
 local update_signal_sections
 
 ---@type fun(state: UiState, signal_table: LuaGuiElement, reset: boolean?)
@@ -652,6 +652,9 @@ function handlers.signal_click(event)
       end
     else
       update_totals(state)
+    end
+    if section.group ~= "" then
+      update_signal_sections(state, false, nil, nil, section.group)
     end
   elseif event.button == defines.mouse_button_type.left then
     state.selected_section_index = nil
@@ -760,6 +763,9 @@ local function set_new_signal_value(player_index, state, value, clear_selected)
     end
   else
     update_totals(state)
+  end
+  if section and section.group ~= "" then
+    update_signal_sections(state, false, nil, nil, section.group)
   end
 end
 
@@ -1604,7 +1610,8 @@ end
 ---@param reset boolean
 ---@param reset_section_index integer?
 ---@param deleted_group string?
-update_signal_sections = function(state, reset, reset_section_index, deleted_group)
+---@param updated_group string?
+update_signal_sections = function(state, reset, reset_section_index, deleted_group, updated_group)
   if not state then return end
 
   local container = state.section_container
@@ -1629,12 +1636,15 @@ update_signal_sections = function(state, reset, reset_section_index, deleted_gro
       if not section_index then goto continue end
       local section = state.combinator:get_item_section(section_index)
       if not section then goto continue end
+      if updated_group and updated_group ~= "" and section.group ~= updated_group then
+        goto continue
+      end
       local active = section.active
       local caption = create_logistic_section_caption(section)
       section_entry.header.checkbox.state = active
       section_entry.header.checkbox.caption = caption
       if not deleted_group then
-        update_signal_table(state, section_entry.signal_table, reset or reset_section_index == section.index)
+        update_signal_table(state, section_entry.signal_table, reset or reset_section_index == section.index or (updated_group and updated_group ~= ""))
       end
       ::continue::
     end
