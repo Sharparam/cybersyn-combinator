@@ -202,34 +202,31 @@ local function get_logistic_groups(player_index)
   if player_data and player_data.translations then
     no_group = player_data.translations["gui-train.empty-train-group"] or no_group
   end
-  local filter = {
-    type = { "constant-combinator" }
-  }
-  local found_groups = {}
   local result = {
     { name = no_group }
   }
-  for _, surface in pairs(game.surfaces) do
-    local entities = surface.find_entities_filtered(filter)
-    for _, entity in pairs(entities) do
-      if not entity or not entity.valid then goto continue end
-      if entity.type == "constant-combinator" then
-        local control = entity.get_control_behavior() --[[@as LuaConstantCombinatorControlBehavior?]]
-        if not control or not control.valid then goto continue end
-        for _, section in pairs(control.sections) do
-          if section.group and section.group ~= "" then
-            local found_group = found_groups[section.group]
-            if not found_group then
-              found_group = { name = section.group, count = 0 }
-              found_groups[section.group] = found_group
-              table.insert(result, found_group)
-            end
-            found_group.count = found_group.count + 1
-          end
-        end
-      end
-      ::continue::
-    end
+
+  local player = game.get_player(player_index)
+
+  if not player or not player.valid then return result end
+
+  -- always LuaForce when reading
+  local force = player.force --[[@as LuaForce]]
+
+  if not force.valid then return result end
+
+  local api_groups = force.get_logistic_groups()
+
+  for _, api_group_name in pairs(api_groups) do
+    local api_group = force.get_logistic_group(api_group_name)
+    log:debug(serpent.line(api_group))
+    -- local count = 0
+    -- for _, section in pairs(api_group.members) do
+    --   log:debug("member ", count, "( ", section.index, ")")
+    --   count = count + 1
+    -- end
+    local count = #api_group.members
+    table.insert(result, { name = api_group_name, count = count })
   end
 
   return result
