@@ -562,7 +562,7 @@ function handlers.on_off(event)
   state.status_label.caption = is_ghost and GHOST_STATUS_NAME or STATUS_NAMES[status] or DEFAULT_STATUS_NAME
 end
 
----@type fun(state: UiState, reset: boolean, reset_section_index: integer?)
+---@type fun(state: UiState, reset: boolean, reset_section_index: integer?, deleted_group: string?)
 local update_signal_sections
 
 ---@type fun(state: UiState, signal_table: LuaGuiElement, reset: boolean?)
@@ -973,6 +973,26 @@ function handlers.logistic_group_item_click(event)
   state.logistic_group_edit.group_name_textfield.text = group
 end
 
+--- @param event EventData.on_gui_click
+function handlers.logistic_group_item_delete_click(event)
+  local element = event.element
+  local group = element.tags.group --[[@as string?]]
+  if not group then return end
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  if not state.logistic_group_edit then return end
+  log:debug("logistic group item delete clicked for group: ", group)
+  state.logistic_group_edit.section.group = ""
+  element.parent.destroy()
+  local player = game.get_player(event.player_index)
+  if not player or not player.valid then return end
+  local force = player.force
+  if not force.valid then return end
+  log:debug("deleting logistic group: ", group)
+  force.delete_logistic_group(group)
+  update_signal_sections(state, false, nil, group)
+end
+
 --- @param name string?
 --- @param count number?
 --- @param is_empty boolean
@@ -1024,7 +1044,13 @@ local function make_logistic_group_item(name, count, is_empty)
         style = "tool_button_red",
         sprite = "utility/trash",
         visible = group ~= "" and not is_empty,
-        mouse_button_filter = { "left" }
+        mouse_button_filter = { "left" },
+        tags = {
+          group = group
+        },
+        handler = {
+          [defines.events.on_gui_click] = handlers.logistic_group_item_delete_click
+        }
       }
     }
   }
@@ -1577,7 +1603,8 @@ end
 ---@param state UiState
 ---@param reset boolean
 ---@param reset_section_index integer?
-update_signal_sections = function(state, reset, reset_section_index)
+---@param deleted_group string?
+update_signal_sections = function(state, reset, reset_section_index, deleted_group)
   if not state then return end
 
   local container = state.section_container
@@ -1606,7 +1633,9 @@ update_signal_sections = function(state, reset, reset_section_index)
       local caption = create_logistic_section_caption(section)
       section_entry.header.checkbox.state = active
       section_entry.header.checkbox.caption = caption
-      update_signal_table(state, section_entry.signal_table, reset or reset_section_index == section.index)
+      if not deleted_group then
+        update_signal_table(state, section_entry.signal_table, reset or reset_section_index == section.index)
+      end
       ::continue::
     end
   end
