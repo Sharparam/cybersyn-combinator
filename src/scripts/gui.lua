@@ -64,15 +64,15 @@ local STATUS_NAMES = {
 local DEFAULT_STATUS_NAME = { "entity-status.disabled" }
 local GHOST_STATUS_NAME = { "entity-status.ghost" }
 
-local SLOT_BUTTON_STYLE = "cybersyn-combinator_signal-button"
-local SLOT_BUTTON_PRESSED_STYLE = "cybersyn-combinator_signal-button_pressed"
+local SLOT_BUTTON_STYLE = constants.STYLES.SIGNAL_BUTTON
+local SLOT_BUTTON_PRESSED_STYLE = constants.STYLES.SIGNAL_BUTTON_PRESSED
 -- local SLOT_BUTTON_DISABLED_STYLE = "cybersyn-combinator_signal-button_disabled"
 -- local SLOT_BUTTON_DISABLED_PRESSED_STYLE = "cybersyn-combinator_signal-button_disabled_pressed"
 local SLOT_BUTTON_DISABLED_STYLE = SLOT_BUTTON_STYLE
 local SLOT_BUTTON_DISABLED_PRESSED_STYLE = SLOT_BUTTON_PRESSED_STYLE
 
-local BIT_BUTTON_STYLE = "cybersyn-combinator_encoder_bit-button"
-local BIT_BUTTON_PRESSED_STYLE = "cybersyn-combinator_encoder_bit-button_pressed"
+local BIT_BUTTON_STYLE = constants.STYLES.ENCODER_BIT_BUTTON
+local BIT_BUTTON_PRESSED_STYLE = constants.STYLES.ENCODER_BIT_BUTTON_PRESSED
 
 --- @param pressed boolean
 local function bit_button_style(pressed)
@@ -461,7 +461,7 @@ local function refresh_network_list(player, state)
     local oct = masking.format_explicit(mask, masking.Mode.OCTAL, false, true)
     flib_gui.add(list, {
       type = "button",
-      style = "cybersyn-combinator_network-list_item",
+      style = constants.STYLES.NETWORK_LIST_ITEM,
       caption = rich,
       tooltip = { "cybersyn-combinator-window.network-list-item-tooltip", dec, hex, bin, oct },
       handler = {
@@ -817,7 +817,7 @@ local function create_dimmer(player_index)
   local _, dimmer = flib_gui.add(screen, {
     type = "frame",
     name = DIMMER_ID,
-    style = "cybersyn-combinator_frame_transparent",
+    style = constants.STYLES.FRAME_TRANSPARENT,
     style_mods = {
       natural_width = 1000000,
       natural_height = 1000000,
@@ -1154,7 +1154,7 @@ local function create_logistic_group_edit(player_index, state, section_id, secti
       type = "scroll-pane",
       name = "group_list",
       direction = "vertical",
-      style = "cybersyn-combinator_group-list_scroll-pane",
+      style = constants.STYLES.GROUP_LIST_SCROLL_PANE,
       style_mods = {
         width = 300,
         minimal_height = 130,
@@ -1371,7 +1371,7 @@ local function create_signal_section(section)
         type = "frame",
         name = "overlay",
         visible = not active,
-        style = "cybersyn-combinator_frame_semitransparent",
+        style = constants.STYLES.FRAME_SEMITRANSPARENT,
         style_mods = {
           width = 400,
           height = overlay_height,
@@ -1458,7 +1458,7 @@ update_signal_table = function(state, signal_table, reset)
           {
             type = "label",
             name = "comparator",
-            style = "cybersyn-combinator_signal-comparator",
+            style = constants.STYLES.SIGNAL_COMPARATOR,
             style_mods = {
               top_padding = -8
             },
@@ -1495,7 +1495,7 @@ update_signal_table = function(state, signal_table, reset)
           {
             type = "label",
             name = "label",
-            style = "cybersyn-combinator_signal-count",
+            style = constants.STYLES.SIGNAL_COUNT,
             ignored_by_interaction = true,
             caption = ""
           }
@@ -1687,7 +1687,7 @@ function handlers.network_mask_signal_changed(event)
   --- @type integer?
   local new_count = nil
   local use_cs_default = settings.get_player_settings(event.player_index)[constants.SETTINGS.NETWORK_MASK_USE_CS_DEFAULT].value
-  local cs_default = settings.global[constants.SETTINGS.CS_NETWORK_FLAG].value
+  local cs_default = constants.SETTINGS.CS_DEFAULT_NETWORK_FLAG
   if use_cs_default and cs_default ~= nil then
     new_count = cs_default --[[@as integer]]
   elseif state.network_mask.mask then
@@ -1960,7 +1960,7 @@ local function create_encoder(player_index, state)
                 {
                   type = "textfield",
                   name = "encoder_mask_textfield",
-                  style = "cybersyn-combinator_network-mask-text-input",
+                  style = constants.STYLES.NETWORK_MASK_TEXT_INPUT,
                   style_mods = { left_margin = 8, width = 200 },
                   numeric = false,
                   clear_and_focus_on_right_click = true,
@@ -2526,7 +2526,7 @@ local function create_window(player, combinator)
                 {
                   type = "textfield",
                   name = "network_mask_textfield",
-                  style = "cybersyn-combinator_network-mask-text-input",
+                  style = constants.STYLES.NETWORK_MASK_TEXT_INPUT,
                   style_mods = { horizontally_stretchable = true, minimal_width = 50, maximal_width = 300 },
                   text = "",
                   numeric = false,
@@ -2555,7 +2555,7 @@ local function create_window(player, combinator)
         {
           type = "scroll-pane",
           name = "network_list",
-          style = "cybersyn-combinator_network-list_scroll-pane",
+          style = constants.STYLES.NETWORK_LIST_SCROLL_PANE,
           vertical_scroll_policy = "auto"
         }
       }
@@ -3072,18 +3072,18 @@ local function create_window(player, combinator)
     end
     flib_gui.add(cs_signals_table, {
       type = "sprite",
-      style = "cybersyn-combinator_cs-signal-sprite",
+      style = constants.STYLES.SIGNAL_SPRITE,
       sprite = "virtual-signal/" .. signal_name
     })
     flib_gui.add(cs_signals_table, {
       type = "label",
-      style = "cybersyn-combinator_cs-signal-label",
+      style = constants.STYLES.SIGNAL_LABEL,
       caption = { "virtual-signal-name." .. signal_name }
     })
     local _, field = flib_gui.add(cs_signals_table, {
       type = "textfield",
       name = "cybersyn-combinator_cs-signal__" .. signal_name,
-      style = "cybersyn-combinator_cs-signal-text",
+      style = constants.STYLES.SIGNAL_TEXT,
       text = tostring(default),
       numeric = false,
       clear_and_focus_on_right_click = true,
@@ -3102,7 +3102,7 @@ local function create_window(player, combinator)
     })
     local _, reset = flib_gui.add(cs_signals_table, {
       type = "sprite-button",
-      style = "cybersyn-combinator_cs-signal-reset",
+      style = constants.STYLES.SIGNAL_RESET,
       sprite = "utility/reset",
       tooltip = { "cybersyn-combinator-window.cs-signal-reset" },
       mouse_button_filter = { "left" },

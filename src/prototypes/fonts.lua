@@ -1,7 +1,9 @@
+local constants = require "scripts.constants"
+
 data:extend {
   {
     type = "font",
-    name = "cybersyn-combinator_signal-comparator-font",
+    name = constants.FONT_NAME,
     from = "default-bold",
     size = 13,
     border = true,

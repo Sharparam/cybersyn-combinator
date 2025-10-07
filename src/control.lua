@@ -7,18 +7,19 @@ local cc_remote = require "scripts.remote"
 local CybersynCombinator = require "scripts.combinator"
 
 local function init_cs_default(name)
-  if not settings.global[name] then return end
-  local num = tonumber(settings.global[name].value)
-  if not num then return end
-  config.cs_signals[name].default = num
-  log:debug("default value for ", name, " initialized to ", num)
+  if type(name) == "number" then
+    local num = name
+    log:debug("default value for ", name, " initialized to ", num)
+  else
+    if not settings.global[name] then return end
+    local num = tonumber(settings.global[name].value)
+    if not num then return end
+    config.cs_signals[name].default = num
+    log:debug("default value for ", name, " initialized to ", num)
+  end
 end
 
-init_cs_default(constants.SETTINGS.CS_REQUEST_THRESHOLD)
-init_cs_default(constants.SETTINGS.CS_FLUID_REQUEST_THRESHOLD)
-init_cs_default(constants.SETTINGS.CS_PRIORITY)
-init_cs_default(constants.SETTINGS.CS_LOCKED_SLOTS)
-init_cs_default(constants.SETTINGS.CS_RESERVED_FLUID_CAPACITY)
+init_cs_default(constants.SETTINGS.CS_DEFAULT_PRIORITY)
 
 local function sort_all_combinators()
   log:info("Sorting all Cybersyn Constant Combinators")
@@ -71,8 +72,8 @@ script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
 end)
 
 local entity_event_filters = {
-  { filter = "type", type = "constant-combinator" },
-  { filter = "name", name = constants.ENTITY_NAME, mode = "and" },
+  { filter = "type",       type = "constant-combinator" },
+  { filter = "name",       name = constants.ENTITY_NAME, mode = "and" },
   { filter = "ghost_type", type = "constant-combinator", mode = "or" },
   { filter = "ghost_name", name = constants.ENTITY_NAME, mode = "and" }
 }
@@ -271,8 +272,8 @@ local function sort_combinator(command)
   combinator:sort_signals()
 end
 
-commands.add_command("cc_sort", { "cybersyn-combinator-commands.sort" }, sort_combinator)
-commands.add_command("cc_sort_all", { "cybersyn-combinator-commands.sort-all" }, sort_all_combinators)
+commands.add_command("cc_sort", { "cybersyn2-combinator-commands.sort" }, sort_combinator)
+commands.add_command("cc_sort_all", { "cybersyn2-combinator-commands.sort-all" }, sort_all_combinators)
 
 cc_gui:register()
 cc_remote:register()

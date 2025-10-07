@@ -101,8 +101,8 @@ function cc_remote:register()
     close = self.close
   })
 
-  commands.add_command("cc_open", { "cybersyn-combinator-commands.remote-open" }, cc_remote.open_from_command)
-  commands.add_command("cc_close", { "cybersyn-combinator-commands.remote-close" }, cc_remote.close_from_command)
+  commands.add_command("cc_open", { "cybersyn2-combinator-commands.remote-open" }, cc_remote.open_from_command)
+  commands.add_command("cc_close", { "cybersyn2-combinator-commands.remote-close" }, cc_remote.close_from_command)
 end
 
 return cc_remote

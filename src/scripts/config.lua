@@ -16,33 +16,9 @@ end
 local config = {
   --- @type table<string, CybersynSignal>
   cs_signals = {
-    ["cybersyn-request-threshold"] = {
+    [constants.SETTINGS.CS_PRIORITY_NAME] = {
       slot = 1,
-      default = 2000,
-      min = 1,
-      max = constants.INT32_MAX
-    },
-    [constants.SETTINGS.CS_FLUID_REQUEST_THRESHOLD] = {
-      slot = 5,
-      default = 0,
-      min = 1,
-      max = constants.INT32_MAX
-    },
-    ["cybersyn-locked-slots"] = {
-      slot = 2,
-      default = 0,
-      min = 0,
-      max = slot_count_wagon
-    },
-    [constants.SETTINGS.CS_RESERVED_FLUID_CAPACITY] = {
-      slot = 4,
-      default = 0,
-      min = 0,
-      max = constants.INT32_MAX
-    },
-    ["cybersyn-priority"] = {
-      slot = 3,
-      default = 0,
+      default = constants.SETTINGS.CS_DEFAULT_PRIORITY,
       min = constants.INT32_MIN,
       max = constants.INT32_MAX
     }

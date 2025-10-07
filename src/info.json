@@ -1,27 +1,10 @@
 {
-  "$schema": "https://facti.rs/schemas/info.json",
-  "name": "cybersyn-combinator",
-  "version": "2.7.3",
-  "title": "Cybersyn Combinator",
+  "name": "cybersyn2-combinator",
+  "version": "1.0.0",
+  "title": "Cybersyn 2 Combinator",
   "author": "Sharparam",
-  "contact": "sharparam@sharparam.com",
   "homepage": "https://github.com/Sharparam/cybersyn-combinator",
-  "description": "A specialized combinator for the Project Cybersyn mod",
+  "description": "A specialized combinator for the Project Cybersyn 2 mod",
   "factorio_version": "2.0",
-  "dependencies": [
-    "base >= 2.0.0",
-    "cybersyn >= 2.0.20",
-    "flib >= 0.15.0"
-  ],
-  "package": {
-    "readme": "information.md",
-    "faq": "faq.md",
-    "gallery": [
-      "../gallery/combinator_window.png",
-      "../gallery/hex_network_masks.png",
-      "../gallery/binary_network_masks.png",
-      "../gallery/prefixed_network_masks.png",
-      "../gallery/encoder.png"
-    ]
-  }
+  "dependencies": ["base >= 2.0.0", "cybersyn2", "flib >= 0.15.0", "! cybersyn-combinator"]
 }
