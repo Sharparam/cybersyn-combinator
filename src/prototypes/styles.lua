@@ -1,6 +1,7 @@
 local styles = data.raw["gui-style"].default
+local constants = require "scripts.constants"
 
-styles["cybersyn-combinator_cs-signal-sprite"] = {
+styles[constants.STYLES.SIGNAL_SPRITE] = {
   type = "image_style",
   parent = "image",
   size = 32,
@@ -8,31 +9,31 @@ styles["cybersyn-combinator_cs-signal-sprite"] = {
   stretch_image_to_widget_size = true
 }
 
-styles["cybersyn-combinator_cs-signal-label"] = {
+styles[constants.STYLES.SIGNAL_LABEL] = {
   type = "label_style",
   parent = "caption_label",
   horizontally_stretchable = "on"
 }
 
-styles["cybersyn-combinator_cs-signal-text"] = {
+styles[constants.STYLES.SIGNAL_TEXT] = {
   type = "textbox_style",
   parent = "short_number_textfield",
   horizontal_align = "right",
   horizontally_stretchable = "off"
 }
 
-styles["cybersyn-combinator_cs-signal-reset"] = {
+styles[constants.STYLES.SIGNAL_RESET] = {
   type = "button_style",
   parent = "tool_button_red",
   horizontally_stretchable = "off"
 }
 
-styles["cybersyn-combinator_signal-button"] = {
+styles[constants.STYLES.SIGNAL_BUTTON] = {
   type = "button_style",
   parent = "flib_slot_button_default"
 }
 
-styles["cybersyn-combinator_signal-button_pressed"] = {
+styles[constants.STYLES.SIGNAL_BUTTON_PRESSED] = {
   type = "button_style",
   parent = "flib_selected_slot_button_default"
 }
@@ -71,10 +72,10 @@ styles["cybersyn-combinator_signal-button_pressed"] = {
 --   default_graphical_set = styles["cybersyn-combinator_signal-button_disabled"].clicked_graphical_set
 -- }
 
-styles["cybersyn-combinator_signal-comparator"] = {
+styles[constants.STYLES.SIGNAL_COMPARATOR] = {
   type = "label_style",
   parent = "label",
-  font = "cybersyn-combinator_signal-comparator-font",
+  font = constants.FONT_NAME,
   size = 36,
   horizontal_align = "left",
   vertical_align = "top",
@@ -83,7 +84,7 @@ styles["cybersyn-combinator_signal-comparator"] = {
   parent_hovered_font_color = { 1, 1, 1 }
 }
 
-styles["cybersyn-combinator_signal-count"] = {
+styles[constants.STYLES.SIGNAL_COUNT] = {
   type = "label_style",
   parent = "count_label",
   size = 36,
@@ -93,7 +94,7 @@ styles["cybersyn-combinator_signal-count"] = {
   parent_hovered_font_color = { 1, 1, 1 }
 }
 
-styles["cybersyn-combinator_network-list_info-sprite"] = {
+styles[constants.STYLES.NETWORK_LIST_INFO_SPRITE] = {
   type = "image_style",
   parent = "image",
   size = 10,
@@ -101,13 +102,13 @@ styles["cybersyn-combinator_network-list_info-sprite"] = {
   vertical_align = "center"
 }
 
-styles["cybersyn-combinator_network-mask-text-input"] = {
+styles[constants.STYLES.NETWORK_MASK_TEXT_INPUT] = {
   type = "textbox_style",
   horizontal_align = "right"
 }
 
 -- Credit to FactoryPlanner for list-box/scroll-pane styles
-styles["cybersyn-combinator_network-list_scroll-pane"] = {
+styles[constants.STYLES.NETWORK_LIST_SCROLL_PANE] = {
   type = "scroll_pane_style",
   parent = "list_box_in_shallow_frame_scroll_pane",
   background_graphical_set = { -- rubber grid
@@ -127,16 +128,16 @@ styles["cybersyn-combinator_network-list_scroll-pane"] = {
   }
 }
 
-styles["cybersyn-combinator_network-list_item"] = {
+styles[constants.STYLES.NETWORK_LIST_ITEM] = {
   type = "button_style",
   parent = "list_box_item",
   horizontally_stretchable = "on",
   horizontally_squashable = "on"
 }
 
-styles["cybersyn-combinator_network-list_item-active"] = {
+styles[constants.STYLES.NETWORK_LIST_ITEM_ACTIVE] = {
   type = "button_style",
-  parent = "cybersyn-combinator_network-list_item",
+  parent = constants.STYLES.NETWORK_LIST_ITEM,
   default_graphical_set = styles.button.selected_graphical_set,
   hovered_graphical_set = styles.button.selected_hovered_graphical_set,
   clicked_graphical_set = styles.button.selected_clicked_graphical_set,
@@ -144,7 +145,7 @@ styles["cybersyn-combinator_network-list_item-active"] = {
   default_vertical_offset = styles.button.selected_vertical_offset
 }
 
-styles["cybersyn-combinator_group-list_scroll-pane"] = {
+styles[constants.STYLES.GROUP_LIST_SCROLL_PANE] = {
   type = "scroll_pane_style",
   parent = "list_box_in_shallow_frame_under_subheader_scroll_pane",
   padding = 0,
@@ -154,38 +155,38 @@ styles["cybersyn-combinator_group-list_scroll-pane"] = {
   }
 }
 
-styles["cybersyn-combinator_frame_transparent"] = {
+styles[constants.STYLES.FRAME_TRANSPARENT] = {
   type = "frame_style",
   graphical_set = {
     base = {
       type = "composition",
-      filename = "__cybersyn-combinator__/graphics/frame/transparent-pixel.png",
+      filename = "__cybersyn2-combinator__/graphics/frame/transparent-pixel.png",
       corner_size = 1,
       position = { 0, 0 }
     }
   }
 }
 
-styles["cybersyn-combinator_frame_semitransparent"] = {
+styles[constants.STYLES.FRAME_SEMITRANSPARENT] = {
   type = "frame_style",
   graphical_set = {
     base = {
       type = "composition",
-      filename = "__cybersyn-combinator__/graphics/frame/semitransparent-pixel.png",
+      filename = "__cybersyn2-combinator__/graphics/frame/semitransparent-pixel.png",
       corner_size = 1,
       position = { 0, 0 }
     }
   }
 }
 
-styles["cybersyn-combinator_encoder_bit-button"] = {
+styles[constants.STYLES.ENCODER_BIT_BUTTON] = {
   type = "button_style",
   parent = "flib_standalone_slot_button_grey",
   size = 32,
   hovered_graphical_set = styles.flib_standalone_slot_button_grey.default_graphical_set
 }
 
-styles["cybersyn-combinator_encoder_bit-button_pressed"] = {
+styles[constants.STYLES.ENCODER_BIT_BUTTON_PRESSED] = {
   type = "button_style",
   parent = "flib_selected_standalone_slot_button_grey",
   size = 32

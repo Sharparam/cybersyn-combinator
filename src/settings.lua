@@ -46,46 +46,18 @@ data:extend {
     order = "c[cybersyn]-c[combinator]-u[upgradeable]"
   },
   {
+    type = "int-setting",
+    name = NAMES.CS_PRIORITY_OLD,
+    setting_type = "runtime-global",
+    default_value = 0,
+    order = "c[cybersyn]-c[combinator]-c[cs_old_priority]"
+  },
+  {
     type = "bool-setting",
     name = NAMES.DISABLE_NONPLAYER_BUILT,
     setting_type = "runtime-global",
     default_value = false,
     order = "c[cybersyn]-c[combinator]-d[disable]-b[built]-n[nonplayer]"
-  },
-  {
-    type = "bool-setting",
-    name = NAMES.EMIT_DEFAULT_REQUEST_THRESHOLD,
-    setting_type = "runtime-global",
-    default_value = false,
-    order = "c[cybersyn]-c[combinator]-e[emit]-d[default]-r[request]-t[threshold]"
-  },
-  {
-    type = "bool-setting",
-    name = NAMES.EMIT_DEFAULT_FLUID_REQUEST_THRESHOLD,
-    setting_type = "runtime-global",
-    default_value = false,
-    order = "c[cybersyn]-c[combinator]-e[emit]-d[default]-r[request]-t[threshold]-f[fluid]"
-  },
-  {
-    type = "bool-setting",
-    name = NAMES.EMIT_DEFAULT_PRIORITY,
-    setting_type = "runtime-global",
-    default_value = false,
-    order = "c[cybersyn]-c[combinator]-e[emit]-d[default]-p[priority]"
-  },
-  {
-    type = "bool-setting",
-    name = NAMES.EMIT_DEFAULT_LOCKED_SLOTS,
-    setting_type = "runtime-global",
-    default_value = false,
-    order = "c[cybersyn]-c[combinator]-e[emit]-d[default]-l[locked]-s[slots]"
-  },
-  {
-    type = "bool-setting",
-    name = NAMES.EMIT_DEFAULT_RESERVED_FLUID_CAPACITY,
-    setting_type = "runtime-global",
-    default_value = false,
-    order = "c[cybersyn]-c[combinator]-e[emit]-d[default]-r[reserved]-f[fluid]-c[capacity]"
   },
   {
     type = "bool-setting",
