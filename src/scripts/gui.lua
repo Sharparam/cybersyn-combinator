@@ -547,6 +547,12 @@ function handlers.dialog_close(event)
   end
 end
 
+---@type fun(state: UiState, reset: boolean, reset_section_index: integer?, deleted_group: string?, updated_group: string?)
+local update_signal_sections
+
+---@type fun(state: UiState, signal_table: LuaGuiElement, reset: boolean?)
+local update_signal_table
+
 --- @param event EventData.on_gui_switch_state_changed
 function handlers.on_off(event)
   local element = event.element
@@ -560,13 +566,8 @@ function handlers.on_off(event)
   local is_ghost = state.entity.name == "entity-ghost"
   state.status_sprite.sprite = is_ghost and GHOST_STATUS_SPRITE or STATUS_SPRITES[status] or DEFAULT_STATUS_SPRITE
   state.status_label.caption = is_ghost and GHOST_STATUS_NAME or STATUS_NAMES[status] or DEFAULT_STATUS_NAME
+  update_signal_sections(state, false, nil, nil, nil)
 end
-
----@type fun(state: UiState, reset: boolean, reset_section_index: integer?, deleted_group: string?, updated_group: string?)
-local update_signal_sections
-
----@type fun(state: UiState, signal_table: LuaGuiElement, reset: boolean?)
-local update_signal_table
 
 --- @param event EventData.on_gui_elem_changed
 function handlers.signal_changed(event)
@@ -1470,7 +1471,7 @@ update_signal_table = function(state, signal_table, reset)
   end
 
   local section_index = section.index
-  local active = section.active
+  local active = section.active and combinator:is_enabled()
   local slot_rows = calc_slot_rows(section.filters_count)
   local slot_count = calc_slot_count(section)
   local button_style = active and SLOT_BUTTON_STYLE or SLOT_BUTTON_DISABLED_STYLE

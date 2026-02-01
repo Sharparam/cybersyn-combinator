@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.8.1
+Date: 2026-02-01
+  Bugfixes:
+    - Fix sections not being darkened to indicate being disabled when the entire combinator is disabled.
+---------------------------------------------------------------------------------------------------
 Version: 2.8.0
 Date: 2026-02-01
   Features:
