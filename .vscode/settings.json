@@ -1,7 +1,6 @@
 {
   "Lua.workspace.library": [
-    "/home/sharparam/factorio/mods/flib",
-    "/home/sharparam/games/factorio/sa_experimental/data"
+    "/home/sharparam/factorio/mods/flib"
   ],
   "Lua.workspace.userThirdParty": [
     "/home/sharparam/.config/Code/User/workspaceStorage/19194ab926a005c1b8add80c8d001947/justarandomgeek.factoriomod-debug/sumneko-3rd"
