@@ -137,7 +137,7 @@ cp -a "$SRCDIR/." "$RELDIR"
 
 RELINFO="$RELDIR/info.json"
 tmpinfo=$(mktemp)
-jq --arg version "$VERSION" '.version = $version' "$RELINFO" > "$tmpinfo" && mv "$tmpinfo" "$RELINFO"
+jq --arg version "$VERSION" '.version = $version | del(.["$schema"])' "$RELINFO" > "$tmpinfo" && mv "$tmpinfo" "$RELINFO"
 
 vprintln "Zip name: $ZIPNAME"
 (
