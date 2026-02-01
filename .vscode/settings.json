@@ -40,8 +40,7 @@
     },
     {
       "name": "Spage Age (Experimental)",
-      "factorioPath": "/home/sharparam/games/factorio/sa_experimental/bin/x64/factorio",
-      "active": true
+      "factorioPath": "/home/sharparam/games/factorio/sa_experimental/bin/x64/factorio"
     }
   ]
 }
