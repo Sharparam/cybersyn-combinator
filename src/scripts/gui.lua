@@ -202,9 +202,34 @@ local function get_logistic_groups(player_index)
   if player_data and player_data.translations then
     no_group = player_data.translations["gui-train.empty-train-group"] or no_group
   end
-  return {
+  local result = {
     { name = no_group }
   }
+
+  local player = game.get_player(player_index)
+
+  if not player or not player.valid then return result end
+
+  -- always LuaForce when reading
+  local force = player.force --[[@as LuaForce]]
+
+  if not force.valid then return result end
+
+  local api_groups = force.get_logistic_groups()
+
+  for _, api_group_name in pairs(api_groups) do
+    local api_group = force.get_logistic_group(api_group_name)
+    log:debug(serpent.line(api_group))
+    -- local count = 0
+    -- for _, section in pairs(api_group.members) do
+    --   log:debug("member ", count, "( ", section.index, ")")
+    --   count = count + 1
+    -- end
+    local count = #api_group.members
+    table.insert(result, { name = api_group_name, count = count })
+  end
+
+  return result
 end
 
 ---@param section LuaLogisticSection
@@ -537,7 +562,7 @@ function handlers.on_off(event)
   state.status_label.caption = is_ghost and GHOST_STATUS_NAME or STATUS_NAMES[status] or DEFAULT_STATUS_NAME
 end
 
----@type fun(state: UiState, reset: boolean, reset_section_index: integer?)
+---@type fun(state: UiState, reset: boolean, reset_section_index: integer?, deleted_group: string?, updated_group: string?)
 local update_signal_sections
 
 ---@type fun(state: UiState, signal_table: LuaGuiElement, reset: boolean?)
@@ -627,6 +652,9 @@ function handlers.signal_click(event)
       end
     else
       update_totals(state)
+    end
+    if section.group ~= "" then
+      update_signal_sections(state, false, nil, nil, section.group)
     end
   elseif event.button == defines.mouse_button_type.left then
     state.selected_section_index = nil
@@ -735,6 +763,9 @@ local function set_new_signal_value(player_index, state, value, clear_selected)
     end
   else
     update_totals(state)
+  end
+  if section and section.group ~= "" then
+    update_signal_sections(state, false, nil, nil, section.group)
   end
 end
 
@@ -948,6 +979,26 @@ function handlers.logistic_group_item_click(event)
   state.logistic_group_edit.group_name_textfield.text = group
 end
 
+--- @param event EventData.on_gui_click
+function handlers.logistic_group_item_delete_click(event)
+  local element = event.element
+  local group = element.tags.group --[[@as string?]]
+  if not group then return end
+  local state = get_player_state(event.player_index)
+  if not state then return end
+  if not state.logistic_group_edit then return end
+  log:debug("logistic group item delete clicked for group: ", group)
+  state.logistic_group_edit.section.group = ""
+  element.parent.destroy()
+  local player = game.get_player(event.player_index)
+  if not player or not player.valid then return end
+  local force = player.force
+  if not force.valid then return end
+  log:debug("deleting logistic group: ", group)
+  force.delete_logistic_group(group)
+  update_signal_sections(state, false, nil, group)
+end
+
 --- @param name string?
 --- @param count number?
 --- @param is_empty boolean
@@ -999,7 +1050,13 @@ local function make_logistic_group_item(name, count, is_empty)
         style = "tool_button_red",
         sprite = "utility/trash",
         visible = group ~= "" and not is_empty,
-        mouse_button_filter = { "left" }
+        mouse_button_filter = { "left" },
+        tags = {
+          group = group
+        },
+        handler = {
+          [defines.events.on_gui_click] = handlers.logistic_group_item_delete_click
+        }
       }
     }
   }
@@ -1552,7 +1609,9 @@ end
 ---@param state UiState
 ---@param reset boolean
 ---@param reset_section_index integer?
-update_signal_sections = function(state, reset, reset_section_index)
+---@param deleted_group string?
+---@param updated_group string?
+update_signal_sections = function(state, reset, reset_section_index, deleted_group, updated_group)
   if not state then return end
 
   local container = state.section_container
@@ -1577,11 +1636,16 @@ update_signal_sections = function(state, reset, reset_section_index)
       if not section_index then goto continue end
       local section = state.combinator:get_item_section(section_index)
       if not section then goto continue end
+      if updated_group and updated_group ~= "" and section.group ~= updated_group then
+        goto continue
+      end
       local active = section.active
       local caption = create_logistic_section_caption(section)
       section_entry.header.checkbox.state = active
       section_entry.header.checkbox.caption = caption
-      update_signal_table(state, section_entry.signal_table, reset or reset_section_index == section.index)
+      if not deleted_group then
+        update_signal_table(state, section_entry.signal_table, reset or reset_section_index == section.index or (updated_group and updated_group ~= ""))
+      end
       ::continue::
     end
   end

@@ -1,8 +1,6 @@
 {
   "Lua.workspace.library": [
-    "/home/sharparam/factorio/mods/flib",
-    "/home/sharparam/factorio/data",
-    "/home/sharparam/.config/Code/User/workspaceStorage/19194ab926a005c1b8add80c8d001947/justarandomgeek.factoriomod-debug/sumneko-3rd/factorio/library"
+    "/home/sharparam/factorio/mods/flib"
   ],
   "Lua.workspace.userThirdParty": [
     "/home/sharparam/.config/Code/User/workspaceStorage/19194ab926a005c1b8add80c8d001947/justarandomgeek.factoriomod-debug/sumneko-3rd"
@@ -20,7 +18,6 @@
   "Lua.runtime.special": {
     "__object_name": "type"
   },
-  "Lua.runtime.plugin": "/home/sharparam/.config/Code/User/workspaceStorage/19194ab926a005c1b8add80c8d001947/justarandomgeek.factoriomod-debug/sumneko-3rd/factorio/plugin.lua",
   "factorio.package.tagName": "v$VERSION",
   "factorio.package.movedToCommitMessage": "Update version to $VERSION",
   "factorio.package.preparingCommitMessage": "Prepare release of version $VERSION",
@@ -43,8 +40,7 @@
     },
     {
       "name": "Spage Age (Experimental)",
-      "factorioPath": "/home/sharparam/games/factorio/sa_experimental/bin/x64/factorio",
-      "active": true
+      "factorioPath": "/home/sharparam/games/factorio/sa_experimental/bin/x64/factorio"
     }
   ]
 }

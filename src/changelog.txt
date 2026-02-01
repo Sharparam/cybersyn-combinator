@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.8.0
+Date: TBD
+  Features:
+    - Implement a working logistic group editor using newly available APIs in Factorio 2.0.57.
+  Bugfixes:
+    - When updating a signal section, other signal sections using the same group will now also properly reflect
+      the update.
+---------------------------------------------------------------------------------------------------
 Version: 2.7.3
 Date: 2025-05-06
   Bugfixes:
