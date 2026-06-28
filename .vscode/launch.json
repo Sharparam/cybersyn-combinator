@@ -5,40 +5,9 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "factoriomod",
+            "type": "factorio",
             "request": "launch",
-            "name": "Factorio Mod Debug",
-            "adjustMods": {
-              "elevated-rails": true,
-              "quality": true,
-              "space-age": true,
-              "cybersyn": true,
-              "cybersyn-combinator": true,
-              "EditorExtensions": true,
-              "flib": true,
-              "LogisticTrainNetwork": false,
-              "LTN_Combinator_Modernized": false,
-              "factoryplanner": false,
-              "RecipeBook": false
-            },
-            "checkGlobals": [
-              "cybersyn-combinator"
-            ],
-            "disableExtraMods": true,
-            "hookLog": true
-        },
-        {
-            "type": "factoriomod",
-            "request": "launch",
-            "name": "Factorio Mod Debug (Settings & Data)",
-            "hookSettings": true,
-            "hookData": true
-        },
-        {
-            "type": "factoriomod",
-            "request": "launch",
-            "name": "Factorio Mod Debug (Profile)",
-            "hookMode": "profile"
+            "name": "Factorio Mod Debug"
         }
     ]
 }

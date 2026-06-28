@@ -28,19 +28,5 @@
     "editor.formatOnSaveMode": "file"
   },
   "lua.targetVersion": "5.2",
-  "Lua.workspace.checkThirdParty": "ApplyInMemory",
-  "factorio.versions": [
-    {
-      "name": "Stable",
-      "factorioPath": "/home/sharparam/games/factorio/latest/bin/x64/factorio"
-    },
-    {
-      "name": "Space Age (Stable)",
-      "factorioPath": "/home/sharparam/games/factorio/sa_latest/bin/x64/factorio"
-    },
-    {
-      "name": "Spage Age (Experimental)",
-      "factorioPath": "/home/sharparam/games/factorio/sa_experimental/bin/x64/factorio"
-    }
-  ]
+  "Lua.workspace.checkThirdParty": "ApplyInMemory"
 }
