@@ -316,17 +316,19 @@ local function update_totals(state)
 
   for section_index, section in state.combinator:iter_item_sections() do
     local slot_count = section.filters_count
+    local multiplier = section.multiplier or 1
 
     for slot = 1, slot_count do
       local signal = state.combinator:get_item_slot(section_index, slot --[[@as uint]])
       if signal and signal.signal then
-        if signal.signal.type == "item" and signal.count < 0 then
+        local count = signal.count * multiplier
+        if signal.signal.type == "item" and count < 0 then
           local stack_size = prototypes.item[signal.signal.name].stack_size
-          local stacks = math.floor(signal.count / stack_size)
-          item_request_total = item_request_total + signal.count
+          local stacks = math.floor(count / stack_size)
+          item_request_total = item_request_total + count
           item_request_stacks = item_request_stacks + stacks
-        elseif signal.signal.type == "fluid" and signal.count < 0 then
-          fluid_request_total = fluid_request_total + signal.count
+        elseif signal.signal.type == "fluid" and count < 0 then
+          fluid_request_total = fluid_request_total + count
         end
       end
     end
